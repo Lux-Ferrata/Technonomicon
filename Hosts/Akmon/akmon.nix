@@ -5,6 +5,9 @@
     modules = [
       ./_hardware-configuration.nix
       inputs.sops-nix.nixosModules.sops
+      self.nixosModules.Tn-hyprland
+      self.nixosModules.Tn-display-manager
+      self.nixosModules.Tn-kanata
       ({ pkgs, config, ... }: {
         system.stateVersion = "23.11";
 
@@ -14,6 +17,8 @@
         boot.loader.systemd-boot.enable = true;
         boot.loader.efi.canTouchEfiVariables = true;
         boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
+        boot.kernelModules = [ "uinput" ];
+        boot.blacklistedKernelModules = [ "wacom" ];
         boot.kernelParams = [ "nvidia-drm.modeset=1" "nvidia-drm.fbdev=1" ];
 
         services.xserver.videoDrivers = [ "nvidia" ];
@@ -25,6 +30,7 @@
           powerManagement.enable = false;
           powerManagement.finegrained = false;
         };
+        hardware.uinput.enable = true;
 
         networking.hostName = "Akmon";
         networking.networkmanager.enable = true;
@@ -42,7 +48,7 @@
           isNormalUser = true;
           hashedPasswordFile = config.sops.secrets.xin-password.path;
           shell = pkgs.zsh;
-          extraGroups = [ "wheel" "networkmanager" ];
+          extraGroups = [ "wheel" "networkmanager" "uinput" "input" ];
         };
       })
     ];

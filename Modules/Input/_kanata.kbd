@@ -1,0 +1,78 @@
+(defcfg
+  process-unmapped-keys yes
+  concurrent-tap-hold yes          ;; Safe: Keeps processing flowing so keys don't queue up
+  danger-enable-cmd yes
+  linux-continue-if-no-devs-found yes
+  linux-dev (
+    /dev/input/by-id/usb-Kinesis_Advantage2_Keyboard_314159265359-event-if02
+    /dev/input/by-id/usb-Kinesis_Advantage2_Keyboard_314159265359-event-mouse
+    /dev/input/by-id/usb-Kinesis_Advantage2_Keyboard_314159265359-if01-event-kbd
+    /dev/input/by-id/usb-Kinesis_Advantage2_Keyboard_314159265359-mouse
+    /dev/input/by-path/platform-i8042-serio-0-event-kbd
+  )
+)
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt         spc            ralt rmet rctl del
+)
+
+(defalias
+  ;; Nav & utility
+  spc-nav  (tap-hold 200 350 spc (layer-toggle nav))
+  bspc-nav (tap-hold 200 350 bspc (layer-toggle nav))
+  mouse    (multi lctl lalt lmet lsft spc)
+  mouse-2  (multi lctl lalt lmet lsft ret)
+
+  hrm-f    (tap-hold 200 250 f lsft)
+  hrm-p    (tap-hold 200 250 p lsft)
+  hrm-l    (tap-hold 200 250 l rsft)
+  hrm-u    (tap-hold 200 250 u rsft)
+
+  hrm-r    (tap-hold 200 250 r lalt)
+  hrm-s    (tap-hold 200 250 s lmet)
+  hrm-t    (tap-hold 200 250 t lctl)
+  hrm-n    (tap-hold 200 250 n rctl)
+  hrm-e    (tap-hold 200 250 e rmet)
+  hrm-i    (tap-hold 200 250 i ralt)
+
+  ;; Modifiers & One-shots
+  lxsft    (tap-hold 250 250 (one-shot 1500 lsft) lsft)
+  rxsft    (tap-hold 250 250 (one-shot 1500 rsft) rsft)
+  lxctl    (tap-hold 250 250 (one-shot 1500 lctl) lctl)
+  rxctl    (tap-hold 250 250 (one-shot 1500 rctl) rctl)
+  lxmet    (tap-hold 250 250 (one-shot 1500 lmet) lmet)
+  rxmet    (tap-hold 250 250 (one-shot 1500 rmet) rmet)
+  lxalt    (tap-hold 250 250 (one-shot 1500 lalt) lalt)
+  rxalt    (tap-hold 250 250 (one-shot 1500 ralt) ralt)
+  sret     (tap-hold 250 250 ret rmet)
+  sdel     (tap-hold 250 250 del rmet)
+  nesc     (tap-hold 250 250 esc (layer-toggle num))
+)
+
+(deflayer colemak
+  grv    1    2    3      4      5    6    7      8      9      0    -    =  @bspc-nav
+  tab    q    w    @hrm-f @hrm-p b    j    @hrm-l @hrm-u y      z    [    ]    \
+  @nesc  a    @hrm-r @hrm-s @hrm-t g    m    @hrm-n @hrm-e @hrm-i o    '    @sret
+  @lxsft ;    c    d      v      x    k    h      ,      .      /    @rxsft
+  @lxctl @lxmet @lxalt               @spc-nav               @rxalt @rxmet @rxctl @sdel
+)
+
+(deflayer nav
+  _  _  _      _     _       _        _        _      _      _        _    _    _    _
+  _  _  S-lft  pgup  S-rght  @mouse-2 @mouse-2 C-lft  up     C-rght   _    _    _    _
+  _  _  home   pgdn  end     @mouse   @mouse   lft    down   rght     _    _    _
+  _  _  _      _     _       _        _        _      _      _        _    _
+  _  _  _            _                                _      _        _    _
+)
+
+(deflayer num
+  _  _  _      _     _       _      _      _      _      _        _    _    _    _
+  _  _  _      _     _       _      0      7      8      9        _    _    _    _
+  _  _  _      _     _       _      0      4      5      6        _    _    _
+  _  _  _      _     _       _      0      1      2      3        _    _
+  _  _  _            _                                _      _        _    _
+)

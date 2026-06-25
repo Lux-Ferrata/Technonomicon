@@ -6,6 +6,9 @@
       ./_hardware-configuration.nix
       inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t480s
       inputs.sops-nix.nixosModules.sops
+      self.nixosModules.Tn-hyprland
+      self.nixosModules.Tn-display-manager
+      self.nixosModules.Tn-kanata
       ({ pkgs, config, ... }: {
         system.stateVersion = "23.11";
 
@@ -15,6 +18,9 @@
         boot.loader.systemd-boot.enable = true;
         boot.loader.efi.canTouchEfiVariables = true;
         boot.loader.efi.efiSysMountPoint = "/boot";
+        boot.kernelModules = [ "uinput" ];
+
+        hardware.uinput.enable = true;
 
         networking.hostName = "Kvasir";
         networking.networkmanager.enable = true;
@@ -32,7 +38,7 @@
           isNormalUser = true;
           hashedPasswordFile = config.sops.secrets.xin-password.path;
           shell = pkgs.zsh;
-          extraGroups = [ "wheel" "networkmanager" ];
+          extraGroups = [ "wheel" "networkmanager" "uinput" "input" ];
         };
       })
     ];
