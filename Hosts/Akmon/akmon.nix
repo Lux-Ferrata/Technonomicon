@@ -8,6 +8,10 @@
       self.nixosModules.Tn-hyprland
       self.nixosModules.Tn-display-manager
       self.nixosModules.Tn-kanata
+      self.nixosModules.Tn-web-browsers
+      self.nixosModules.Tn-web-apps
+      self.nixosModules.Tn-shell
+      self.nixosModules.Home-xin
       ({ pkgs, config, ... }: {
         system.stateVersion = "23.11";
 
