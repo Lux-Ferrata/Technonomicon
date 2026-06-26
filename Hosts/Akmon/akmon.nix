@@ -5,6 +5,7 @@
     modules = [
       ./_hardware-configuration.nix
       inputs.sops-nix.nixosModules.sops
+      self.nixosModules.Tn-nix
       self.nixosModules.Tn-hyprland
       self.nixosModules.Tn-display-manager
       self.nixosModules.Tn-kanata
@@ -14,9 +15,6 @@
       self.nixosModules.Home-xin
       ({ pkgs, config, ... }: {
         system.stateVersion = "23.11";
-
-        nix.settings.experimental-features = [ "nix-command" "flakes" ];
-        nixpkgs.config.allowUnfree = true;
 
         boot.loader.systemd-boot.enable = true;
         boot.loader.efi.canTouchEfiVariables = true;

@@ -1,8 +1,5 @@
-{ pkgs, ... }: {
+{ ... }: {
   home.file.".config/hypr/hyprland.lua".text = ''
-    -- ── Plugin ───────────────────────────────────────────────────────────────────
-    hl.plugin.load("${pkgs.hyprlandPlugins.hypr-dynamic-cursors}/lib/libhypr-dynamic-cursors.so")
-
     -- ── Monitor ──────────────────────────────────────────────────────────────────
     -- Akmon:  hl.monitor({ output = "DP-1",  mode = "2560x1440@144", position = "0x0", scale = 1 })
     -- Kvasir: hl.monitor({ output = "eDP-1", mode = "2560x1440@60",  position = "0x0", scale = 1.5 })
@@ -67,23 +64,6 @@
         },
         xwayland = {
             force_zero_scaling = true,
-        },
-    })
-
-    hl.config({
-        plugin = {
-            ["dynamic-cursors"] = {
-                enabled = true,
-                mode    = "none",
-                shake   = {
-                    enabled   = true,
-                    threshold = 6.0,
-                    base      = 4.0,
-                    speed     = 4.0,
-                    timeout   = 2000,
-                    effects   = false,
-                },
-            },
         },
     })
 

@@ -8,7 +8,6 @@
     security.pam.services.hyprlock = {};
 
     environment.systemPackages = with pkgs; [
-      hyprlandPlugins.hypr-dynamic-cursors
       hyprlock
       hypridle
       hyprpaper
