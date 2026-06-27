@@ -219,3 +219,17 @@ aliases.update({
     # Editors
     'eo': 'hx',
 })
+
+def _eon(args):
+    if not args:
+        print("Usage: eon <file>")
+        return 1
+    file = os.path.abspath(args[0])
+    wdir = os.path.dirname(file)
+    subprocess.Popen(
+        ['ghostty', '--working-directory', wdir, '-e', 'hx', file],
+        start_new_session=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+aliases['eon'] = _eon
