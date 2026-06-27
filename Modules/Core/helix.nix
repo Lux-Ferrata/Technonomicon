@@ -36,6 +36,7 @@
 
     environment.systemPackages = with pkgs; [
       previewImage
+      openInGhostty
       openInObsidian
       imv
       helix
