@@ -1,22 +1,5 @@
-// Unmap all default single-key and compound-key bindings
-[
-  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-  '/', '?', ';', "'", ',', '.', '-', '=', '[', ']', '\\',
-  'g0', 'g$', 'gi', 'gf', 'gF', 'gs', 'gp', 'gu', 'gU',
-  'gt', 'gT', 'g.', 'go', 'gn', 'gg', 'G',
-  'cc', 'cS',
-  '<Ctrl-a>', '<Ctrl-b>', '<Ctrl-c>', '<Ctrl-d>', '<Ctrl-e>', '<Ctrl-f>',
-  '<Ctrl-g>', '<Ctrl-h>', '<Ctrl-i>', '<Ctrl-j>', '<Ctrl-k>', '<Ctrl-l>',
-  '<Ctrl-m>', '<Ctrl-n>', '<Ctrl-o>', '<Ctrl-p>', '<Ctrl-q>', '<Ctrl-r>',
-  '<Ctrl-s>', '<Ctrl-t>', '<Ctrl-u>', '<Ctrl-v>', '<Ctrl-w>', '<Ctrl-x>',
-  '<Ctrl-y>', '<Ctrl-z>',
-].forEach(k => { try { api.unmap(k); } catch(e) {} });
-
-api.unmap('<Ctrl-i>');
+// Disable all default keybindings
+api.unmapAllExcept([]);
 api.iunmap('<Ctrl-i>');
 
 // o - open URL in current tab
