@@ -4,6 +4,8 @@
     programs.chromium.enable = true;
     environment.systemPackages = [
       pkgs.qutebrowser
+      pkgs.bitwarden-cli
+      pkgs.bemenu
       ((pkgs.brave.override {
         commandLineArgs = [
           "--enable-features=UseOzonePlatform"
@@ -23,7 +25,17 @@
       }))
     ];
 
-    home-manager.users.xin.home.file.".config/surfingkeys/config.js".source = ./_surfingkeys.js;
+    home-manager.users.xin.home.file.".config/qutebrowser/config.py".source = ./_qutebrowser-config.py;
+    home-manager.users.xin.home.file.".local/share/qutebrowser/userscripts/qute-bitwarden" = {
+      source = "${pkgs.qutebrowser}/share/qutebrowser/userscripts/qute-bitwarden";
+      executable = true;
+    };
+
+    home-manager.users.xin.xdg.mimeApps.defaultApplications = {
+      "text/html"              = "org.qutebrowser.qutebrowser.desktop";
+      "x-scheme-handler/http"  = "org.qutebrowser.qutebrowser.desktop";
+      "x-scheme-handler/https" = "org.qutebrowser.qutebrowser.desktop";
+    };
 
     environment.etc."brave/policies/managed/default.json".text = builtins.toJSON {
       "PasswordManagerEnabled" = false;
@@ -48,11 +60,9 @@
       "ImagesForNewTabPageEnabled" = false;
 
       "ExtensionInstallForcelist" = [
-        "gfbliohnnapiefjpjlpjnehglfpaknnc;https://clients2.google.com/service/update2/crx" # Surfingkeys
         "eimadpbcbfnmbkopoojfekhnkhdbieeh;https://clients2.google.com/service/update2/crx" # Dark Reader
         "nngceckbapebfimnlniiiahkandclblb;https://clients2.google.com/service/update2/crx" # Bitwarden
         "cjpalhdlnbpafiamejdnhcphjbkeiagm;https://clients2.google.com/service/update2/crx" # uBlock Origin
-        "dndlcbaomdoggooaficldplkcmkfpgff;https://clients2.google.com/service/update2/crx" # New Tab, New Window
         "blaaajhemilngeeffpbfkdjjoefldkok;https://clients2.google.com/service/update2/crx" # LeechBlock NG
       ];
     };
