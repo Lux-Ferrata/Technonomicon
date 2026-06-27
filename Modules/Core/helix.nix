@@ -140,6 +140,7 @@
         space = "file_picker"
         o     = ":sh open-in-obsidian %val{filename}"
         p     = ":sh preview-image %val{selection}"
+        v     = ":sh codium %val{filename}"
       '';
 
       ".config/helix/languages.toml".text = ''
