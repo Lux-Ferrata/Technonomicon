@@ -98,6 +98,14 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "bitwarden-vault";
+        desktopName = "Bitwarden Vault";
+        exec = "${pkgs.brave}/bin/brave --app=https://vault.bitwarden.com --start-maximized";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
