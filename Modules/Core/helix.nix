@@ -9,6 +9,17 @@
       ${pkgs.imv}/bin/imv "$path" & disown
     '';
 
+    openInGhostty = pkgs.writeShellScriptBin "open-in-ghostty" ''
+      file="$1"
+      if [ -z "$file" ] || [ "$file" = "[scratch]" ]; then
+        dir="$HOME"
+      else
+        dir=$(dirname "$(realpath "$file")")
+      fi
+      ghostty --working-directory "$dir" &
+      disown
+    '';
+
     openInObsidian = pkgs.writeShellScriptBin "open-in-obsidian" ''
       if [ -z "$1" ] || [ "$1" = "[scratch]" ]; then
         exit 1
