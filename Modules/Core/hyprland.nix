@@ -64,6 +64,7 @@
           hl.config({ ['xwayland.force_zero_scaling'] = true })
 
           hl.on("hyprland.start", function()
+            hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE GDK_BACKEND")
             hl.exec_cmd("hypridle")
             hl.exec_cmd("quickshell")
             hl.exec_cmd("nm-applet --indicator")
