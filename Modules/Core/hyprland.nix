@@ -87,7 +87,7 @@
             input = {
               kb_layout    = "us",
               follow_mouse = 1,
-              touchpad     = { natural_scroll = true, disable_while_typing = true },
+              touchpad     = { natural_scroll = true, disable_while_typing = true, drag_lock = false },
             },
             general = {
               gaps_in     = 5,
