@@ -61,7 +61,7 @@
           hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
           hl.env("HYPRCURSOR_SIZE", "24")
 
-          hl.xwayland({ force_zero_scaling = true })
+          hl.config({ ['xwayland.force_zero_scaling'] = true })
 
           hl.on("hyprland.start", function()
             hl.exec_cmd("hypridle")
