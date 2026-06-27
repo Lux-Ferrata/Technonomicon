@@ -134,6 +134,17 @@
         show_startup_tips false
         show_release_notes false
         copy_on_select true
+
+        keybinds {
+          scroll {
+            bind "Up"       { ScrollUp; }
+            bind "Down"     { ScrollDown; }
+            bind "PageUp"   { PageScrollUp; }
+            bind "PageDown" { PageScrollDown; }
+            bind "Home"     { ScrollToTop; }
+            bind "End"      { ScrollToBottom; }
+          }
+        }
       '';
 
       ".config/zellij/layouts/bare.kdl".text = ''
