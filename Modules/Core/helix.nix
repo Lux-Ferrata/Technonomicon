@@ -133,6 +133,7 @@
         default_layout "bare"
         show_startup_tips false
         show_release_notes false
+        copy_on_select true
       '';
 
       ".config/zellij/layouts/bare.kdl".text = ''
