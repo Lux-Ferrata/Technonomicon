@@ -1,20 +1,65 @@
-// 1. Remove mapkey `Ctrl-i` to disable the Vim editor
+// Unmap all default single-key and compound-key bindings
+[
+  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+  'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  '/', '?', ';', "'", ',', '.', '-', '=', '[', ']', '\\',
+  'g0', 'g$', 'gi', 'gf', 'gF', 'gs', 'gp', 'gu', 'gU',
+  'gt', 'gT', 'g.', 'go', 'gn', 'gg', 'G',
+  'cc', 'cS',
+  '<Ctrl-a>', '<Ctrl-b>', '<Ctrl-c>', '<Ctrl-d>', '<Ctrl-e>', '<Ctrl-f>',
+  '<Ctrl-g>', '<Ctrl-h>', '<Ctrl-i>', '<Ctrl-j>', '<Ctrl-k>', '<Ctrl-l>',
+  '<Ctrl-m>', '<Ctrl-n>', '<Ctrl-o>', '<Ctrl-p>', '<Ctrl-q>', '<Ctrl-r>',
+  '<Ctrl-s>', '<Ctrl-t>', '<Ctrl-u>', '<Ctrl-v>', '<Ctrl-w>', '<Ctrl-x>',
+  '<Ctrl-y>', '<Ctrl-z>',
+].forEach(k => { try { api.unmap(k); } catch(e) {} });
+
 api.unmap('<Ctrl-i>');
-api.iunmap('<Ctrl-i>'); // Ensures it is disabled in text input fields too
+api.iunmap('<Ctrl-i>');
 
-// Map 'o' to open a URL in the current tab (aliases 'go')
-api.map('o', 'go');
+// o - open URL in current tab
+api.mapkey('o', 'Open URL in current tab', function() {
+    api.Front.openOmnibar({type: 'URLs'});
+});
 
-// 2. Map Shift+f ('F') to open a link in non-active new tab (aliases 'c')
-api.map('F', 'c');
+// t - open URL in new tab
+api.mapkey('t', 'Open URL in new tab', function() {
+    api.Front.openOmnibar({type: 'URLs', tabbed: true});
+});
 
-// 3. Map Arrow Keys for Visual Mode (vmap targets visual mode specifically)
+// f - link hints (click a link)
+api.mapkey('f', 'Click a link', function() {
+    Hints.create('', Hints.dispatchMouseClick);
+});
+
+// F - open link in new background tab
+api.mapkey('F', 'Open link in background tab', function() {
+    Hints.create('', function(link) {
+        api.RUNTIME('openLink', {
+            url: link.href,
+            tab: {tabbed: true, active: false},
+        });
+    });
+});
+
+// y - yank current URL to clipboard
+api.mapkey('y', 'Yank current URL', function() {
+    api.Clipboard.write(window.location.href);
+});
+
+// v - enter visual mode
+api.mapkey('v', 'Enter visual mode', function() {
+    Visual.activate();
+});
+
+// Visual mode arrow keys
 api.vmap('<ArrowDown>', 'j');
 api.vmap('<ArrowUp>', 'k');
 api.vmap('<ArrowLeft>', 'h');
 api.vmap('<ArrowRight>', 'l');
 
-// 4. Set Dark Theme (Using the built-in generator's code, plus your centered menu!)
 settings.theme = `
 .sk_theme {
     font-family: Input Sans Condensed, Charcoal, sans-serif;
