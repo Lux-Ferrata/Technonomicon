@@ -10,9 +10,9 @@ c.url.default_page = 'https://en.wikipedia.org/wiki/Special:Random'
 
 # Search engines
 c.url.searchengines = {
-    'DEFAULT': 'https://duckduckgo.com/?q={}',
+    'DEFAULT': 'https://www.google.com/search?q={}',
     'w': 'https://en.wikipedia.org/wiki/Special:Search?search={}',
-    'g': 'https://www.google.com/search?q={}',
+    'dd': 'https://duckduckgo.com/?q={}',
 }
 
 # Dark mode
