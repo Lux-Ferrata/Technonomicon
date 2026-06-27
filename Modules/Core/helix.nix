@@ -105,19 +105,20 @@
       python3Packages.jupyter
     ];
 
-    home-manager.users.xin.programs.vscode = {
+    home-manager.users.xin.programs.vscodium = {
       enable = true;
-      package = pkgs.vscodium;
-      extensions = with pkgs.vscode-extensions; [
-        arcticicestudio.nord-visual-studio-code
-      ];
-      userSettings = {
-        "workbench.colorTheme"        = "Nord";
-        "editor.fontFamily"           = "'JetBrains Mono', monospace";
-        "editor.fontSize"             = 14;
-        "editor.lineNumbers"          = "relative";
-        "editor.minimap.enabled"      = false;
-        "workbench.activityBar.location" = "hidden";
+      profiles.default = {
+        extensions = with pkgs.vscode-extensions; [
+          arcticicestudio.nord-visual-studio-code
+        ];
+        userSettings = {
+          "workbench.colorTheme"           = "Nord";
+          "editor.fontFamily"              = "'JetBrains Mono', monospace";
+          "editor.fontSize"                = 14;
+          "editor.lineNumbers"             = "relative";
+          "editor.minimap.enabled"         = false;
+          "workbench.activityBar.location" = "hidden";
+        };
       };
     };
 
