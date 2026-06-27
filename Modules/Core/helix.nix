@@ -93,6 +93,22 @@
       python3Packages.jupyter
     ];
 
+    home-manager.users.xin.programs.vscode = {
+      enable = true;
+      package = pkgs.vscodium;
+      extensions = with pkgs.vscode-extensions; [
+        arcticicestudio.nord-visual-studio-code
+      ];
+      userSettings = {
+        "workbench.colorTheme"        = "Nord";
+        "editor.fontFamily"           = "'JetBrains Mono', monospace";
+        "editor.fontSize"             = 14;
+        "editor.lineNumbers"          = "relative";
+        "editor.minimap.enabled"      = false;
+        "workbench.activityBar.location" = "hidden";
+      };
+    };
+
     home-manager.users.xin.home.file = {
       ".config/ghostty/config".text = ''
         confirm-close-surface = false
