@@ -1,14 +1,10 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-web-browsers = { pkgs, config, ... }:
-  let
-    nyxt = pkgs.callPackage ./Nyxt/_nyxt.nix {};
-  in {
+  flake.nixosModules.Tn-web-browsers = { pkgs, config, ... }: {
 
     networking.nameservers = [ "1.1.1.3" "1.0.0.3" ];
 
     programs.chromium.enable = true;
     environment.systemPackages = [
-      nyxt
       pkgs.bitwarden-cli
       pkgs.bemenu
       ((pkgs.brave.override {
