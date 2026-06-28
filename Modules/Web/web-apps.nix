@@ -4,14 +4,6 @@
     environment.systemPackages = [
 
       (pkgs.makeDesktopItem {
-        name = "Discord-App";
-        desktopName = "Discord App";
-        exec = "${pkgs.brave}/bin/brave --app=https://www.discord.gg/channels/@me --start-maximized";
-        terminal = false;
-        categories = [ "Application" "Network" ];
-      })
-
-      (pkgs.makeDesktopItem {
         name = "khan-academy";
         desktopName = "Khan Academy";
         exec = "${pkgs.brave}/bin/brave --app=https://www.khanacademy.org --start-maximized";
