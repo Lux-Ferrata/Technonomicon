@@ -4,10 +4,6 @@
 (define-configuration buffer
   ((default-modes (append '(vi-normal-mode) %slot-value%))))
 
-;;; One window per page
-(define-configuration browser
-  ((open-external-link-in-new-window-p t)))
-
 ;;; Start page
 (define-configuration browser
   ((default-new-buffer-url (quri:uri "https://en.wikipedia.org/wiki/Special:Random"))))
