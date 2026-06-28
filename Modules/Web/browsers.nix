@@ -7,7 +7,6 @@
     programs.chromium.enable = true;
     environment.systemPackages = [
       nyxt
-      pkgs.qutebrowser
       pkgs.bitwarden-cli
       pkgs.bemenu
       ((pkgs.brave.override {
