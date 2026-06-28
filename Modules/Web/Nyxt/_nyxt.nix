@@ -10,9 +10,19 @@ let
     tar -xf ${archive}
     mv Nyxt-x86_64.AppImage $out
   '';
+  extracted = pkgs.appimageTools.extractType2 {
+    pname = "nyxt";
+    inherit version;
+    src = appimage;
+  };
 in
 pkgs.appimageTools.wrapType2 {
   pname = "nyxt";
   inherit version;
   src = appimage;
+  extraInstallCommands = ''
+    install -Dm644 ${extracted}/nyxt.desktop $out/share/applications/nyxt.desktop
+    install -Dm644 ${extracted}/nyxt.png \
+      $out/share/icons/hicolor/256x256/apps/nyxt.png
+  '';
 }
