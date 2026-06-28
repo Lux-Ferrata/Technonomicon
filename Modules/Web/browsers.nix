@@ -1,8 +1,12 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-web-browsers = { pkgs, config, ... }: {
+  flake.nixosModules.Tn-web-browsers = { pkgs, config, ... }:
+  let
+    nyxt = pkgs.callPackage ./Nyxt/_nyxt.nix {};
+  in {
 
     programs.chromium.enable = true;
     environment.systemPackages = [
+      nyxt
       pkgs.qutebrowser
       pkgs.bitwarden-cli
       pkgs.bemenu
