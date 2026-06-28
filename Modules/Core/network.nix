@@ -47,11 +47,6 @@
         ::1 tumblr.com
         ::1 www.tumblr.com
 
-        127.0.0.1 pinterest.com
-        127.0.0.1 www.pinterest.com
-        ::1 pinterest.com
-        ::1 www.pinterest.com
-
         127.0.0.1 snapchat.com
         127.0.0.1 www.snapchat.com
         ::1 snapchat.com
