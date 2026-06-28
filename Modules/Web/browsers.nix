@@ -54,7 +54,21 @@
         "nngceckbapebfimnlniiiahkandclblb;https://clients2.google.com/service/update2/crx" # Bitwarden
         "cjpalhdlnbpafiamejdnhcphjbkeiagm;https://clients2.google.com/service/update2/crx" # uBlock Origin
         "blaaajhemilngeeffpbfkdjjoefldkok;https://clients2.google.com/service/update2/crx" # LeechBlock NG
+        "hfjbmagddngcpeloejdejnfgbamkddxk;https://clients2.google.com/service/update2/crx" # Vimium C
       ];
+
+      "ExtensionSettings" = {
+        "hfjbmagddngcpeloejdejnfgbamkddxk" = {
+          "policy_for_managed_users" = {
+            "keyMappings" = ''
+              unmapAll
+              map <c-f> LinkHints.activateMode
+              map <c-t> Vomnibar.activateInNewTab
+              map <c-n> Vomnibar.activate
+            '';
+          };
+        };
+      };
     };
 
   };
