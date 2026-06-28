@@ -4,6 +4,8 @@
     nyxt = pkgs.callPackage ./Nyxt/_nyxt.nix {};
   in {
 
+    networking.nameservers = [ "1.1.1.3" "1.0.0.3" ];
+
     programs.chromium.enable = true;
     environment.systemPackages = [
       nyxt
