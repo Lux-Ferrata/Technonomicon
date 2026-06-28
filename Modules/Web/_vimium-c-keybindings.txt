@@ -1,0 +1,18 @@
+# Vimium C key mappings
+# Paste these into: brave://extensions → Vimium C → Details → Extension options → Key mappings
+#
+# NOTE: These cannot be applied declaratively via Nix/managed policy.
+# Vimium C does not read keybindings from chrome.storage.managed.
+
+# Clear all default bindings first so only the ones below are active
+unmapAll
+
+# Open link hints with Ctrl+F (instead of the default 'f')
+# Lets you click any link on the page using the keyboard
+map <c-f> LinkHints.activateMode
+
+# Open the Vomnibar (address/search bar) in a new tab with Ctrl+T
+map <c-t> Vomnibar.activateInNewTab
+
+# Open the Vomnibar in the current tab with Ctrl+N
+map <c-n> Vomnibar.activate
