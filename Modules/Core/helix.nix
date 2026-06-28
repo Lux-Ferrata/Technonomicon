@@ -243,6 +243,7 @@
 
         [[language]]
         name = "markdown"
+        comment-tokens = ["- [ ]", "- [x]", "-", "+", "*", ">", "1."]
         language-servers = ["markdown-oxide", "marksman"]
         formatter = { command = "prettier", args = ["--parser", "markdown"] }
 
