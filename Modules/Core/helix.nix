@@ -176,6 +176,10 @@
         left  = ["mode", "spinner", "file-name", "file-modification-indicator"]
         right = ["diagnostics", "position", "file-encoding", "file-type"]
 
+        [keys.insert]
+        esc = ["normal_mode", ":write"]
+        C-c = ["normal_mode", ":write"]
+
         [keys.normal.space]
         f     = ":format"
         space = "file_picker"
