@@ -1,15 +1,13 @@
-{ pkgs, fetchurl }:
+{ pkgs }:
 
 let
   version = "1.0.0-rc.10";
-  src = ./_Allusion-1.0.0-rc.10.AppImage;
+  src = pkgs.fetchurl {
+    url = "https://github.com/allusion-app/Allusion/releases/download/v${version}/Allusion-${version}.AppImage";
+    hash = "sha256-5bBQjjb2vs3+s1r7+GOSVQbRBc8eyWjQFAlI3/mUh/k=";
+  };
 in
-
-pkgs.runCommand "allusion" {} ''
-  mkdir -p $out/bin
-  cat > $out/bin/allusion << 'EOF'
-  #!/bin/sh
-  exec ${src}
-  EOF
-  chmod +x $out/bin/allusion
-''
+pkgs.appimageTools.wrapType2 {
+  name = "allusion";
+  inherit src;
+}
