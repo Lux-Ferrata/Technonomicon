@@ -1,13 +1,9 @@
 (in-package :nyxt-user)
 
-;;; Vim keybindings globally
-(define-configuration buffer
+;;; Vim keybindings on web pages only — not on prompt/status/message buffers
+;;; Scoping to web-buffer prevents vi-normal bindings from eating q/w in hint prompts
+(define-configuration web-buffer
   ((default-modes (append '(vi-normal-mode) %slot-value%))))
-
-;;; Vi-style on-page hints (like qutebrowser) — bypasses prompt buffer
-;;; so q/w/etc. are typed as hint characters rather than triggering vi commands
-(define-configuration nyxt/mode/hint:hint-mode
-  ((nyxt/mode/hint:hinting-type :vi)))
 
 ;;; Start page
 (define-configuration browser
