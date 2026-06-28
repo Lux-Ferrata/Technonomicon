@@ -29,14 +29,6 @@
       }))
     ];
 
-    home-manager.users.xin.home.file.".config/qutebrowser/config.py" = {
-      source = ./_qutebrowser-config.py;
-      force = true;
-    };
-    home-manager.users.xin.home.file.".local/share/qutebrowser/userscripts/qute-bitwarden" = {
-      source = "${pkgs.qutebrowser}/share/qutebrowser/userscripts/qute-bitwarden";
-      executable = true;
-    };
     home-manager.users.xin.home.file.".config/nyxt/config.lisp" = {
       source = ./Nyxt/_nyxt-config.lisp;
       force = true;
