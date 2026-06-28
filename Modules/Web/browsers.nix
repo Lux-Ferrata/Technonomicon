@@ -57,6 +57,10 @@
         "hfjbmagddngcpeloejdejnfgbamkddxk;https://clients2.google.com/service/update2/crx" # Vimium C
       ];
 
+      "URLBlocklist" = [
+        "youtube.com/shorts*"
+      ];
+
       "ExtensionSettings" = {
         "hfjbmagddngcpeloejdejnfgbamkddxk" = {
           "policy_for_managed_users" = {
@@ -65,6 +69,16 @@
               map <c-f> LinkHints.activateMode
               map <c-t> Vomnibar.activateInNewTab
               map <c-n> Vomnibar.activate
+            '';
+          };
+        };
+        "cjpalhdlnbpafiamejdnhcphjbkeiagm" = {
+          "policy_for_managed_users" = {
+            "userFilters" = ''
+              youtube.com/shorts$document
+              youtube.com##ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])
+              youtube.com##ytd-reel-shelf-renderer
+              youtube.com##[is-shorts]
             '';
           };
         };
