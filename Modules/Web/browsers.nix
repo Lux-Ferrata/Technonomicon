@@ -38,11 +38,15 @@
       source = "${pkgs.qutebrowser}/share/qutebrowser/userscripts/qute-bitwarden";
       executable = true;
     };
+    home-manager.users.xin.home.file.".config/nyxt/config.lisp" = {
+      source = ./Nyxt/_nyxt-config.lisp;
+      force = true;
+    };
 
     home-manager.users.xin.xdg.mimeApps.defaultApplications = {
-      "text/html"              = "org.qutebrowser.qutebrowser.desktop";
-      "x-scheme-handler/http"  = "org.qutebrowser.qutebrowser.desktop";
-      "x-scheme-handler/https" = "org.qutebrowser.qutebrowser.desktop";
+      "text/html"              = "nyxt.desktop";
+      "x-scheme-handler/http"  = "nyxt.desktop";
+      "x-scheme-handler/https" = "nyxt.desktop";
     };
 
     environment.etc."brave/policies/managed/default.json".text = builtins.toJSON {
