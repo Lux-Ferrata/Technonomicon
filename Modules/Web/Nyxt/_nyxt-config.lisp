@@ -24,6 +24,18 @@
 (define-configuration browser
   ((default-cookie-policy :no-third-party)))
 
+;;; Close the blank window that finalize-startup creates unconditionally
+(define-configuration browser
+  ((after-startup-hook
+    (hooks:add-hook %slot-value%
+      (make-instance 'hooks:handler
+                     :fn (lambda (browser)
+                           (declare (ignore browser))
+                           (dolist (w (window-list))
+                             (when (string= "" (title (active-buffer w)))
+                               (ffi-window-delete w))))
+                     :name 'close-blank-startup-window)))))
+
 ;;; Downloads — straight to ~/Downloads
 (define-configuration browser
   ((download-path (make-instance 'download-directory
