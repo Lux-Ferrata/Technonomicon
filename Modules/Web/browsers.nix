@@ -54,7 +54,7 @@
         "nngceckbapebfimnlniiiahkandclblb;https://clients2.google.com/service/update2/crx" # Bitwarden
         "cjpalhdlnbpafiamejdnhcphjbkeiagm;https://clients2.google.com/service/update2/crx" # uBlock Origin
         "blaaajhemilngeeffpbfkdjjoefldkok;https://clients2.google.com/service/update2/crx" # LeechBlock NG
-        "hfjbmagddngcpeloejdejnfgbamkddxk;https://clients2.google.com/service/update2/crx" # Vimium C
+        "hfjbmagddngcpeloejdejnfgbamkjaeg;https://clients2.google.com/service/update2/crx" # Vimium C
       ];
 
       "URLBlocklist" = [
@@ -62,7 +62,7 @@
       ];
 
       "ExtensionSettings" = {
-        "hfjbmagddngcpeloejdejnfgbamkddxk" = {
+        "hfjbmagddngcpeloejdejnfgbamkjaeg" = {
           "policy_for_managed_users" = {
             "keyMappings" = ''
               unmapAll
