@@ -14,7 +14,11 @@
       "Bash(gh api *)",
       "Bash(gh search *)",
       "WebFetch(domain:git.outfoxxed.me)",
-      "Read(//sys/class/power_supply/**)"
+      "Read(//sys/class/power_supply/**)",
+      "Bash(journalctl *)",
+      "Bash(hyprctl monitors *)",
+      "Bash(hyprctl clients *)",
+      "Bash(systemctl --user show-environment)"
     ]
   }
 }

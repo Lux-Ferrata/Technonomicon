@@ -135,6 +135,7 @@
         show_startup_tips false
         show_release_notes false
         copy_on_select true
+        scrollback_editor "hx"
 
         keybinds {
           scroll {
