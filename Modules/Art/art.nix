@@ -1,7 +1,6 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-art = { pkgs, config, ... }:
     let
-      pureref = pkgs.callPackage (import ./PureRef/_pureref.nix) {};
       allusion = pkgs.callPackage (import ./Allusion/_allusion.nix) {};
     in {
 
@@ -22,24 +21,6 @@
         ffmpeg
         wl-color-picker
         pinta
-
-        (makeDesktopItem {
-          name = "allusion";
-          desktopName = "Allusion";
-          exec = "allusion"; # FIXED: System-wide path resolution
-          icon = "${./Allusion/_allusion-icon.png}";
-          terminal = false;
-          type = "Application";
-        })
-
-        (makeDesktopItem {
-          name = "pureref";
-          desktopName = "PureRef";
-          exec = "pureref"; # FIXED: System-wide path resolution
-          icon = "${./PureRef/_pureref-icon.png}";
-          terminal = false;
-          type = "Application";
-        })
       ];
 
       home-manager.users.xin.home.file.".config/OpenSCAD/OpenSCAD.conf".text = ''
