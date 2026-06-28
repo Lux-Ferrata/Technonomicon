@@ -24,7 +24,9 @@
 (define-configuration browser
   ((default-cookie-policy :no-third-party)))
 
-;;; Close the blank window that finalize-startup creates unconditionally
+;;; finalize-startup unconditionally calls (window-make browser) which creates a
+;;; blank window with a plain base `buffer'. The real window (opened by open-urls)
+;;; gets a `web-buffer'. Close any window whose active-buffer is not a web-buffer.
 (define-configuration browser
   ((after-startup-hook
     (hooks:add-hook %slot-value%
@@ -32,7 +34,7 @@
                      :fn (lambda (browser)
                            (declare (ignore browser))
                            (dolist (w (window-list))
-                             (when (string= "" (title (active-buffer w)))
+                             (unless (typep (active-buffer w) 'web-buffer)
                                (ffi-window-delete w))))
                      :name 'close-blank-startup-window)))))
 
