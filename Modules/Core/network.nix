@@ -10,6 +10,52 @@
         ::1 reddit.com
         ::1 www.reddit.com
         ::1 old.reddit.com
+
+        127.0.0.1 twitter.com
+        127.0.0.1 www.twitter.com
+        127.0.0.1 x.com
+        127.0.0.1 www.x.com
+        ::1 twitter.com
+        ::1 www.twitter.com
+        ::1 x.com
+        ::1 www.x.com
+
+        127.0.0.1 facebook.com
+        127.0.0.1 www.facebook.com
+        127.0.0.1 m.facebook.com
+        ::1 facebook.com
+        ::1 www.facebook.com
+        ::1 m.facebook.com
+
+        127.0.0.1 instagram.com
+        127.0.0.1 www.instagram.com
+        ::1 instagram.com
+        ::1 www.instagram.com
+
+        127.0.0.1 tiktok.com
+        127.0.0.1 www.tiktok.com
+        ::1 tiktok.com
+        ::1 www.tiktok.com
+
+        127.0.0.1 linkedin.com
+        127.0.0.1 www.linkedin.com
+        ::1 linkedin.com
+        ::1 www.linkedin.com
+
+        127.0.0.1 tumblr.com
+        127.0.0.1 www.tumblr.com
+        ::1 tumblr.com
+        ::1 www.tumblr.com
+
+        127.0.0.1 pinterest.com
+        127.0.0.1 www.pinterest.com
+        ::1 pinterest.com
+        ::1 www.pinterest.com
+
+        127.0.0.1 snapchat.com
+        127.0.0.1 www.snapchat.com
+        ::1 snapchat.com
+        ::1 www.snapchat.com
     '';
 
     time.timeZone = "America/Detroit";
