@@ -8,6 +8,6 @@ let
   };
 in
 pkgs.appimageTools.wrapType2 {
-  name = "allusion";
-  inherit src;
+  pname = "allusion";
+  inherit version src;
 }
