@@ -84,7 +84,6 @@
     '';
 
     security.sudo.extraConfig = "Defaults pwfeedback\n";
-    security.pam.services.greetd.enableGnomeKeyring = true;
 
     environment.sessionVariables = {
       NIXOS_OZONE_WL = "1";
