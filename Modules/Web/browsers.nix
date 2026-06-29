@@ -38,6 +38,8 @@
       "TorDisabled" = true;
       "IPFSCompanionEnabled" = false;
 
+      "RestoreOnStartup" = 5;
+
       "DefaultBrowserSettingEnabled" = false;
       "MetricsReportingEnabled" = false;
       "SearchSuggestEnabled" = false;
