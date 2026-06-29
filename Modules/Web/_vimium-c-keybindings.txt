@@ -16,3 +16,6 @@ map <c-t> Vomnibar.activateInNewTab
 
 # Open the Vomnibar in the current tab with Ctrl+N
 map <c-n> Vomnibar.activate
+
+# Copy current URL to clipboard with Ctrl+Y
+map <c-y> copyCurrentUrl
