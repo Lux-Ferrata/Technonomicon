@@ -19,3 +19,18 @@ map <c-n> Vomnibar.activate
 
 # Copy current URL to clipboard with Ctrl+Y
 map <c-y> copyCurrentUrl
+
+# ---------------------------------------------------------------------------
+# uBlock Origin — My Filters
+# Paste into: uBlock dashboard → My filters → Apply changes
+# ---------------------------------------------------------------------------
+
+! Block YouTube Shorts
+youtube.com##ytd-rich-shelf-renderer[is-shorts]
+youtube.com##ytd-reel-shelf-renderer
+youtube.com##ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])
+youtube.com##[is-shorts]
+youtube.com##ytd-guide-entry-renderer:has(a[href="/shorts"])
+youtube.com##ytd-mini-guide-entry-renderer:has(a[href="/shorts"])
+youtube.com/shorts
+||youtube.com/shorts$document
