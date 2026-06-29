@@ -41,7 +41,7 @@
       (pkgs.makeDesktopItem {
         name = "youtube";
         desktopName = "YouTube";
-        exec = "${pkgs.brave}/bin/brave --app=https://www.youtube.com --start-maximized";
+        exec = "${pkgs.brave}/bin/brave --app=https://www.youtube.com/feed/subscriptions --start-maximized";
         icon = "${icons.youtube}";
         terminal = false;
         categories = [ "Application" "Network" ];
