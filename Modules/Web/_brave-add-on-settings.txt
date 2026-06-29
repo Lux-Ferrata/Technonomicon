@@ -1,0 +1,40 @@
+# Vimium C key mappings
+# Paste these into: brave://extensions → Vimium C → Details → Extension options → Key mappings
+#
+# NOTE: These cannot be applied declaratively via Nix/managed policy.
+# Vimium C does not read keybindings from chrome.storage.managed.
+
+# Clear all default bindings first so only the ones below are active
+unmapAll
+
+# Open link hints with Ctrl+F (instead of the default 'f')
+# Lets you click any link on the page using the keyboard
+map <c-f> LinkHints.activateMode
+
+# Open the Vomnibar (address/search bar) in a new tab with Ctrl+T
+map <c-t> Vomnibar.activateInNewTab
+
+# Open the Vomnibar in the current tab with Ctrl+N
+map <c-n> Vomnibar.activate
+
+# Copy current URL to clipboard with Ctrl+Y
+map <c-y> copyCurrentUrl
+
+# Enter caret/visual mode with Ctrl+V
+# Once inside: v toggles selection, y yanks, arrow keys and Ctrl+arrows move — all built-in, not remappable
+map <c-v> enterVisualMode
+
+# ---------------------------------------------------------------------------
+# uBlock Origin — My Filters
+# Paste into: uBlock dashboard → My filters → Apply changes
+# ---------------------------------------------------------------------------
+
+! Block YouTube Shorts
+youtube.com##ytd-rich-shelf-renderer[is-shorts]
+youtube.com##ytd-reel-shelf-renderer
+youtube.com##ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])
+youtube.com##[is-shorts]
+youtube.com##ytd-guide-entry-renderer:has(a[href="/shorts"])
+youtube.com##ytd-mini-guide-entry-renderer:has(a[href="/shorts"])
+youtube.com/shorts
+||youtube.com/shorts$document
