@@ -26,6 +26,19 @@
         fi
       done
     '';
+
+    vimEdit = pkgs.writeShellScript "vim-edit" ''
+      ${pkgs.wtype}/bin/wtype -M ctrl -k a
+      sleep 0.15
+      ${pkgs.wtype}/bin/wtype -M ctrl -k c
+      sleep 0.15
+
+      export TMPFILE=$(mktemp /tmp/vim-edit-XXXXXX.md)
+      ${pkgs.wl-clipboard}/bin/wl-paste > "$TMPFILE"
+
+      ghostty --title=vim-edit -e bash -c \
+        'nvim "$TMPFILE"; ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPFILE"; rm -f "$TMPFILE"'
+    '';
   in {
 
     programs.hyprland.enable = true;
