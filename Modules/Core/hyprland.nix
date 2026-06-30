@@ -170,6 +170,7 @@
             valign           = center
             placeholder_text = Password
             dots_center      = true
+            outer_color      = rgba(00ffffee)
           }
         '';
 
