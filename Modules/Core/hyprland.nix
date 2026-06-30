@@ -1,21 +1,19 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-hyprland = { pkgs, ... }:
   let
-    toggleGrimoire = pkgs.writeShellScript "toggle-grimoire" ''
+    focusObsidian = pkgs.writeShellScript "focus-obsidian" ''
       if ${pkgs.hyprland}/bin/hyprctl clients -j \
-          | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "grimoire-inbox")' > /dev/null 2>&1; then
-        ${pkgs.hyprland}/bin/hyprctl dispatch togglespecialworkspace grimoire
+          | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "obsidian")' > /dev/null 2>&1; then
+        ${pkgs.hyprland}/bin/hyprctl dispatch focuswindow class:obsidian
       else
-        ${pkgs.hyprland}/bin/hyprctl dispatch exec \
-          "[workspace special:grimoire silent] ghostty --class=grimoire-inbox -e hx ~/Grimoire/Inbox.md"
+        obsidian
       fi
     '';
 
     startupApps = pkgs.writeShellScript "hyprland-startup-apps" ''
       sleep 1
-      ${pkgs.hyprland}/bin/hyprctl dispatch exec "[workspace special:obsidian silent] obsidian"
+      ${pkgs.hyprland}/bin/hyprctl dispatch exec "[silent] obsidian"
       ${pkgs.hyprland}/bin/hyprctl dispatch exec "[workspace special:discord silent] flatpak run com.discordapp.Discord"
-      ${pkgs.hyprland}/bin/hyprctl dispatch exec "[workspace special:grimoire silent] ghostty --class=grimoire-inbox -e hx ~/Grimoire/Inbox.md"
     '';
   in {
 
