@@ -10,10 +10,8 @@
       fi
     '';
 
-    startupApps = pkgs.writeShellScript "hyprland-startup-apps" ''
-      sleep 1
-      ${pkgs.hyprland}/bin/hyprctl dispatch exec "[workspace special:obsidian silent] obsidian"
-      ${pkgs.hyprland}/bin/hyprctl dispatch exec "flatpak run com.discordapp.Discord"
+    toggleObsidian = pkgs.writeShellScript "toggle-obsidian" ''
+      ${pkgs.hyprland}/bin/hyprctl dispatch togglespecialworkspace obsidian
     '';
   in {
 
