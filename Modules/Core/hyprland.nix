@@ -156,20 +156,6 @@
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
           hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
-          hl.bind(mainMod .. " + Space", hl.dsp.submap("leader"))
-
-          local function lbind(key, cmd)
-            hl.bind(key, hl.dsp.exec_cmd(cmd),    { submap = "leader" })
-            hl.bind(key, hl.dsp.submap("reset"),   { submap = "leader" })
-          end
-
-          lbind("G", "gtk-launch gemini")
-          lbind("Y", "gtk-launch youtube")
-          lbind("M", "gtk-launch G-Mail")
-          lbind("C", "gtk-launch G-Calendar")
-
-          hl.bind("Escape", hl.dsp.submap("reset"), { submap = "leader" })
-          hl.bind("Space",  hl.dsp.submap("reset"), { submap = "leader" })
         '';
 
         ".config/hypr/hyprlock.conf".text = ''
