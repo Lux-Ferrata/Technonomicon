@@ -264,12 +264,12 @@
 
               PanelWindow {
                   visible: Hyprland.submap !== "" && root.submapBinds.length > 0
-                  anchors { bottom: true; left: true; right: true }
+                  anchors { top: true; left: true; right: true }
                   implicitHeight: content.implicitHeight + 20
                   color: Qt.rgba(0.04, 0.04, 0.08, 0.95)
 
                   Rectangle {
-                      anchors { top: parent.top; left: parent.left; right: parent.right }
+                      anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
                       height: 1
                       color: "#00ffff"
                   }
