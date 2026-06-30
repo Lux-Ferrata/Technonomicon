@@ -164,10 +164,10 @@
               hl.bind(key, hl.dsp.submap("reset"))
             end
 
-            lbind("G", "brave --app=https://gemini.google.com")
-            lbind("Y", "brave --app=https://youtube.com")
-            lbind("M", "brave --app=https://mail.google.com")
-            lbind("C", "brave --app=https://calendar.google.com")
+            lbind("G", "gtk-launch gemini")
+            lbind("Y", "gtk-launch youtube")
+            lbind("M", "gtk-launch G-Mail")
+            lbind("C", "gtk-launch G-Calendar")
 
             hl.bind("Escape", hl.dsp.submap("reset"))
             hl.bind("Space",  hl.dsp.submap("reset"))
