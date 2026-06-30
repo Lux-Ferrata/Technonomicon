@@ -118,9 +118,9 @@
           hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())
           hl.bind(mainMod .. " + F",         hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
           hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("nemo"))
-          hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("${focusObsidian}"))
-          hl.bind(mainMod .. " + 0",         hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&filepath=inbox'"))
-          hl.bind(mainMod .. " + J",         hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&daily=true'"))
+          hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("obsidian"))
+          hl.bind(mainMod .. " + 0",         hl.dsp.exec_cmd("obsidian 'obsidian://open?vault=Grimoire&file=inbox'"))
+          hl.bind(mainMod .. " + J",         hl.dsp.exec_cmd("${openDailyNote}"))
           hl.bind(mainMod .. " + ALT + 9",   hl.dsp.exec_cmd("hyprctl dispatch togglespecialworkspace discord"))
 
           hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left"  }))
