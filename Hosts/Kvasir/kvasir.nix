@@ -15,11 +15,12 @@
 
       inputs.nixos-hardware.nixosModules.lenovo-thinkpad-t480s
       inputs.sops-nix.nixosModules.sops
-      inputs.hjem.nixosModules.hjem
+      inputs.home-manager.nixosModules.home-manager
 
       self.nixosModules.Tn-nix
       self.nixosModules.Tn-desktop
-      self.nixosModules.Tn-emacs
+      self.nixosModules.Tn-hyprland
+      self.nixosModules.Tn-neovim
       self.nixosModules.Tn-web-browsers
       self.nixosModules.Tn-web-apps
       self.nixosModules.Tn-network
@@ -29,6 +30,7 @@
       self.nixosModules.Tn-pdf
       self.nixosModules.Tn-games
       self.nixosModules.Tn-learning
+      self.nixosModules.Tn-mind
       self.nixosModules.Tn-art
       self.nixosModules.Tn-utf
       self.nixosModules.Tn-virtualization
@@ -60,11 +62,13 @@
 
         networking.hostName = "Kvasir";
 
-        hjem = {
-          extraModules = [ inputs.hjem-impure.hjemModules.default ];
-          users.xin = {
-            impure.enable = true;
-          };
+        services.logind.settings.Login.HandleLidSwitch = "suspend";
+
+        home-manager = {
+          useGlobalPkgs = true;
+          useUserPackages = true;
+          extraSpecialArgs = { inherit inputs; };
+          users.xin.home.stateVersion = "23.11";
         };
 
         users = {
@@ -84,6 +88,7 @@
               "input"
               "dialout"
               "plugdev"
+              "networkmanager"
             ];
           };
         };

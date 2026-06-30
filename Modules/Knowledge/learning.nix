@@ -2,7 +2,7 @@
   flake.nixosModules.Tn-learning = { pkgs, config, ... }: {
 
     environment.systemPackages = with pkgs; [
-      ledger
+      hledger
       fava
       beancount
       gnucash
@@ -10,8 +10,7 @@
       anki-bin
       zotero
       zathura
-      libation
-      pdfannots2json
+pdfannots2json
       (symlinkJoin {
         name = "rnote-wrapped";
         paths = [ rnote ];

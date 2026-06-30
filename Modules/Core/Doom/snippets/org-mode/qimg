@@ -1,5 +1,0 @@
-# -*- mode: snippet -*-
-# name: Quarto Inline Image
-# key: qimg
-# --
-@@md:![${1:Caption here}](${2:image.png})@@$0

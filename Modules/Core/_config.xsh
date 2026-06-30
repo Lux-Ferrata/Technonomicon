@@ -32,8 +32,8 @@ $LESS_TERMCAP_us = "\x1b[1;4;32m"    # Begin underline
 # =============================================================================
 # 2. DYNAMIC SESSION VARIABLES
 # =============================================================================
-$SUDO_EDITOR = "emacsclient -t -a ''"
-$EDITOR = "emacsclient -t -a ''"
+$SUDO_EDITOR = "nvim"
+$EDITOR = "nvim"
 
 # =============================================================================
 # 3. INIT SCRIPTS & EXTERNAL PLUGINS
@@ -52,6 +52,7 @@ execx($(starship init xonsh))
 
 # Clear screen on boot
 print('\n' * 100, end='')
+os.system("eza --icons --oneline --group-directories-first --color=always")
 
 # =============================================================================
 # 4. DIRECTORY ALIASES
@@ -65,32 +66,24 @@ aliases['dl'] = 'cd ~/Downloads'
 aliases['gst'] = 'git status -sb'
 aliases['gco'] = 'git checkout'
 aliases['gl'] = 'git log --oneline -n 10'
+aliases['cp']  = 'cp -r'
 aliases['cpv'] = 'rsync -h --progress'  # Modern rsync copy with progress bar
 
 # =============================================================================
 # 5. CORE EVENTS & HOOKS (Includes Auto-Eza)
 # =============================================================================
-@events.on_chdir
-def auto_ls(olddir, newdir, **kw):
-    # Vterm Directory Tracking
-    if 'vterm' in os.environ.get('INSIDE_EMACS', ''):
-        print(f"\x1b]51;A{newdir}\x1b\\", end='', flush=True)
+_auto_ls_cwd = [os.getcwd()]
 
-    # Automatic directory content list on every 'cd'
-    os.system("eza --icons --oneline --group-directories-first --color=always")
+@events.on_postcommand
+def auto_ls(cmd, rtn, out, ts, **kw):
+    current = os.getcwd()
+    if _auto_ls_cwd[0] != current:
+        _auto_ls_cwd[0] = current
+        os.system("eza --icons --oneline --group-directories-first --color=always")
 
 # =============================================================================
 # 6. CUSTOM SHELL UTILITIES & WRAPPERS
 # =============================================================================
-
-# --- Emacs vterm file opener ---
-def _eo_wrapper(args):
-    if not args:
-        print("Usage: eo <filename>")
-        return 1
-    file_path = os.path.abspath(args[0])
-    print(f"\x1b]51;Efind-file {file_path}\x1b\\", end='')
-aliases['eo'] = _eo_wrapper
 
 # --- Clipboard Utilities (Replaces OMZ 'copypath' & 'copyfile') ---
 def _copypath(args):
@@ -224,9 +217,26 @@ aliases.update({
     # System Lifecycle Controls
     'power-off': 'bash /etc/scripts/clean-power-off.sh',
     'logout': 'sudo kill -9 -1',
-    'restart': 'sudo reboot',
+    'restart': 'bash /etc/scripts/clean-reboot.sh',
 
     # Downloads & Compression
     'bzip': 'bzip3',
     'book-dl': 'aria2c -x 16 -s 16',
+
+    # Editors
+    'eo': 'nvim',
 })
+
+def _eon(args):
+    if not args:
+        print("Usage: eon <file>")
+        return 1
+    file = os.path.abspath(args[0])
+    wdir = os.path.dirname(file)
+    subprocess.Popen(
+        ['ghostty', '--working-directory', wdir, '-e', 'nvim', file],
+        start_new_session=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+aliases['eon'] = _eon

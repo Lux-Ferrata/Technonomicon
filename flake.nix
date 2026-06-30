@@ -16,21 +16,15 @@
     sops-nix.url = "github:Mic92/sops-nix";
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
 
-    hjem.url = "github:feel-co/hjem";
-    hjem.inputs.nixpkgs.follows = "nixpkgs";
-    hjem-impure.url = "github:Rexcrazy804/hjem-impure";
-    hjem-impure.inputs.nixpkgs.follows = "nixpkgs";
-
-    doom-emacs-unstraightened.url = "github:marienz/nix-doom-emacs-unstraightened";
-    ewm.url = "git+https://codeberg.org/ezemtsov/ewm";
-    app-launcher = {
-      url = "github:SebastienWae/app-launcher";
-      flake = false;
-    };
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     plover-flake.url = "github:openstenoproject/plover-flake";
 
     nix-flatpak.url = "github:gmodena/nix-flatpak";
+
+    lazyvim.url = "github:pfassina/lazyvim-nix";
+    lazyvim.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, import-tree, ... }:

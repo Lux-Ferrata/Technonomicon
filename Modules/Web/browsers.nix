@@ -1,14 +1,19 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-web-browsers = { pkgs, config, ... }: {
 
+    networking.nameservers = [ "1.1.1.3" "1.0.0.3" ];
+
     programs.chromium.enable = true;
     environment.systemPackages = [
+      pkgs.bitwarden-cli
+      pkgs.bemenu
       ((pkgs.brave.override {
         commandLineArgs = [
           "--enable-features=UseOzonePlatform"
           "--ozone-platform=wayland"
           "--disable-features=BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
           "--hide-crash-restore-bubble"
+          "--password-store=basic"
         ];
       }).overrideAttrs (oldAttrs: {
         postFixup = (oldAttrs.postFixup or "") + ''
@@ -22,13 +27,6 @@
       }))
     ];
 
-    hjem.users.xin = {
-      enable = true;
-      files = {
-        ".config/surfingkeys/config.js".source = ./_surfingkeys.js;
-      };
-    };
-
     environment.etc."brave/policies/managed/default.json".text = builtins.toJSON {
       "PasswordManagerEnabled" = false;
       "AutofillAddressEnabled" = false;
@@ -39,6 +37,8 @@
       "BraveVPNMode" = 0; # 0 = Disabled
       "TorDisabled" = true;
       "IPFSCompanionEnabled" = false;
+
+      "RestoreOnStartup" = 5;
 
       "DefaultBrowserSettingEnabled" = false;
       "MetricsReportingEnabled" = false;
@@ -52,13 +52,40 @@
       "ImagesForNewTabPageEnabled" = false;
 
       "ExtensionInstallForcelist" = [
-        "gfbliohnnapiefjpjlpjnehglfpaknnc;https://clients2.google.com/service/update2/crx" # Surfingkeys
         "eimadpbcbfnmbkopoojfekhnkhdbieeh;https://clients2.google.com/service/update2/crx" # Dark Reader
         "nngceckbapebfimnlniiiahkandclblb;https://clients2.google.com/service/update2/crx" # Bitwarden
         "cjpalhdlnbpafiamejdnhcphjbkeiagm;https://clients2.google.com/service/update2/crx" # uBlock Origin
-        "dndlcbaomdoggooaficldplkcmkfpgff;https://clients2.google.com/service/update2/crx" # New Tab, New Window
         "blaaajhemilngeeffpbfkdjjoefldkok;https://clients2.google.com/service/update2/crx" # LeechBlock NG
+        "hfjbmagddngcpeloejdejnfgbamkjaeg;https://clients2.google.com/service/update2/crx" # Vimium C
+        "dndlcbaomdoggooaficldplkcmkfpgff;https://clients2.google.com/service/update2/crx" # New Tab, New Window
       ];
+
+      "URLBlocklist" = [
+        "youtube.com/shorts*"
+      ];
+
+      "ExtensionSettings" = {
+        "hfjbmagddngcpeloejdejnfgbamkjaeg" = {
+          "policy_for_managed_users" = {
+            "keyMappings" = ''
+              unmapAll
+              map <c-f> LinkHints.activateMode
+              map <c-t> Vomnibar.activateInNewTab
+              map <c-n> Vomnibar.activate
+            '';
+          };
+        };
+        "cjpalhdlnbpafiamejdnhcphjbkeiagm" = {
+          "policy_for_managed_users" = {
+            "userFilters" = ''
+              youtube.com/shorts$document
+              youtube.com##ytd-rich-section-renderer:has(ytd-rich-shelf-renderer[is-shorts])
+              youtube.com##ytd-reel-shelf-renderer
+              youtube.com##[is-shorts]
+            '';
+          };
+        };
+      };
     };
 
   };

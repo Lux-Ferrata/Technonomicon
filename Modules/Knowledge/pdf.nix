@@ -13,7 +13,7 @@
       })
     ];
 
-    environment.etc."sioyek/prefs_user.config".text = ''
+    home-manager.users.xin.home.file.".config/sioyek/prefs_user.config".text = ''
       # --- UI & VISUALS ---
   # Start in dark mode automatically
   default_dark_mode 1
@@ -45,11 +45,11 @@
   search_url_a https://arxiv.org/search/?query=
   search_url_l http://libgen.rs/search.php?req=
 
-  # 3. Inverse Search (Click PDF -> Jump to Doom Emacs)
-  inverse_search_command emacsclient -n +%2 "%1"
+  # 3. Inverse Search (Click PDF -> Jump to Helix)
+  inverse_search_command hx "%1:%2"
     '';
 
-    environment.etc."sioyek/keys_user.config".text = ''
+    home-manager.users.xin.home.file.".config/sioyek/keys_user.config".text = ''
       # --- CUSTOM NAVIGATION ---
   # Rebind up and down from j/k to u/e
   move_up u

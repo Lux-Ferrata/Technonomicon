@@ -1,9 +1,0 @@
-# -*- mode: snippet -*-
-# name: mermaid
-# uuid: mermaid
-# key: <mer
-# condition: t
-# --
-#+begin_src mermaid :file ${1:diagram}.svg
-$0
-#+end_src

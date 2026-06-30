@@ -1,32 +1,21 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-communication = { pkgs, ... }: {
 
-    hjem.users.xin = {
-      enable = true;
-      files = {
-        ".config/discord/settings.json".text = builtins.toJSON {
-          SKIP_HOST_UPDATE = true;
-        };
-        ".config/mako/config".text = ''
-          default-timeout=3000
-        '';
-      };
-    };
+    imports = [ inputs.nix-flatpak.nixosModules.nix-flatpak ];
 
-    systemd.user.services.mako = {
-      description = "Mako notification daemon for EWM layer-shell support";
-      wantedBy = [ "graphical-session.target" ];
-      serviceConfig = {
-        ExecStart = "${pkgs.mako}/bin/mako";
-        Restart = "on-failure";
-      };
+    services.flatpak = {
+      enable = true;
+      remotes = [{
+        name     = "flathub";
+        location = "https://dl.flathub.org/repo/flathub.flatpakrepo";
+      }];
+      packages = [
+        { appId = "com.discordapp.Discord"; origin = "flathub"; }
+      ];
     };
 
     environment.systemPackages = with pkgs; [
-      #  slack
-      #  discord
       newsflash
-      mako
     ];
   };
 }

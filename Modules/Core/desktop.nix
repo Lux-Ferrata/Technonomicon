@@ -1,9 +1,6 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-desktop = { pkgs, pkgs-stable, config, ... }: {
 
-    imports = [ inputs.ewm.nixosModules.default ];
-    programs.ewm.enable = true;
-
     hardware = {
       bluetooth.enable = true;
       graphics.enable = true;
@@ -36,7 +33,7 @@
           middleEmulation = false;
         };
       };
-      gnome.gnome-keyring.enable = true;
+      upower.enable = true;
       pulseaudio.enable = false;
       pipewire = {
         enable = true;
@@ -60,6 +57,7 @@
       iosevka-comfy.comfy-wide-motion
       iosevka-comfy.comfy-wide-motion-duo
       nerd-fonts.symbols-only
+      nerd-fonts.jetbrains-mono
       jetbrains-mono
       sarasa-gothic
       noto-fonts
@@ -85,13 +83,18 @@
       KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
     '';
 
-    security.pam.services.swaylock = {};
+    security.sudo.extraConfig = "Defaults pwfeedback\n";
 
     environment.sessionVariables = {
       NIXOS_OZONE_WL = "1";
       ELECTRON_OZONE_PLATFORM_HINT = "auto";
       QT_QPA_PLATFORM = "wayland";
       QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
+      QT_AUTO_SCREEN_SCALE_FACTOR = "0";
+      QT_SCALE_FACTOR = "1";
+      GDK_SCALE = "1";
+      GDK_BACKEND = "wayland,x11";
+      ANKI_WAYLAND = "1";
       NIXPKGS_ALLOW_UNFREE = "1";
     };
 
@@ -100,7 +103,6 @@
       slurp
       wtype
       blueman
-      swaylock
       gromit-mpx
       pavucontrol
       wl-clipboard
@@ -133,48 +135,56 @@
       };
     };
 
-    programs.dconf = {
-      enable = true;
-      profiles.user.databases = [{
-        settings = {
-          "org/gnome/desktop/interface" = {
-            color-scheme = "prefer-dark";
-            gtk-theme = "Adwaita-dark";
-          };
-          "org/virt-manager/virt-manager/connections" = {
-            autoconnect = [ "qemu:///system" ];
-            uris = [ "qemu:///system" ];
-          };
+    programs.dconf.enable = true;
+
+    home-manager.users.xin = {
+      dconf.settings = {
+        "org/gnome/desktop/interface" = {
+          color-scheme = "prefer-dark";
+          gtk-theme = "Adwaita-dark";
         };
-      }];
-    };
+        "org/nemo/preferences" = {
+          show-hidden-files = false;
+        };
+        "org/virt-manager/virt-manager/connections" = {
+          autoconnect = [ "qemu:///system" ];
+          uris = [ "qemu:///system" ];
+        };
+      };
 
-    environment.etc = {
-      "xdg/user-dirs.defaults".text = ''
-        DESKTOP=Archive
-        DOWNLOAD=Downloads
-        TEMPLATES=Projects
-        PUBLICSHARE=Projects
-        DOCUMENTS=Media
-        MUSIC=Media
-        PICTURES=Media
-        VIDEOS=Media
-      '';
-      "xdg/fcitx5/config".source = ./_fcitx5-config;
+      gtk = {
+        enable = true;
+        theme.name = "Adwaita-dark";
+        iconTheme = {
+          package = pkgs.adwaita-icon-theme;
+          name    = "Adwaita";
+        };
+        gtk3.extraConfig.gtk-application-prefer-dark-theme = 1;
+        gtk4 = {
+          theme.name = "Adwaita-dark";
+          extraConfig.gtk-application-prefer-dark-theme = 1;
+        };
+      };
 
-      "xdg/gromit-mpx.cfg".source = ./_gromit-mpx.cfg;
-      "xdg/gromit-mpx.ini".source = ./_gromit-mpx.ini;
+      xdg.userDirs = {
+        enable = true;
+        createDirectories = false;
+        setSessionVariables = true;
+        desktop     = "$HOME/Archive";
+        download    = "$HOME/Downloads";
+        templates   = "$HOME/Projects";
+        publicShare = "$HOME/Projects";
+        documents   = "$HOME/Media";
+        music       = "$HOME/Media";
+        pictures    = "$HOME/Media";
+        videos      = "$HOME/Media";
+      };
 
-      "gtk-3.0/settings.ini".text = ''
-        [Settings]
-        gtk-theme-name=Adwaita-dark
-        gtk-application-prefer-dark-theme=1
-      '';
-      "gtk-4.0/settings.ini".text = ''
-        [Settings]
-        gtk-theme-name=Adwaita-dark
-        gtk-application-prefer-dark-theme=1
-      '';
+      home.file = {
+        ".config/fcitx5/config".source = ./_fcitx5-config;
+        ".config/gromit-mpx.cfg".source = ./_gromit-mpx.cfg;
+        ".config/gromit-mpx.ini".source = ./_gromit-mpx.ini;
+      };
     };
 
     services.logind.settings.Login.HandleSuspend = "ignore";

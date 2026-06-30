@@ -3,7 +3,6 @@
 
     programs.xonsh = {
       enable = true;
-      config = builtins.readFile ./_config.xsh;
       extraPackages = ps: [
         (ps.buildPythonPackage {
           pname = "xontrib-fzf-widgets";
@@ -40,14 +39,28 @@
       nix-direnv.enable = true;
     };
 
-    environment.etc."gitconfig".source = ./_gitconfig;
-    environment.etc."gitignore_global".text = ''
-      *~
-    .*~
-    #*#
-    \#*\#
-    .*.swp
-    '';
+    home-manager.users.xin = {
+      home.file.".config/xonsh/rc.xsh".source = ./_config.xsh;
+
+      programs.git = {
+        enable = true;
+        settings = {
+          user.name = "xin";
+          user.email = "git@ironshark.org";
+          alias = {
+            save = "! msg=$(gum write --placeholder 'Commit message...') && [ -n \"$msg\" ] && git add . && git commit -m \"$msg\"";
+            send = "! git status && echo -n 'Commit Message: ' && read -r CommitMessage && git add . && git commit -m \"$CommitMessage\" && git push";
+            unstage = "restore --staged";
+            history = "log --graph --pretty=oneline";
+            last = "log -1 HEAD";
+          };
+          init.defaultBranch = "main";
+          pull.rebase = false;
+          push.default = "current";
+        };
+        ignores = [ "*~" ".*~" "#*#" "\\#*\\#" ".*.swp" ];
+      };
+    };
 
     programs.starship = {
       enable = true;
@@ -101,11 +114,28 @@
       };
     };
 
+    environment.etc."scripts/clean-power-off.sh" = {
+      mode = "0755";
+      text = ''
+        #!/usr/bin/env bash
+        trash-empty 10
+        systemctl poweroff
+      '';
+    };
+
+    environment.etc."scripts/clean-reboot.sh" = {
+      mode = "0755";
+      text = ''
+        #!/usr/bin/env bash
+        trash-empty 10
+        systemctl reboot
+      '';
+    };
+
     environment.systemPackages = with pkgs; [
       nix-your-shell
       gitFull
       git-lfs
-      ghostty
       btop
       nmon
       kmon
@@ -128,7 +158,6 @@
       eza
       entr
       progress
-      copyq
       zip
       caligula
       gum
