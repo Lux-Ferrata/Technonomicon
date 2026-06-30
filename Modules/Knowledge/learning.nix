@@ -10,8 +10,7 @@
       anki-bin
       zotero
       zathura
-      libation
-      pdfannots2json
+pdfannots2json
       (symlinkJoin {
         name = "rnote-wrapped";
         paths = [ rnote ];
