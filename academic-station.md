@@ -1,11 +1,4 @@
-### Adding (additional recommendations)
-
-Add wl-kbptr, and screen shoot macro
-pavucontrol on right click
-add speaker icon to sound tray item
-helix save on switch to normal mode
-fix discord and obsidian special workspaces
-
+# Packages to Add 
 | Package | Why |
 |---------|-----|
 | `typst` + `tinymist` | Modern LaTeX alternative — compiles in milliseconds, cleaner syntax, first-class math |
@@ -38,12 +31,8 @@ fix discord and obsidian special workspaces
 | `hyprpicker` | Wayland color picker (replaces `wl-color-picker`) |
 | `satty` | Screenshot annotation tool |
 | `wf-recorder` | Lightweight Wayland screen recorder |
-| `awww` | Animated wallpaper daemon (`pkgs.awww` — upstream renamed from `swww`) |
-| `wlogout` | Styled logout/poweroff/reboot screen |
 | `nwg-look` | GTK theme configurator for Wayland |
-| `hyprshot` | Hyprland-aware screenshot wrapper |
 | **Terminal tools** | | |
-| `yazi` | Blazing-fast TUI file manager with image previews |
 | `glow` | Render markdown in terminal |
 | `presenterm` | Markdown-based terminal presentations |
 | `frogmouth` | TUI markdown reader with navigation |
