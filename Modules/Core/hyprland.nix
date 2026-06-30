@@ -3,8 +3,7 @@
   let
     startupApps = pkgs.writeShellScript "hyprland-startup-apps" ''
       sleep 1
-      ${pkgs.hyprland}/bin/hyprctl dispatch exec "[silent] obsidian"
-      ${pkgs.hyprland}/bin/hyprctl dispatch exec "[workspace special:discord silent] flatpak run com.discordapp.Discord"
+      ${pkgs.hyprland}/bin/hyprctl dispatch exec "flatpak run com.discordapp.Discord"
     '';
   in {
 
