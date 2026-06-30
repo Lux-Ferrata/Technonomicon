@@ -203,6 +203,21 @@
             }
           '';
 
+          anki = ''
+            return {
+              "rareitems/anki.nvim",
+              dependencies = { "nvim-lua/plenary.nvim" },
+              lazy = false,
+              opts = {
+                tex_support = false,
+                models = {
+                  ["Basic"]                     = "Default",
+                  ["Basic (and reversed card)"] = "Default",
+                },
+              },
+            }
+          '';
+
           lsp = ''
             return {
               "neovim/nvim-lspconfig",
