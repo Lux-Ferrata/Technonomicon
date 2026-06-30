@@ -1,6 +1,31 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-hyprland = { pkgs, ... }:
   let
+    activateObsidian = pkgs.writeShellScript "activate-obsidian" ''
+      ITEMS=$(${pkgs.glib}/bin/gdbus call --session \
+        --dest org.kde.StatusNotifierWatcher \
+        --object-path /StatusNotifierWatcher \
+        --method org.freedesktop.DBus.Properties.Get \
+        "org.kde.StatusNotifierWatcher" "RegisteredStatusNotifierItems" 2>/dev/null \
+        | grep -oP "'\K[^']+")
+
+      for ITEM in $ITEMS; do
+        DEST="''${ITEM%%/*}"
+        OBJ="/''${ITEM#*/}"
+
+        TOOLTIP=$(${pkgs.glib}/bin/gdbus call --session \
+          --dest "$DEST" --object-path "$OBJ" \
+          --method org.freedesktop.DBus.Properties.Get \
+          "org.kde.StatusNotifierItem" "ToolTip" 2>/dev/null)
+
+        if echo "$TOOLTIP" | grep -q "Obsidian"; then
+          ${pkgs.glib}/bin/gdbus call --session \
+            --dest "$DEST" --object-path "$OBJ" \
+            --method org.kde.StatusNotifierItem.Activate 0 0
+          exit 0
+        fi
+      done
+    '';
   in {
 
     programs.hyprland.enable = true;
