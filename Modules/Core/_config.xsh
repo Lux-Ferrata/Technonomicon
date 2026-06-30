@@ -70,9 +70,14 @@ aliases['cpv'] = 'rsync -h --progress'  # Modern rsync copy with progress bar
 # =============================================================================
 # 5. CORE EVENTS & HOOKS (Includes Auto-Eza)
 # =============================================================================
-@events.on_chdir
-def auto_ls(olddir, newdir, **kw):
-    os.system("eza --icons --oneline --group-directories-first --color=always")
+_auto_ls_cwd = [os.getcwd()]
+
+@events.on_postcommand
+def auto_ls(cmd, rtn, out, ts, **kw):
+    current = os.getcwd()
+    if _auto_ls_cwd[0] != current:
+        _auto_ls_cwd[0] = current
+        os.system("eza --icons --oneline --group-directories-first --color=always")
 
 # =============================================================================
 # 6. CUSTOM SHELL UTILITIES & WRAPPERS
