@@ -1,15 +1,6 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-hyprland = { pkgs, ... }:
   let
-    smartClose = pkgs.writeShellScript "smart-close" ''
-      if ${pkgs.hyprland}/bin/hyprctl activewindow -j \
-          | ${pkgs.jq}/bin/jq -e '.class == "obsidian"' > /dev/null 2>&1; then
-        ${pkgs.hyprland}/bin/hyprctl dispatch movetoworkspacesilent special:obsidian
-      else
-        ${pkgs.hyprland}/bin/hyprctl dispatch closewindow activewindow
-      fi
-    '';
-
   in {
 
     programs.hyprland.enable = true;
