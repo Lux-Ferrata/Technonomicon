@@ -158,7 +158,6 @@
       eza
       entr
       progress
-      copyq
       zip
       caligula
       gum
