@@ -82,7 +82,7 @@
 
           hl.window_rule({
             name   = "grimoire-inbox-float",
-            match  = { class = "grimoire-inbox" },
+            match  = { title = "grimoire-inbox" },
             float  = true,
             size   = "900 600",
             center = true,
