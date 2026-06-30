@@ -33,10 +33,13 @@
     });
 
     wlKbptrFloat = pkgs.writeShellScript "wl-kbptr-float" ''
-      while ${pkgs.hyprland}/bin/hyprctl clients -j \
-        | ${pkgs.jq}/bin/jq -r '.[] | select(.floating == true) | "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"' \
-        | ${wlKbptr}/bin/wl-kbptr -o modes=floating -o cancellation_status_code=1
-      do true; done
+      while true; do
+        WS=$(${pkgs.hyprland}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
+        WINS=$(${pkgs.hyprland}/bin/hyprctl clients -j \
+          | ${pkgs.jq}/bin/jq -r --argjson ws "$WS" \
+            '.[] | select(.workspace.id == $ws and .mapped) | "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"')
+        echo "$WINS" | ${wlKbptr}/bin/wl-kbptr -o modes=floating -o cancellation_status_code=1 || break
+      done
     '';
 
     wlKbptrTile = pkgs.writeShellScript "wl-kbptr-tile" ''
