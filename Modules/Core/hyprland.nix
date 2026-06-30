@@ -10,9 +10,6 @@
       fi
     '';
 
-    toggleObsidian = pkgs.writeShellScript "toggle-obsidian" ''
-      ${pkgs.hyprland}/bin/hyprctl dispatch togglespecialworkspace obsidian
-    '';
   in {
 
     programs.hyprland.enable = true;
