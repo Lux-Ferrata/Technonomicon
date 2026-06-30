@@ -22,6 +22,9 @@
     plover-flake.url = "github:openstenoproject/plover-flake";
 
     nix-flatpak.url = "github:gmodena/nix-flatpak";
+
+    lazyvim.url = "github:pfassina/lazyvim-nix";
+    lazyvim.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, import-tree, ... }:
