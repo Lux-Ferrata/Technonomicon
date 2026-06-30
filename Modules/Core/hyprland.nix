@@ -61,6 +61,7 @@
     xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
 
     environment.systemPackages = with pkgs; [
+      wlKbptr
       anyrun
       hypridle
       bibata-cursors
