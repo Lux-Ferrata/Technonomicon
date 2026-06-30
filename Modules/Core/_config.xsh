@@ -66,6 +66,7 @@ aliases['dl'] = 'cd ~/Downloads'
 aliases['gst'] = 'git status -sb'
 aliases['gco'] = 'git checkout'
 aliases['gl'] = 'git log --oneline -n 10'
+aliases['cp']  = 'cp -r'
 aliases['cpv'] = 'rsync -h --progress'  # Modern rsync copy with progress bar
 
 # =============================================================================
