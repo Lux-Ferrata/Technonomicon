@@ -89,7 +89,7 @@
             hl.exec_cmd("blueman-applet")
             hl.exec_cmd("copyq --start-server")
             hl.exec_cmd("obsidian")
-            hl.exec_cmd("flatpak run com.discordapp.Discord")
+            hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
           end)
 
           hl.config({
