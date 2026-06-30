@@ -48,6 +48,7 @@
           user.name = "xin";
           user.email = "git@ironshark.org";
           alias = {
+            save = "! msg=$(gum write --placeholder 'Commit message...') && [ -n \"$msg\" ] && git add . && git commit -m \"$msg\"";
             send = "! git status && echo -n 'Commit Message: ' && read -r CommitMessage && git add . && git commit -m \"$CommitMessage\" && git push";
             unstage = "restore --staged";
             history = "log --graph --pretty=oneline";
