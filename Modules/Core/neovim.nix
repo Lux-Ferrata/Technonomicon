@@ -122,6 +122,18 @@
     };
 
     home-manager.users.xin.home.file = {
+      ".config/yazi/keymap.toml".text = ''
+        [[manager.prepend_keymap]]
+        on   = [ "d" ]
+        run  = "shell 'trash-put \"$@\"' --confirm"
+        desc = "Move to trash"
+
+        [[manager.prepend_keymap]]
+        on   = [ "D" ]
+        run  = "remove --permanently"
+        desc = "Permanently delete"
+      '';
+
       ".config/ghostty/config".text = ''
         confirm-close-surface = false
         command = zellij
