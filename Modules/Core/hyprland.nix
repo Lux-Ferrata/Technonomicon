@@ -27,6 +27,19 @@
       done
     '';
 
+    wlKbptr = pkgs.wl-kbptr.overrideAttrs (oldAttrs: {
+      mesonFlags = (oldAttrs.mesonFlags or []) ++ [ "-Dopencv=enabled" ];
+      buildInputs = (oldAttrs.buildInputs or []) ++ [ pkgs.opencv ];
+    });
+
+    wlKbptrFloat = pkgs.writeShellScript "wl-kbptr-float" ''
+      while ${wlKbptr}/bin/wl-kbptr -o mode=floating -o cancellation_status_code=1; do true; done
+    '';
+
+    wlKbptrTile = pkgs.writeShellScript "wl-kbptr-tile" ''
+      while ${wlKbptr}/bin/wl-kbptr -o mode=tile -o cancellation_status_code=1; do true; done
+    '';
+
     vimEdit = pkgs.writeShellScript "vim-edit" ''
       ${pkgs.wtype}/bin/wtype -M ctrl -k a
       sleep 0.15
