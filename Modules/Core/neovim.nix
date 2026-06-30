@@ -194,7 +194,7 @@
               dependencies = { "nvim-lua/plenary.nvim" },
               opts = {
                 workspaces = {
-                  { name = "vault", path = "~/Notes" },
+                  { name = "Grimoire", path = "~/Grimoire" },
                 },
                 follow_url_func = function(url)
                   vim.fn.jobstart({ "xdg-open", url })
