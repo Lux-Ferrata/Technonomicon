@@ -201,7 +201,6 @@
               }
 
               Notifications {}
-              WhichKey {}
           }
         '';
 
