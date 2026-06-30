@@ -1,0 +1,250 @@
+{ inputs, ... }: {
+
+  flake.nixosModules.Tn-neovim = { pkgs, ... }:
+  let
+    previewImage = pkgs.writeShellScriptBin "preview-image" ''
+      path="$1"
+      [ -z "$path" ] && exit 1
+      [[ "$path" != /* ]] && path="$(pwd)/$path"
+      ${pkgs.imv}/bin/imv "$path" & disown
+    '';
+
+    openInGhostty = pkgs.writeShellScriptBin "open-in-ghostty" ''
+      file="$1"
+      if [ -z "$file" ] || [ "$file" = "[scratch]" ]; then
+        dir="$HOME"
+      else
+        dir=$(dirname "$(realpath "$file")")
+      fi
+      ghostty --working-directory "$dir" &
+      disown
+    '';
+
+    openInObsidian = pkgs.writeShellScriptBin "open-in-obsidian" ''
+      if [ -z "$1" ] || [ "$1" = "[scratch]" ]; then
+        exit 1
+      fi
+      FILE_PATH=$(realpath "$1")
+      ENCODED_PATH=$(${pkgs.python3}/bin/python3 -c \
+        "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" \
+        "$FILE_PATH")
+      ${pkgs.xdg-utils}/bin/xdg-open "obsidian://open?path=$ENCODED_PATH"
+      hyprctl dispatch focuswindow "class:^(obsidian)$" \
+        || hyprctl dispatch focuswindow "class:^(Obsidian)$"
+    '';
+  in {
+
+    environment.systemPackages = with pkgs; [
+      previewImage
+      openInGhostty
+      openInObsidian
+      imv
+      zellij
+      lazygit
+      ghostty
+      # JS / TypeScript
+      nodejs
+      typescript-language-server
+      prettier
+      # File Management
+      yazi
+      # Git
+      delta
+      # DAP Debug Adapters
+      lldb
+      python3Packages.debugpy
+      # Accounting
+      beancount
+      # AI Coding
+      aider-chat
+      # Markdown LSP
+      marksman
+      markdown-oxide
+      # General Tooling
+      qalculate-gtk
+      claude-code
+      sqlite
+      gdb
+      # Export Tooling
+      pandoc
+      # Chart Tooling
+      mermaid-cli
+      drawio
+      pdf2svg
+      # PDF Tooling
+      poppler
+      # LaTeX
+      texlive.combined.scheme-full
+      # Spell Checking
+      hunspell
+      hunspellDicts.en_US
+      # Haskell
+      ghc cabal-install haskell-language-server haskellPackages.hoogle
+      # Nix
+      nixfmt
+      nixd
+      # Python
+      python3 pyright ruff black
+      # BQN
+      cbqn
+      # Bash / Shell
+      shellcheck shfmt
+      # Scheme & Racket
+      guile racket
+      # C
+      clang-tools
+      # Zig
+      zig zls
+      # Assembly & Forth
+      nasm gforth
+      # Verilog & VHDL
+      verilator verible ghdl vhdl-ls
+      # Jupyter Notebooks
+      zeromq
+      python3Packages.jupyter
+    ];
+
+    home-manager.users.xin.programs.vscodium = {
+      enable = true;
+      profiles.default = {
+        extensions = with pkgs.vscode-extensions; [
+          arcticicestudio.nord-visual-studio-code
+        ];
+        userSettings = {
+          "workbench.colorTheme"           = "Nord";
+          "editor.fontFamily"              = "'JetBrains Mono', monospace";
+          "editor.fontSize"                = 14;
+          "editor.lineNumbers"             = "relative";
+          "editor.minimap.enabled"         = false;
+          "workbench.activityBar.location" = "hidden";
+        };
+      };
+    };
+
+    home-manager.users.xin.home.file = {
+      ".config/ghostty/config".text = ''
+        confirm-close-surface = false
+        command = zellij
+      '';
+
+      ".config/zellij/config.kdl".text = ''
+        pane_frames false
+        simplified_ui true
+        default_layout "bare"
+        show_startup_tips false
+        show_release_notes false
+        copy_on_select true
+        scrollback_editor "nvim"
+
+        keybinds {
+          scroll {
+            bind "Up"       { ScrollUp; }
+            bind "Down"     { ScrollDown; }
+            bind "PageUp"   { PageScrollUp; }
+            bind "PageDown" { PageScrollDown; }
+            bind "Home"     { ScrollToTop; }
+            bind "End"      { ScrollToBottom; }
+          }
+        }
+      '';
+
+      ".config/zellij/layouts/bare.kdl".text = ''
+        layout {
+          pane
+        }
+      '';
+    };
+
+    home-manager.users.xin = {
+      imports = [ inputs.lazyvim.homeManagerModules.default ];
+
+      programs.lazyvim = {
+        enable = true;
+
+        extras = {
+          lang.nix        = { enable = true; };
+          lang.python     = { enable = true; installDependencies = false; };
+          lang.typescript = { enable = true; installDependencies = false; };
+        };
+
+        plugins = {
+
+          colorscheme = ''
+            return {
+              "shaunsingh/nord.nvim",
+              priority = 1000,
+              config = function()
+                vim.g.nord_contrast               = true
+                vim.g.nord_borders                = false
+                vim.g.nord_disable_background     = false
+                vim.g.nord_cursorline_transparent  = false
+                vim.g.nord_italic                 = true
+                vim.g.nord_bold                   = false
+                require("nord").set()
+              end,
+            }
+          '';
+
+          obsidian = ''
+            return {
+              "epwalsh/obsidian.nvim",
+              version = "*",
+              lazy = true,
+              ft = "markdown",
+              dependencies = { "nvim-lua/plenary.nvim" },
+              opts = {
+                workspaces = {
+                  { name = "vault", path = "~/Notes" },
+                },
+                follow_url_func = function(url)
+                  vim.fn.jobstart({ "xdg-open", url })
+                end,
+              },
+            }
+          '';
+
+          lsp = ''
+            return {
+              "neovim/nvim-lspconfig",
+              opts = {
+                servers = {
+                  hls      = {},
+                  clangd   = {},
+                  zls      = {},
+                  marksman = {},
+                },
+              },
+            }
+          '';
+        };
+
+        config = {
+          options = ''
+            vim.opt.relativenumber = true
+            vim.opt.cursorline     = true
+            vim.opt.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50"
+          '';
+
+          keymaps = ''
+            vim.keymap.set("i", "<Esc>", "<Esc>:w<CR>", { desc = "Normal + save" })
+            vim.keymap.set("i", "<C-c>", "<Esc>:w<CR>", { desc = "Normal + save" })
+
+            vim.keymap.set("n", "<leader>o", function()
+              vim.fn.jobstart({ "open-in-obsidian", vim.fn.expand("%:p") })
+            end, { desc = "Open in Obsidian" })
+
+            vim.keymap.set("v", "<leader>p", function()
+              local sel = vim.fn.expand("<cfile>")
+              vim.fn.jobstart({ "preview-image", sel })
+            end, { desc = "Preview image" })
+
+            vim.keymap.set("n", "<leader>t", function()
+              vim.fn.jobstart({ "open-in-ghostty", vim.fn.expand("%:p") })
+            end, { desc = "Open in Ghostty" })
+          '';
+        };
+      };
+    };
+
+  };
+}
