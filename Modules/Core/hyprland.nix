@@ -37,22 +37,7 @@
       ${pkgs.wl-clipboard}/bin/wl-paste > "$TMPFILE"
 
       ghostty --title=vim-edit -e bash -c \
-        'nvim "$TMPFILE"; ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPFILE"; rm -f "$TMPFILE"; (sleep 0.5 && ${pkgs.wtype}/bin/wtype -M ctrl -k v) &'
-    '';
-
-    vimEditClose = pkgs.writeShellScript "vim-edit-close" ''
-      ACTIVE=$(${pkgs.hyprland}/bin/hyprctl activewindow -j)
-      TITLE=$(echo "$ACTIVE" | ${pkgs.jq}/bin/jq -r '.title')
-
-      if [ "$TITLE" = "vim-edit" ]; then
-        ${pkgs.wtype}/bin/wtype -k Escape
-        sleep 0.05
-        ${pkgs.wtype}/bin/wtype ':wq'
-        sleep 0.05
-        ${pkgs.wtype}/bin/wtype -k Return
-      else
-        ${pkgs.hyprland}/bin/hyprctl dispatch killactive
-      fi
+        'nvim "$TMPFILE"; ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPFILE"; rm -f "$TMPFILE"'
     '';
   in {
 
