@@ -46,7 +46,7 @@ Zotero defaults to `~/Zotero`. To move it to a hidden directory:
 | `porsmo` | TUI Pomodoro timer |
 | `wtfutil` | Configurable terminal dashboard (tasks, clock, GitHub, etc.) |
 | `activitywatch` | Automatic self-hosted app/window-usage tracker; privacy-respecting |
-| `hledger` + `hledger-ui` + `hledger-web` | Modern plain-text accounting (better reports than ledger) |
+| `hledger-ui` + `hledger-web` | hledger TUI and web frontends (hledger itself already installed) |
 | `haskellPackages.arbtt` | Rule-based automatic time tracker (X/Wayland window titles → categories) |
 | `datasette` | SQLite data browser/API; great for exploring activitywatch or custom tracking DBs |
 | **Extra Hyprland tools** | | |
