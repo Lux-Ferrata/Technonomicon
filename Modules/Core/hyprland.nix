@@ -217,6 +217,121 @@
               }
 
               Notifications {}
+              WhichKey {}
+          }
+        '';
+
+        ".config/quickshell/WhichKey.qml".text = ''
+          pragma ComponentBehavior: Bound
+          import Quickshell
+          import Quickshell.Hyprland
+          import Quickshell.Io
+          import QtQuick
+          import QtQuick.Layouts
+
+          Scope {
+              id: root
+              property var submapBinds: []
+              property string buffer: ""
+
+              Process {
+                  id: bindsProc
+                  command: ["hyprctl", "binds", "-j"]
+                  stdout: SplitParser {
+                      onRead: line => root.buffer += line
+                  }
+                  onExited: {
+                      try {
+                          const all = JSON.parse(root.buffer)
+                          const sub = Hyprland.submap
+                          root.submapBinds = all.filter(
+                              b => b.submap === sub && b.dispatcher !== "submap"
+                          )
+                      } catch(e) { root.submapBinds = [] }
+                      root.buffer = ""
+                  }
+              }
+
+              Connections {
+                  target: Hyprland
+                  function onSubmapChanged() {
+                      if (Hyprland.submap !== "") {
+                          root.buffer = ""
+                          if (!bindsProc.running) bindsProc.running = true
+                      } else {
+                          root.submapBinds = []
+                      }
+                  }
+              }
+
+              PanelWindow {
+                  visible: Hyprland.submap !== "" && root.submapBinds.length > 0
+                  anchors { bottom: true; left: true; right: true }
+                  implicitHeight: content.implicitHeight + 20
+                  color: Qt.rgba(0.04, 0.04, 0.08, 0.95)
+
+                  Rectangle {
+                      anchors { top: parent.top; left: parent.left; right: parent.right }
+                      height: 1
+                      color: "#00ffff"
+                  }
+
+                  ColumnLayout {
+                      id: content
+                      anchors { fill: parent; margins: 10 }
+                      spacing: 6
+
+                      Text {
+                          text: Hyprland.submap
+                          color: "#00ffff"
+                          font.pixelSize: 11
+                          font.family: "JetBrains Mono"
+                          font.bold: true
+                          font.letterSpacing: 1
+                      }
+
+                      Flow {
+                          Layout.fillWidth: true
+                          spacing: 20
+
+                          Repeater {
+                              model: root.submapBinds
+                              delegate: Row {
+                                  required property var modelData
+                                  spacing: 8
+
+                                  Rectangle {
+                                      width: keyLabel.implicitWidth + 10
+                                      height: keyLabel.implicitHeight + 6
+                                      color: Qt.rgba(0, 1, 1, 0.12)
+                                      border.color: "#00ffff"
+                                      border.width: 1
+                                      radius: 3
+                                      anchors.verticalCenter: parent.verticalCenter
+
+                                      Text {
+                                          id: keyLabel
+                                          anchors.centerIn: parent
+                                          text: modelData.key
+                                          color: "#00ffff"
+                                          font.pixelSize: 12
+                                          font.family: "JetBrains Mono"
+                                          font.bold: true
+                                      }
+                                  }
+
+                                  Text {
+                                      anchors.verticalCenter: parent.verticalCenter
+                                      text: modelData.arg
+                                      color: "#cdd6f4"
+                                      font.pixelSize: 12
+                                      font.family: "JetBrains Mono"
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
           }
         '';
 
