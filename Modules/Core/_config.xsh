@@ -216,7 +216,7 @@ aliases.update({
     # System Lifecycle Controls
     'power-off': 'bash /etc/scripts/clean-power-off.sh',
     'logout': 'sudo kill -9 -1',
-    'restart': 'sudo reboot',
+    'restart': 'bash /etc/scripts/clean-reboot.sh',
 
     # Downloads & Compression
     'bzip': 'bzip3',
