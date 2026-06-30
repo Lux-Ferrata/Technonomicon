@@ -193,6 +193,8 @@ hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left"  }))
           hl.bind(mainMod .. " + SHIFT + L",     hl.dsp.window.move({ direction = "right" }))
           hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.swap({ direction = "left"  }))
           hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.swap({ direction = "right" }))
+          hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.swap({ direction = "up"    }))
+          hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.swap({ direction = "down"  }))
 
           for i = 1, 9 do
             hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
