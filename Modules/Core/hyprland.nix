@@ -1,13 +1,8 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-hyprland = { pkgs, ... }:
   let
-    focusObsidian = pkgs.writeShellScript "focus-obsidian" ''
-      if ${pkgs.hyprland}/bin/hyprctl clients -j \
-          | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "obsidian")' > /dev/null 2>&1; then
-        ${pkgs.hyprland}/bin/hyprctl dispatch focuswindow class:obsidian
-      else
-        obsidian
-      fi
+    openDailyNote = pkgs.writeShellScript "open-daily-note" ''
+      obsidian "obsidian://advanced-uri?vault=Grimoire&daily=true"
     '';
 
     startupApps = pkgs.writeShellScript "hyprland-startup-apps" ''
