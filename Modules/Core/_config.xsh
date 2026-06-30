@@ -217,7 +217,7 @@ aliases.update({
     'book-dl': 'aria2c -x 16 -s 16',
 
     # Editors
-    'eo': 'hx',
+    'eo': 'nvim',
 })
 
 def _eon(args):
