@@ -203,6 +203,23 @@
             }
           '';
 
+          anki = ''
+            return {
+              "rareitems/anki.nvim",
+              dependencies = { "nvim-lua/plenary.nvim" },
+              -- don't lazy-load: plugin needs to register the .anki filetype on startup
+              lazy = false,
+              opts = {
+                tex_support = false,
+                models = {
+                  -- map notetype name → deck name (edit to match your Anki decks)
+                  ["Basic"]                     = "Default",
+                  ["Basic (and reversed card)"] = "Default",
+                },
+              },
+            }
+          '';
+
           lsp = ''
             return {
               "neovim/nvim-lspconfig",
