@@ -187,10 +187,12 @@ hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left"  }))
           hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up"    }))
           hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
 
-          hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ direction = "left"  }))
-          hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.move({ direction = "down"  }))
-          hl.bind(mainMod .. " + SHIFT + K", hl.dsp.window.move({ direction = "up"    }))
-          hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({ direction = "right" }))
+          hl.bind(mainMod .. " + SHIFT + H",     hl.dsp.window.move({ direction = "left"  }))
+          hl.bind(mainMod .. " + SHIFT + J",     hl.dsp.window.move({ direction = "down"  }))
+          hl.bind(mainMod .. " + SHIFT + K",     hl.dsp.window.move({ direction = "up"    }))
+          hl.bind(mainMod .. " + SHIFT + L",     hl.dsp.window.move({ direction = "right" }))
+          hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.move({ direction = "left"  }))
+          hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.move({ direction = "right" }))
 
           for i = 1, 9 do
             hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
