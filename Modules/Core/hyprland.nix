@@ -222,15 +222,40 @@
         ".config/quickshell/WhichKey.qml".text = ''
           pragma ComponentBehavior: Bound
           import Quickshell
-          import Quickshell.Hyprland
           import Quickshell.Io
           import QtQuick
           import QtQuick.Layouts
 
           Scope {
               id: root
+              property string activeSubmap: ""
               property var submapBinds: []
               property string buffer: ""
+
+              Timer {
+                  interval: 100
+                  running: true
+                  repeat: true
+                  onTriggered: if (!submapCheck.running) submapCheck.running = true
+              }
+
+              Process {
+                  id: submapCheck
+                  command: ["hyprctl", "activesubmap"]
+                  stdout: SplitParser {
+                      onRead: line => {
+                          const sub = line.trim()
+                          if (sub === root.activeSubmap) return
+                          root.activeSubmap = sub
+                          if (sub !== "") {
+                              root.buffer = ""
+                              if (!bindsProc.running) bindsProc.running = true
+                          } else {
+                              root.submapBinds = []
+                          }
+                      }
+                  }
+              }
 
               Process {
                   id: bindsProc
@@ -241,7 +266,7 @@
                   onExited: {
                       try {
                           const all = JSON.parse(root.buffer)
-                          const sub = Hyprland.submap
+                          const sub = root.activeSubmap
                           root.submapBinds = all.filter(
                               b => b.submap === sub && b.dispatcher !== "submap"
                           )
@@ -250,20 +275,8 @@
                   }
               }
 
-              Connections {
-                  target: Hyprland
-                  function onSubmapChanged() {
-                      if (Hyprland.submap !== "") {
-                          root.buffer = ""
-                          if (!bindsProc.running) bindsProc.running = true
-                      } else {
-                          root.submapBinds = []
-                      }
-                  }
-              }
-
               PanelWindow {
-                  visible: Hyprland.submap !== "" && root.submapBinds.length > 0
+                  visible: root.activeSubmap !== "" && root.submapBinds.length > 0
                   anchors { top: true; left: true; right: true }
                   implicitHeight: content.implicitHeight + 20
                   color: Qt.rgba(0.04, 0.04, 0.08, 0.95)
@@ -280,7 +293,7 @@
                       spacing: 6
 
                       Text {
-                          text: Hyprland.submap
+                          text: root.activeSubmap
                           color: "#00ffff"
                           font.pixelSize: 11
                           font.family: "JetBrains Mono"
