@@ -124,7 +124,7 @@
           hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("systemctl poweroff"))
           hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())
           hl.bind(mainMod .. " + F",         hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
-          hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen())
+          hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("nemo"))
           hl.bind(mainMod .. " + 0",         hl.dsp.exec_cmd("${toggleGrimoire}"))
           hl.bind(mainMod .. " + ALT + 1",   hl.dsp.exec_cmd("hyprctl dispatch togglespecialworkspace obsidian"))
           hl.bind(mainMod .. " + ALT + 9",   hl.dsp.exec_cmd("hyprctl dispatch togglespecialworkspace discord"))
