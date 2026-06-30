@@ -113,6 +113,24 @@
       };
     };
 
+    environment.etc."scripts/clean-power-off.sh" = {
+      mode = "0755";
+      text = ''
+        #!/usr/bin/env bash
+        trash-empty 10
+        systemctl poweroff
+      '';
+    };
+
+    environment.etc."scripts/clean-reboot.sh" = {
+      mode = "0755";
+      text = ''
+        #!/usr/bin/env bash
+        trash-empty 10
+        systemctl reboot
+      '';
+    };
+
     environment.systemPackages = with pkgs; [
       nix-your-shell
       gitFull
