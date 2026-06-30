@@ -1,10 +1,6 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-hyprland = { pkgs, ... }:
   let
-    openDailyNote = pkgs.writeShellScript "open-daily-note" ''
-      obsidian "obsidian://advanced-uri?vault=Grimoire&daily=true"
-    '';
-
     startupApps = pkgs.writeShellScript "hyprland-startup-apps" ''
       sleep 1
       ${pkgs.hyprland}/bin/hyprctl dispatch exec "[silent] obsidian"
