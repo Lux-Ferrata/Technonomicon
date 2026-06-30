@@ -227,7 +227,7 @@ def _eon(args):
     file = os.path.abspath(args[0])
     wdir = os.path.dirname(file)
     subprocess.Popen(
-        ['ghostty', '--working-directory', wdir, '-e', 'hx', file],
+        ['ghostty', '--working-directory', wdir, '-e', 'nvim', file],
         start_new_session=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
