@@ -252,6 +252,33 @@
             vim.opt.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50"
           '';
 
+          autocmds = ''
+            vim.api.nvim_create_autocmd("FileType", {
+              pattern = "markdown",
+              callback = function()
+                vim.keymap.set("i", "<CR>", function()
+                  local line = vim.api.nvim_get_current_line()
+                  local col = vim.api.nvim_win_get_cursor(0)[2]
+                  if col < #line then return "<CR>" end
+
+                  -- Empty checkbox item: clear marker and stay on line
+                  if line:match("^%s*%- %[.%]%s*$") then return "<C-u>" end
+                  -- Checkbox with content: continue with unchecked box
+                  local indent = line:match("^(%s*)%- %[.%] ")
+                  if indent then return "<CR>" .. indent .. "- [ ] " end
+
+                  -- Empty bullet: clear marker
+                  if line:match("^%s*%-%s*$") then return "<C-u>" end
+                  -- Bullet with content: continue list
+                  indent = line:match("^(%s*)%- ")
+                  if indent then return "<CR>" .. indent .. "- " end
+
+                  return "<CR>"
+                end, { buffer = true, expr = true, replace_keycodes = true, desc = "Continue markdown list" })
+              end,
+            })
+          '';
+
           keymaps = ''
             vim.keymap.set("i", "<Esc>", "<Esc>:w<CR>", { desc = "Normal + save" })
             vim.keymap.set("i", "<C-c>", "<Esc>:w<CR>", { desc = "Normal + save" })
