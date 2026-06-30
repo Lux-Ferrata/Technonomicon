@@ -143,6 +143,9 @@
           color-scheme = "prefer-dark";
           gtk-theme = "Adwaita-dark";
         };
+        "org/nemo/preferences" = {
+          show-hidden-files = false;
+        };
         "org/virt-manager/virt-manager/connections" = {
           autoconnect = [ "qemu:///system" ];
           uris = [ "qemu:///system" ];
