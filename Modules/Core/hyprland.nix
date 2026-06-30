@@ -155,6 +155,20 @@
 
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
           hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+
+          hl.bind(mainMod .. " + Space", hl.dsp.submap("leader"))
+
+          hl.submap("leader", function()
+            local function lbind(key, cmd)
+              hl.bind(key, hl.dsp.exec_cmd(cmd))
+              hl.bind(key, hl.dsp.submap("reset"))
+            end
+
+            lbind("G", "brave --app=https://gemini.google.com")
+
+            hl.bind("Escape", hl.dsp.submap("reset"))
+            hl.bind("Space",  hl.dsp.submap("reset"))
+          end)
         '';
 
         ".config/hypr/hyprlock.conf".text = ''
