@@ -165,6 +165,9 @@
             end
 
             lbind("G", "brave --app=https://gemini.google.com")
+            lbind("Y", "brave --app=https://youtube.com")
+            lbind("M", "brave --app=https://mail.google.com")
+            lbind("C", "brave --app=https://calendar.google.com")
 
             hl.bind("Escape", hl.dsp.submap("reset"))
             hl.bind("Space",  hl.dsp.submap("reset"))
