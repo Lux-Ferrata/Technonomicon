@@ -159,6 +159,7 @@
 
         ".config/hypr/hyprlock.conf".text = ''
           background {
+            color       = rgba(00ffffee)
             blur_passes = 3
             blur_size   = 7
           }
