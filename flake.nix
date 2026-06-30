@@ -25,9 +25,6 @@
 
     lazyvim.url = "github:pfassina/lazyvim-nix";
     lazyvim.inputs.nixpkgs.follows = "nixpkgs";
-
-    hypr-which-key.url = "github:VTimofeenko/hypr-which-key";
-    hypr-which-key.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, import-tree, ... }:
