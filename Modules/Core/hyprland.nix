@@ -157,7 +157,7 @@
           hl.bind(mainMod .. " + Return",    hl.dsp.exec_cmd("anyrun"))
           hl.bind(mainMod .. " + T",         hl.dsp.exec_cmd(terminal))
           hl.bind(mainMod .. " + S",         hl.dsp.exec_cmd("brave"))
-          hl.bind(mainMod .. " + D",         hl.dsp.exec_cmd("${vimEditClose}"))
+          hl.bind(mainMod .. " + D",         hl.dsp.window.close())
           hl.bind(mainMod .. " + Q",         hl.dsp.exec_cmd("hyprlock"))
           hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("systemctl poweroff"))
           hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())
