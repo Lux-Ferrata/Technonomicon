@@ -80,6 +80,14 @@
             center = true,
           })
 
+          hl.window_rule({
+            name   = "grimoire-inbox-float",
+            match  = { class = "grimoire-inbox" },
+            float  = true,
+            size   = "900 600",
+            center = true,
+          })
+
           hl.on("hyprland.start", function()
             hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE GDK_BACKEND")
             hl.exec_cmd("hypridle")
