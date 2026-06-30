@@ -33,11 +33,14 @@
     });
 
     wlKbptrFloat = pkgs.writeShellScript "wl-kbptr-float" ''
-      while ${wlKbptr}/bin/wl-kbptr -o modes=tile -o cancellation_status_code=1; do true; done
+      while ${pkgs.hyprland}/bin/hyprctl clients -j \
+        | ${pkgs.jq}/bin/jq -r '.[] | select(.floating == true) | "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"' \
+        | ${wlKbptr}/bin/wl-kbptr -o modes=floating -o cancellation_status_code=1
+      do true; done
     '';
 
     wlKbptrTile = pkgs.writeShellScript "wl-kbptr-tile" ''
-      while ${wlKbptr}/bin/wl-kbptr -o modes=tile,bisect -o cancellation_status_code=1; do true; done
+      while ${wlKbptr}/bin/wl-kbptr -o modes=tile -o cancellation_status_code=1; do true; done
     '';
 
     vimEdit = pkgs.writeShellScript "vim-edit" ''
