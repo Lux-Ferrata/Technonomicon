@@ -52,6 +52,7 @@ execx($(starship init xonsh))
 
 # Clear screen on boot
 print('\n' * 100, end='')
+os.system("eza --icons --oneline --group-directories-first --color=always")
 
 # =============================================================================
 # 4. DIRECTORY ALIASES
