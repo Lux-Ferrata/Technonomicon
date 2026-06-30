@@ -36,6 +36,9 @@
     ];
 
     home-manager.users.xin = {
+      imports = [ inputs.hypr-which-key.homeManagerModules.default ];
+      services.hypr-which-key.enable = true;
+
 
       home.pointerCursor = {
         package    = pkgs.bibata-cursors;
