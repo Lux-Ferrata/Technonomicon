@@ -75,8 +75,8 @@
             hl.exec_cmd("udiskie --tray")
             hl.exec_cmd("blueman-applet")
             hl.exec_cmd("copyq --start-server")
-
-            hl.exec_cmd("${startupApps}")
+            hl.exec_cmd("[workspace special:obsidian silent] obsidian")
+            hl.exec_cmd("flatpak run com.discordapp.Discord")
           end)
 
           hl.config({
