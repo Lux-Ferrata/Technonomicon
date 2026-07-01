@@ -179,7 +179,7 @@
           hl.bind(mainMod .. " + S",         hl.dsp.exec_cmd("brave"))
           hl.bind(mainMod .. " + D",         hl.dsp.window.close())
           hl.bind(mainMod .. " + Q",         hl.dsp.exec_cmd("hyprlock"))
-          hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("bash /etc/scripts/clean-power-off.sh"))
+          hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("/etc/scripts/clean-power-off.sh"))
           hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())
           hl.bind(mainMod .. " + F",         hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
           hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("nemo"))
