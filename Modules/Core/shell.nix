@@ -117,18 +117,18 @@
     environment.etc."scripts/clean-power-off.sh" = {
       mode = "0755";
       text = ''
-        #!/usr/bin/env bash
-        trash-empty 10
-        systemctl poweroff
+        #!${pkgs.bash}/bin/bash
+        ${pkgs.trash-cli}/bin/trash-empty 10
+        ${pkgs.systemd}/bin/systemctl poweroff
       '';
     };
 
     environment.etc."scripts/clean-reboot.sh" = {
       mode = "0755";
       text = ''
-        #!/usr/bin/env bash
-        trash-empty 10
-        systemctl reboot
+        #!${pkgs.bash}/bin/bash
+        ${pkgs.trash-cli}/bin/trash-empty 10
+        ${pkgs.systemd}/bin/systemctl reboot
       '';
     };
 
