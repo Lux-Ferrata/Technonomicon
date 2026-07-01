@@ -186,8 +186,6 @@
           hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("${activateObsidian}"))
           hl.bind(mainMod .. " + 0",         hl.dsp.exec_cmd("ghostty --title=grimoire-inbox -e nvim $HOME/Grimoire/Inbox.md"))
           hl.bind(mainMod .. " + Z",         hl.dsp.exec_cmd("${vimEdit}"))
-          hl.bind(mainMod .. " + G",         hl.dsp.exec_cmd("${wlKbptrFloat}"))
-          hl.bind(mainMod .. " + SHIFT + G", hl.dsp.exec_cmd("${wlKbptrTile}"))
           hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left"  }))
           hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down"  }))
           hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up"    }))
