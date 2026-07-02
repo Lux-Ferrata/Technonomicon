@@ -128,6 +128,15 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "habitica";
+        desktopName = "Habitica";
+        exec = "${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized";
+        icon = "${icons.habitica}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
