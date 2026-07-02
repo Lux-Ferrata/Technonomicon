@@ -168,7 +168,7 @@
             },
             scrolling = {
               fullscreen_on_one_column = true,
-              column_default_width     = 1.0,
+              column_default_width = 1.0,
               explicit_column_widths   = "1.0, 0.5",
             },
             cursor = {
