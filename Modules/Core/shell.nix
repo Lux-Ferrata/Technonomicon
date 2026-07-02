@@ -118,7 +118,9 @@
       mode = "0755";
       text = ''
         #!${pkgs.bash}/bin/bash
-        ${pkgs.trash-cli}/bin/trash-empty 10
+        ${pkgs.libnotify}/bin/notify-send "Shutting down..." "Cleaning up and powering off" &
+        timeout 10 find /home/xin/Downloads -mindepth 1 -delete 2>/dev/null || true
+        timeout 60 ${pkgs.trash-cli}/bin/trash-empty 10 2>/dev/null || true
         ${pkgs.systemd}/bin/systemctl poweroff
       '';
     };
@@ -127,6 +129,7 @@
       mode = "0755";
       text = ''
         #!${pkgs.bash}/bin/bash
+        find /home/xin/Downloads -mindepth 1 -delete
         ${pkgs.trash-cli}/bin/trash-empty 10
         ${pkgs.systemd}/bin/systemctl reboot
       '';
