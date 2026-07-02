@@ -144,7 +144,7 @@
           hl.config({
             input = {
               kb_layout    = "us",
-              follow_mouse = 1,
+              follow_mouse = 0,
               touchpad     = { natural_scroll = true, disable_while_typing = true, drag_lock = false },
             },
             general = {
