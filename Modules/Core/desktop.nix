@@ -170,7 +170,7 @@
         enable = true;
         createDirectories = false;
         setSessionVariables = true;
-        desktop     = "$HOME/Archive";
+        desktop     = "$HOME/Media";
         download    = "$HOME/Downloads";
         templates   = "$HOME/Projects";
         publicShare = "$HOME/Projects";
