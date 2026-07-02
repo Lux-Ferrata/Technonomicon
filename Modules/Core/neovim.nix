@@ -122,6 +122,13 @@
     };
 
     home-manager.users.xin.home.file = {
+      ".config/yazi/yazi.toml".text = ''
+        [opener]
+        edit = [
+          { run = 'nvim "$@"', block = true, desc = "Neovim" },
+        ]
+      '';
+
       ".config/yazi/keymap.toml".text = ''
         [[manager.prepend_keymap]]
         on   = [ "d" ]
