@@ -106,6 +106,12 @@
           hl.config({ ['xwayland.force_zero_scaling'] = true })
 
           hl.window_rule({
+            name      = "discord-workspace",
+            match     = { class = "com.discordapp.Discord" },
+            workspace = 9,
+          })
+
+          hl.window_rule({
             name   = "portal-dialog-size",
             match  = { class = "xdg-desktop-portal-gtk" },
             float  = true,
