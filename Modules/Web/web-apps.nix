@@ -15,7 +15,7 @@
         syncthing    = icon "https://api.iconify.design/simple-icons:syncthing.svg"      "0kb6gjsi674gcq2y757ahgycfn0zmgzq6928nwl6ps2mfjgk0pn5";
         exercism     = icon "https://api.iconify.design/simple-icons:exercism.svg"       "00md3wqkcy2yi0i4k98kxalxf6h32pxmgqqr6phb5yzcg5b2wywb";
         bitwarden    = icon "https://api.iconify.design/simple-icons:bitwarden.svg"      "0gxhn0700vszcg9v68nzf0j1f321zpimzp68blf5pnw983ljr8y6";
-        habitica     = icon "https://api.iconify.design/simple-icons:habitica.svg"      "0cdcwkj3ik0czayxn0xgw4kjklprdkxq68f40z0rz6wxvlbamsz3";
+        habitica     = icon "https://api.iconify.design/game-icons:dragon-head.svg"     "0vkc7m6hdl6c5kvzwygvl0rpk4nw80zsgw2zyjk4m107gm2n0n21";
       };
     in {
 
