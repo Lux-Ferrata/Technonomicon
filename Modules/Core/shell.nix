@@ -140,6 +140,7 @@
       gitFull
       git-lfs
       jujutsu
+      lazyjj
       btop
       nmon
       kmon
