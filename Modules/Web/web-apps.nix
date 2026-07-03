@@ -168,6 +168,15 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "ogs";
+        desktopName = "OGS";
+        exec = "${pkgs.brave}/bin/brave --app=https://online-go.com/play --start-maximized";
+        icon = "${icons.ogs}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
