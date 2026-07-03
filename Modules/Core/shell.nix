@@ -139,6 +139,7 @@
       nix-your-shell
       gitFull
       git-lfs
+      jujutsu
       btop
       nmon
       kmon
