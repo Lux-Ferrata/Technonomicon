@@ -260,6 +260,11 @@
           '';
 
           autocmds = ''
+            vim.api.nvim_create_autocmd("BufWritePre", {
+              pattern = "*",
+              callback = MiniTrailspace.trim,
+            })
+
             vim.api.nvim_create_autocmd("FileType", {
               pattern = "markdown",
               callback = function()
