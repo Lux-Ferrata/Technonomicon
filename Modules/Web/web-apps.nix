@@ -148,6 +148,15 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "weather";
+        desktopName = "Weather";
+        exec = "${pkgs.brave}/bin/brave --app=https://weather.com/us/arizona/city/tucson/tenday --start-maximized";
+        icon = "${icons.weather}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
