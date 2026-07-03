@@ -138,6 +138,15 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "amazon";
+        desktopName = "Amazon";
+        exec = "${pkgs.brave}/bin/brave --app=https://www.amazon.com/gp/css/order-history --start-maximized";
+        icon = "${icons.amazon}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
