@@ -20,6 +20,7 @@
         weather      = pkgs.fetchurl { name = "weather.svg"; sha256 = "1b5jng11ipsp52nrrl7pidc4yqr3ik00p0zzb4agzljf1dv0m2pc"; url = "https://api.iconify.design/simple-icons:theweatherchannel.svg"; };
         pima         = pkgs.fetchurl { name = "pima.svg"; sha256 = "113nwvkbzk6blffpbvxkkk99ax59gldymcnm7vz3p0fwiyk0n1xk"; url = "https://api.iconify.design/mdi:school.svg"; };
         ogs          = pkgs.fetchurl { name = "ogs.svg"; sha256 = "0s1hfinl2pq73mjgbdpf9pps06qd4mnvpd416vw89azr1yamj2ja"; url = "https://api.iconify.design/simple-icons:go.svg"; };
+        tsumego      = pkgs.fetchurl { name = "tsumego.svg"; sha256 = "18nxcahsqqhxbbqa63iv3zdik79is9wwjm9kq180ilvzk5470bhm"; url = "https://api.iconify.design/game-icons:stone-pile.svg"; };
       };
     in {
 
