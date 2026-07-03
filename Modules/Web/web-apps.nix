@@ -187,6 +187,15 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "tsumego-test";
+        desktopName = "Tsumego: Test";
+        exec = "${pkgs.brave}/bin/brave --app=https://www.101weiqi.com/guan/ --start-maximized";
+        icon = "${icons.tsumego}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
