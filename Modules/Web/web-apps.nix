@@ -197,6 +197,15 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "kifubara";
+        desktopName = "kifubara";
+        exec = "${pkgs.brave}/bin/brave --app=https://kifubara.app/me/games --start-maximized";
+        icon = "${icons.kifubara}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
