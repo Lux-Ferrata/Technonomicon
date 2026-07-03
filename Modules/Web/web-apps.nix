@@ -200,7 +200,7 @@
 
       (pkgs.makeDesktopItem {
         name = "kifubara";
-        desktopName = "kifubara";
+        desktopName = "Kifubara";
         exec = "${pkgs.brave}/bin/brave --app=https://kifubara.app/me/games --start-maximized";
         icon = "${icons.kifubara}";
         terminal = false;
