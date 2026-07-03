@@ -21,6 +21,7 @@
         pima         = pkgs.fetchurl { name = "pima.svg"; sha256 = "113nwvkbzk6blffpbvxkkk99ax59gldymcnm7vz3p0fwiyk0n1xk"; url = "https://api.iconify.design/mdi:school.svg"; };
         ogs          = pkgs.fetchurl { name = "ogs.svg"; sha256 = "0s1hfinl2pq73mjgbdpf9pps06qd4mnvpd416vw89azr1yamj2ja"; url = "https://api.iconify.design/simple-icons:go.svg"; };
         tsumego      = pkgs.fetchurl { name = "tsumego.svg"; sha256 = "18nxcahsqqhxbbqa63iv3zdik79is9wwjm9kq180ilvzk5470bhm"; url = "https://api.iconify.design/game-icons:stone-pile.svg"; };
+        kifubara     = pkgs.fetchurl { name = "kifubara.svg"; sha256 = "0nv3x2b2z38pksq5gylnq7fd000ia2mmqvkdi1i13am59lcnyrl4"; url = "https://api.iconify.design/game-icons:abstract-119.svg"; };
       };
     in {
 
