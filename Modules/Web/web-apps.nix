@@ -178,6 +178,15 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "tsumego-specialized-training";
+        desktopName = "Tsumego: Specialized Training";
+        exec = "${pkgs.brave}/bin/brave --app=https://www.101weiqi.com/training/ --start-maximized";
+        icon = "${icons.tsumego}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
