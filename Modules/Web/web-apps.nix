@@ -158,6 +158,15 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "pima-community-college";
+        desktopName = "Pima Community College";
+        exec = "${pkgs.brave}/bin/brave --app=https://mypima.pima.edu/ --start-maximized";
+        icon = "${icons.pima}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
