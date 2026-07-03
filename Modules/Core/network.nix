@@ -51,6 +51,9 @@
         127.0.0.1 www.snapchat.com
         ::1 snapchat.com
         ::1 www.snapchat.com
+
+        127.0.0.1 news.google.com
+        ::1 news.google.com
     '';
 
     time.timeZone = "America/Detroit";
