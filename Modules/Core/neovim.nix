@@ -262,7 +262,7 @@
           autocmds = ''
             vim.api.nvim_create_autocmd("BufWritePre", {
               pattern = "*",
-              callback = MiniTrailspace.trim,
+              callback = function() require("mini.trailspace").trim() end,
             })
 
             vim.api.nvim_create_autocmd("FileType", {
