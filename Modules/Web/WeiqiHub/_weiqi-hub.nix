@@ -11,6 +11,18 @@ let
   appimage = pkgs.appimageTools.wrapType2 {
     pname = "weiqi-hub";
     inherit version src;
+    extraPkgs = p: with p; [
+      gtk3
+      glib
+      gdk-pixbuf
+      pango
+      harfbuzz
+      atk
+      cairo
+      libepoxy
+      fontconfig
+      stdenv.cc.cc.lib
+    ];
   };
   extracted = pkgs.appimageTools.extractType2 { pname = "weiqi-hub"; inherit version src; };
 in
