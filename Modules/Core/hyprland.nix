@@ -200,6 +200,7 @@
           hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("nemo"))
           hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("${activateObsidian}"))
           hl.bind(mainMod .. " + 0",         hl.dsp.exec_cmd("ghostty --title=grimoire-inbox -e nvim $HOME/Grimoire/Inbox.md"))
+          hl.bind(mainMod .. " + SHIFT + 0", hl.dsp.exec_cmd("ghostty --title=technonomicon -e nvim $HOME/Projects/Technonomicon/README.md"))
           hl.bind(mainMod .. " + Z",         hl.dsp.exec_cmd("${vimEdit}"))
           hl.bind(mainMod .. " + C",         hl.dsp.exec_cmd("qalculate-gtk"))
           hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left"  }))
