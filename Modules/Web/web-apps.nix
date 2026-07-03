@@ -18,6 +18,7 @@
         habitica     = icon "https://api.iconify.design/game-icons:dragon-head.svg"     "0vkc7m6hdl6c5kvzwygvl0rpk4nw80zsgw2zyjk4m107gm2n0n21";
         amazon       = pkgs.fetchurl { name = "amazon.svg"; sha256 = "193prd7blp1kv0f83hcpyh55jbpl073vm432bykpfq71md7idz00"; url = "https://api.iconify.design/simple-icons:amazon.svg"; };
         weather      = pkgs.fetchurl { name = "weather.svg"; sha256 = "1b5jng11ipsp52nrrl7pidc4yqr3ik00p0zzb4agzljf1dv0m2pc"; url = "https://api.iconify.design/simple-icons:theweatherchannel.svg"; };
+        pima         = pkgs.fetchurl { name = "pima.svg"; sha256 = "113nwvkbzk6blffpbvxkkk99ax59gldymcnm7vz3p0fwiyk0n1xk"; url = "https://api.iconify.design/mdi:school.svg"; };
       };
     in {
 
