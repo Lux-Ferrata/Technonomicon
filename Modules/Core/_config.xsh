@@ -58,6 +58,16 @@ os.system("eza --icons --oneline --group-directories-first --color=always")
 # 4. DIRECTORY ALIASES
 # =============================================================================
 aliases['tn'] = 'cd ~/Projects/Technonomicon'
+
+def _tnc(args):
+    cd ~/Projects/Technonomicon
+    claude
+aliases['tnc'] = _tnc
+
+def _tnr(args):
+    cd ~/Projects/Technonomicon
+    claude --resume
+aliases['tnr'] = _tnr
 aliases['ps'] = 'cd ~/Projects/Personal-Blog/content/posts'
 aliases['pj'] = 'cd ~/Projects'
 aliases['dl'] = 'cd ~/Downloads'
