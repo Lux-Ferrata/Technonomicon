@@ -128,6 +128,14 @@
           })
 
           hl.window_rule({
+            name   = "technonomicon-float",
+            match  = { title = "technonomicon" },
+            float  = true,
+            size   = "900 600",
+            center = true,
+          })
+
+          hl.window_rule({
             name   = "vim-edit-float",
             match  = { title = "vim-edit" },
             float  = true,
