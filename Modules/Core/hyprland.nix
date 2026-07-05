@@ -57,15 +57,6 @@
       fi
     '';
 
-    smartClose = pkgs.writeShellScript "smart-close" ''
-      CLASS=$(${pkgs.hyprland}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.class')
-      if echo "$CLASS" | grep -q "brave-habitica"; then
-        ${pkgs.hyprland}/bin/hyprctl dispatch togglespecialworkspace habitica
-      else
-        ${pkgs.hyprland}/bin/hyprctl dispatch killactive
-      fi
-    '';
-
     vimEdit = pkgs.writeShellScript "vim-edit" ''
       ${pkgs.wtype}/bin/wtype -M ctrl -k a
       sleep 0.15
