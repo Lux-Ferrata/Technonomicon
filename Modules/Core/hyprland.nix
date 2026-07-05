@@ -47,8 +47,11 @@
     '';
 
     activateHabitica = pkgs.writeShellScript "activate-habitica" ''
+      if [ -z "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
+        export HYPRLAND_INSTANCE_SIGNATURE=$(ls -t /tmp/hypr/ 2>/dev/null | head -1)
+      fi
       if ${pkgs.hyprland}/bin/hyprctl clients -j \
-        | ${pkgs.jq}/bin/jq -e '[.[] | select(.class | test("brave-habitica"))] | length > 0' \
+        | ${pkgs.jq}/bin/jq -e '[.[] | select(.title | test("Habitica"; "i"))] | length > 0' \
         > /dev/null 2>&1
       then
         ${pkgs.hyprland}/bin/hyprctl dispatch togglespecialworkspace habitica
