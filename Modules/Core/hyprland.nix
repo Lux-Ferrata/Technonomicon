@@ -143,6 +143,14 @@
             center = true,
           })
 
+          hl.window_rule({
+            name   = "habitica-float",
+            match  = { class = "brave-habitica" },
+            float  = true,
+            size   = "1200 800",
+            center = true,
+          })
+
           hl.on("hyprland.start", function()
             hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE GDK_BACKEND")
             hl.exec_cmd("hypridle")
