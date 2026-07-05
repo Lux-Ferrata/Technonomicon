@@ -159,7 +159,7 @@
 
           hl.window_rule({
             name   = "habitica-special",
-            match  = { class = "brave-habitica" },
+            match  = { title = "Habitica" },
             float  = true,
             size   = "1200 800",
             center = true,
