@@ -1,6 +1,17 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-hyprland = { pkgs, ... }:
   let
+    activateHabitica = pkgs.writeShellScript "activate-habitica" ''
+      if ${pkgs.hyprland}/bin/hyprctl clients -j \
+        | ${pkgs.jq}/bin/jq -e '[.[] | select(.class | test("brave-habitica"))] | length > 0' \
+        > /dev/null 2>&1
+      then
+        ${pkgs.hyprland}/bin/hyprctl dispatch togglespecialworkspace habitica
+      else
+        ${pkgs.brave}/bin/brave --app=https://habitica.com &
+      fi
+    '';
+
     activateObsidian = pkgs.writeShellScript "activate-obsidian" ''
       ITEMS=$(${pkgs.glib}/bin/gdbus call --session \
         --dest org.kde.StatusNotifierWatcher \
