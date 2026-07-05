@@ -53,7 +53,7 @@
       then
         ${pkgs.hyprland}/bin/hyprctl dispatch togglespecialworkspace habitica
       else
-        ${pkgs.brave}/bin/brave --app=https://habitica.com &
+        ${pkgs.hyprland}/bin/hyprctl dispatch exec "[workspace special:habitica silent] ${pkgs.brave}/bin/brave --app=https://habitica.com"
       fi
     '';
 
