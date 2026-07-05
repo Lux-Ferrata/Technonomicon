@@ -15,6 +15,7 @@ $COMPLETIONS_CONFIRM = False
 $UPDATE_COMPLETIONS_ON_KEYPRESS = False
 $COMPLETIONS_BRACKETS = False     # Stops looking up matching brackets on completion
 $COMPLETION_QUERY_LIMIT = 50       # Prevents lag on massive directories (default is 100)
+$COMPLETIONS_DISPLAY = 'multi'    # Show all matches in a multi-column popup grid on Tab
 
 # Execution Time Tracking (Replaces OMZ 'timer')
 $TIMER_FORMAT = '[Execution Time: {time:.2f}s]'
