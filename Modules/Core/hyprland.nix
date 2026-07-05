@@ -164,12 +164,11 @@
           })
 
           hl.window_rule({
-            name      = "habitica-special",
-            match     = { class = "brave-habitica" },
-            workspace = "special:habitica",
-            float     = true,
-            size      = "1200 800",
-            center    = true,
+            name   = "habitica-special",
+            match  = { class = "brave-habitica" },
+            float  = true,
+            size   = "1200 800",
+            center = true,
           })
 
           hl.on("hyprland.start", function()
