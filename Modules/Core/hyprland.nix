@@ -46,6 +46,26 @@
       while ${wlKbptr}/bin/wl-kbptr -o modes=tile -o cancellation_status_code=1; do true; done
     '';
 
+    activateHabitica = pkgs.writeShellScript "activate-habitica" ''
+      if ${pkgs.hyprland}/bin/hyprctl clients -j \
+        | ${pkgs.jq}/bin/jq -e '[.[] | select(.class | test("brave-habitica"))] | length > 0' \
+        > /dev/null 2>&1
+      then
+        ${pkgs.hyprland}/bin/hyprctl dispatch togglespecialworkspace habitica
+      else
+        ${pkgs.brave}/bin/brave --app=https://habitica.com &
+      fi
+    '';
+
+    smartClose = pkgs.writeShellScript "smart-close" ''
+      CLASS=$(${pkgs.hyprland}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.class')
+      if echo "$CLASS" | grep -q "brave-habitica"; then
+        ${pkgs.hyprland}/bin/hyprctl dispatch togglespecialworkspace habitica
+      else
+        ${pkgs.hyprland}/bin/hyprctl dispatch killactive
+      fi
+    '';
+
     vimEdit = pkgs.writeShellScript "vim-edit" ''
       ${pkgs.wtype}/bin/wtype -M ctrl -k a
       sleep 0.15
