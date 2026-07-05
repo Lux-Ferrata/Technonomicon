@@ -251,7 +251,7 @@
             hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
             hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
           end
-          hl.bind(mainMod .. " + ALT + 1", hl.dsp.exec_cmd("${pkgs.brave}/bin/brave --app=https://habitica.com"))
+          hl.bind(mainMod .. " + ALT + 1", hl.dsp.exec_cmd("${activateHabitica}"))
 
           hl.bind("XF86AudioRaiseVolume",      hl.dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"))
           hl.bind("XF86AudioLowerVolume",      hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"))
