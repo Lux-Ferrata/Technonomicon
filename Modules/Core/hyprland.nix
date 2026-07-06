@@ -77,6 +77,19 @@
       copyq
     ];
 
+    environment.etc."scripts/net-info.sh" = {
+      mode = "0755";
+      text = ''
+        #!/usr/bin/env bash
+        CONN=$(${pkgs.networkmanager}/bin/nmcli -t -f DEVICE,TYPE,STATE,CONNECTION dev | grep ':connected:' | awk -F: '{print $4 " (" $2 ") on " $1}')
+        [ -z "$CONN" ] && CONN="Not connected"
+        IP=$(${pkgs.networkmanager}/bin/nmcli -t -f IP4.ADDRESS dev show | awk -F: '$2 != "" {print $2}' | head -1)
+        [ -z "$IP" ] && IP="none"
+        exec ${pkgs.libnotify}/bin/notify-send "Network" "$CONN
+IP: $IP"
+      '';
+    };
+
     home-manager.users.xin = {
 
       home.pointerCursor = {
