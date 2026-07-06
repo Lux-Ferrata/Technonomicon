@@ -16,6 +16,8 @@ pkgs.symlinkJoin {
   buildInputs = [ pkgs.makeWrapper ];
   postBuild = ''
     wrapProgram $out/bin/pomodorolm \
-      --set WEBKIT_DISABLE_COMPOSITING_MODE 1
+      --set WEBKIT_DISABLE_COMPOSITING_MODE 1 \
+      --set GDK_BACKEND x11 \
+      --set WEBKIT_FORCE_SANDBOX 0
   '';
 }
