@@ -429,6 +429,63 @@ IP: $IP"
                       }
                   }
 
+                  Item {
+                      id: netWidget
+                      implicitWidth: 28
+                      implicitHeight: 28
+
+                      property string connType: "none"
+
+                      Process {
+                          id: netStatusProc
+                          command: ["sh", "-c", "${pkgs.networkmanager}/bin/nmcli -t -f TYPE,STATE dev | grep ':connected' | head -1"]
+                          running: true
+                          property bool gotData: false
+                          onRunningChanged: if (running) gotData = false
+                          stdout: SplitParser {
+                              onRead: line => {
+                                  if (line.trim() !== "") {
+                                      netStatusProc.gotData = true
+                                      const t = line.split(":")[0].toLowerCase()
+                                      netWidget.connType = t.includes("wifi") || t.includes("wireless") ? "wifi" : "ethernet"
+                                  }
+                              }
+                          }
+                          onExited: (code, status) => {
+                              if (!gotData) netWidget.connType = "none"
+                          }
+                      }
+
+                      Timer {
+                          interval: 15000; running: true; repeat: true
+                          onTriggered: if (!netStatusProc.running) netStatusProc.running = true
+                      }
+
+                      Process { id: netInfoProc; command: ["/etc/scripts/net-info.sh"] }
+                      Process { id: nmEditorProc; command: ["${pkgs.networkmanagerapplet}/bin/nm-connection-editor"] }
+
+                      Text {
+                          anchors.centerIn: parent
+                          font.pixelSize: 18
+                          font.family: "JetBrainsMono Nerd Font Mono"
+                          color: netWidget.connType === "none" ? "#555555" : "#cdd6f4"
+                          text: netWidget.connType === "wifi" ? "󰤨" :
+                                netWidget.connType === "ethernet" ? "󰈀" : "󰤭"
+                      }
+
+                      MouseArea {
+                          anchors.fill: parent
+                          acceptedButtons: Qt.LeftButton | Qt.RightButton
+                          onClicked: mouse => {
+                              if (mouse.button === Qt.RightButton) {
+                                  nmEditorProc.running = true
+                              } else {
+                                  netInfoProc.running = true
+                              }
+                          }
+                      }
+                  }
+
                   Repeater {
                       model: SystemTray.items
                       delegate: Item {
