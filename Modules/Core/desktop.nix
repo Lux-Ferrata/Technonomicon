@@ -110,7 +110,6 @@
       gnome-themes-extra
       adwaita-icon-theme
       kdePackages.skanlite
-      pomodoro-gtk
 
       inputs.plover-flake.packages.${pkgs.stdenv.hostPlatform.system}.plover-full
     ];
