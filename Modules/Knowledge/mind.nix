@@ -5,14 +5,7 @@
       taskwarrior3
       timewarrior
 
-      (pkgs.makeDesktopItem {
-        name = "pomofocus";
-        desktopName = "Pomofocus";
-        exec = "${pkgs.brave}/bin/brave --app=https://pomofocus.io --start-maximized";
-        icon = "${pkgs.fetchurl { name = "timer.svg"; url = "https://api.iconify.design/mdi:timer.svg"; sha256 = "sha256-TMBdlXz0OmiiFTaKJkeLpPeAsnFbqP1AGN4wiufqoVk="; }}";
-        terminal = false;
-        categories = [ "Application" "Network" ];
-      })
+      pomodoro-gtk
     ];
 
     xdg.mime.defaultApplications = {
