@@ -156,6 +156,9 @@
         scrollback_editor "nvim"
 
         keybinds {
+          normal {
+            bind "Ctrl e" { EditScrollback; SwitchToMode "Normal"; }
+          }
           scroll {
             bind "Up"       { ScrollUp; }
             bind "Down"     { ScrollDown; }
