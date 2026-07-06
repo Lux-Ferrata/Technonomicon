@@ -30,7 +30,7 @@
       (pkgs.makeDesktopItem {
         name = "khan-academy";
         desktopName = "Khan Academy";
-        exec = "${pkgs.brave}/bin/brave --app=https://www.khanacademy.org --start-maximized";
+        exec = "${pkgs.brave}/bin/brave --app=https://www.khanacademy.org/profile/me/courses --start-maximized";
         icon = "${icons.khanAcademy}";
         terminal = false;
         categories = [ "Application" "Network" ];
