@@ -46,17 +46,6 @@
       while ${wlKbptr}/bin/wl-kbptr -o modes=tile -o cancellation_status_code=1; do true; done
     '';
 
-    activateHabitica = pkgs.writeShellScript "activate-habitica" ''
-      if ${pkgs.hyprland}/bin/hyprctl clients -j \
-        | ${pkgs.jq}/bin/jq -e '[.[] | select(.title | test("Habitica"; "i"))] | length > 0' \
-        > /dev/null 2>&1
-      then
-        ${pkgs.hyprland}/bin/hyprctl dispatch 'hl.dsp.workspace.toggle_special("habitica")'
-      else
-        ${pkgs.hyprland}/bin/hyprctl dispatch 'hl.dsp.exec_cmd("[workspace special:habitica silent] ${pkgs.brave}/bin/brave --app=https://habitica.com")'
-      fi
-    '';
-
     vimEdit = pkgs.writeShellScript "vim-edit" ''
       ${pkgs.wtype}/bin/wtype -M ctrl -k a
       sleep 0.15
@@ -154,14 +143,6 @@
             center = true,
           })
 
-          hl.window_rule({
-            name   = "habitica-special",
-            match  = { title = "Habitica" },
-            float  = true,
-            size   = "1200 800",
-            center = true,
-          })
-
           hl.on("hyprland.start", function()
             hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE GDK_BACKEND")
             hl.exec_cmd("hypridle")
@@ -172,7 +153,6 @@
             hl.exec_cmd("copyq --start-server")
             hl.exec_cmd("obsidian")
             hl.exec_cmd("plover")
-            hl.exec_cmd("[workspace special:habitica silent] ${pkgs.brave}/bin/brave --app=https://habitica.com")
             hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
           end)
 
@@ -242,7 +222,6 @@
             hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
             hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
           end
-          hl.bind(mainMod .. " + ALT + 1", hl.dsp.exec_cmd("${activateHabitica}"))
 
           hl.bind("XF86AudioRaiseVolume",      hl.dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"))
           hl.bind("XF86AudioLowerVolume",      hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"))
@@ -254,7 +233,7 @@
           hl.bind("Print",            hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
           hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
 
-          hl.bind(mainMod .. " + M",          hl.dsp.layout("colresize +conf"))
+          hl.bind(mainMod .. " + M",          hl.dsp.window.fullscreen())
 
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
           hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
