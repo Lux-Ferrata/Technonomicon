@@ -185,6 +185,7 @@
       # bitwarden-cli
       # bitwarden-desktop
       nvtopPackages.full
+      sops
     ];
   };
 }
