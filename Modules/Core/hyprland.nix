@@ -177,7 +177,6 @@
               rounding = 8,
             },
             scrolling = {
-              fullscreen_on_one_column = true,
               explicit_column_widths   = "1.0, 0.5",
             },
             cursor = {
