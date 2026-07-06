@@ -46,14 +46,6 @@
       while ${wlKbptr}/bin/wl-kbptr -o modes=tile -o cancellation_status_code=1; do true; done
     '';
 
-    toggleColWidth = pkgs.writeShellScript "toggle-col-width" ''
-      fullscreen=$(${pkgs.hyprland}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq '.fullscreen')
-      if [ "$fullscreen" != "0" ]; then
-        ${pkgs.hyprland}/bin/hyprctl dispatch fullscreen 0
-      fi
-      ${pkgs.hyprland}/bin/hyprctl dispatch layoutmsg "colresize +conf"
-    '';
-
     vimEdit = pkgs.writeShellScript "vim-edit" ''
       ${pkgs.wtype}/bin/wtype -M ctrl -k a
       sleep 0.15
