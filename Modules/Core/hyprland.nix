@@ -85,8 +85,7 @@
         [ -z "$CONN" ] && CONN="Not connected"
         IP=$(${pkgs.networkmanager}/bin/nmcli -t -f IP4.ADDRESS dev show | awk -F: '$2 != "" {print $2}' | head -1)
         [ -z "$IP" ] && IP="none"
-        exec ${pkgs.libnotify}/bin/notify-send "Network" "$CONN
-IP: $IP"
+        exec ${pkgs.libnotify}/bin/notify-send "Network" "$(printf '%s\nIP: %s' "$CONN" "$IP")"
       '';
     };
 
