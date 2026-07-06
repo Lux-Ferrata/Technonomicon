@@ -1,6 +1,6 @@
 { pkgs }:
 let
-  python = pkgs.python3.withPackages (ps: [ ps.requests ]);
+  python = pkgs.python3.withPackages (ps: [ ps.requests ps.tkinter ]);
 
   script = pkgs.writeText "tomatych.py" ''
     try:
