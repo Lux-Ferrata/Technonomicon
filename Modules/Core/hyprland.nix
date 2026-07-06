@@ -241,7 +241,7 @@
           hl.bind("Print",            hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
           hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
 
-          hl.bind(mainMod .. " + M",          hl.dsp.layout("colresize +conf"))
+          hl.bind(mainMod .. " + M",          hl.dsp.exec_cmd("${toggleColWidth}"))
 
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
           hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
