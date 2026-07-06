@@ -177,7 +177,7 @@
               rounding = 8,
             },
             scrolling = {
-              explicit_column_widths   = "0.5 1.0",
+              explicit_column_widths   = "0.5, 1.0",
             },
             cursor = {
               inactive_timeout = 0.5,
