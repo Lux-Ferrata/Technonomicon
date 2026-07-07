@@ -77,12 +77,57 @@
       copyq
     ];
 
-    environment.etc."scripts/screenshot.sh" = {
+    environment.etc."scripts/scrollshot.sh" = {
       mode = "0755";
       text = ''
         #!/usr/bin/env bash
-        REGION=$(${pkgs.slurp}/bin/slurp) || exit 0
-        ${pkgs.grim}/bin/grim -g "$REGION" - | ${pkgs.wl-clipboard}/bin/wl-copy
+        TMPDIR=$(mktemp -d)
+        trap 'rm -rf "$TMPDIR"' EXIT
+
+        WIN=$(${pkgs.hyprland}/bin/hyprctl activewindow -j)
+        GEO=$(echo "$WIN" | ${pkgs.jq}/bin/jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')
+        W=$(echo "$WIN" | ${pkgs.jq}/bin/jq -r '.size[0]')
+        H=$(echo "$WIN" | ${pkgs.jq}/bin/jq -r '.size[1]')
+
+        ${pkgs.wtype}/bin/wtype -M ctrl -k Home -m ctrl
+        sleep 0.3
+
+        COUNT=0
+        PREV_SHA=""
+        while [ $COUNT -lt 30 ]; do
+            F="$TMPDIR/$(printf '%04d' $COUNT).png"
+            ${pkgs.grim}/bin/grim -g "$GEO" "$F"
+            SHA=$(sha256sum "$F" | cut -c1-64)
+            if [ "$SHA" = "$PREV_SHA" ]; then
+                rm -f "$F"
+                break
+            fi
+            PREV_SHA="$SHA"
+            COUNT=$((COUNT+1))
+            ${pkgs.wtype}/bin/wtype -k Next
+            sleep 0.35
+        done
+
+        SHOTS=$(ls -1 "$TMPDIR"/[0-9]*.png 2>/dev/null | wc -l || echo 0)
+        [ "$SHOTS" -eq 0 ] && exit 0
+
+        if [ "$SHOTS" -eq 1 ]; then
+            ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPDIR/0000.png"
+        else
+            OVERLAP=40
+            CROP_H=$((H - OVERLAP))
+            IDX=1
+            for ORIG in $(ls "$TMPDIR"/[0-9]*.png | sort | tail -n +2); do
+                ${pkgs.imagemagick}/bin/magick "$ORIG" \
+                    -crop "$W"x"$CROP_H+0+$OVERLAP" +repage \
+                    "$TMPDIR/c$(printf '%04d' $IDX).png"
+                IDX=$((IDX+1))
+            done
+            ${pkgs.imagemagick}/bin/magick $(ls "$TMPDIR"/*.png | sort) \
+                -append - | ${pkgs.wl-clipboard}/bin/wl-copy
+        fi
+
+        ${pkgs.libnotify}/bin/notify-send "Scrollshot" "Captured $SHOTS frames → clipboard"
       '';
     };
 
