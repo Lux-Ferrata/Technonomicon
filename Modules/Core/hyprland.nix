@@ -85,11 +85,15 @@
         TMPDIR=$(mktemp -d)
         trap 'rm -rf "$TMPDIR"' EXIT
 
-        WIN=$(${pkgs.hyprland}/bin/hyprctl activewindow -j)
-        GEO=$(echo "$WIN" | ${pkgs.jq}/bin/jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')
-        W=$(echo "$WIN" | ${pkgs.jq}/bin/jq -r '.size[0]')
-        H=$(echo "$WIN" | ${pkgs.jq}/bin/jq -r '.size[1]')
+        # Let user select a region on screen
+        GEO=$(${pkgs.slurp}/bin/slurp) || exit 0
 
+        # Parse width and height from "X,Y WxH"
+        WH=$(echo "$GEO" | awk '{print $2}')
+        W=$(echo "$WH" | cut -dx -f1)
+        H=$(echo "$WH" | cut -dx -f2)
+
+        # Scroll the focused window to the top, then capture frame by frame
         ${pkgs.wtype}/bin/wtype -M ctrl -k Home -m ctrl
         sleep 0.3
 
@@ -115,6 +119,7 @@
         if [ "$SHOTS" -eq 1 ]; then
             ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPDIR/0000.png"
         else
+            # Page Down leaves ~40px overlap with the previous frame; crop it out
             OVERLAP=40
             CROP_H=$((H - OVERLAP))
             IDX=1
