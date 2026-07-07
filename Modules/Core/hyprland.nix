@@ -85,32 +85,45 @@
         TMPDIR=$(mktemp -d)
         trap 'rm -rf "$TMPDIR"' EXIT
 
-        # Let user select a region on screen
+        # Region selection
         GEO=$(${pkgs.slurp}/bin/slurp) || exit 0
 
-        # Parse width and height from "X,Y WxH"
+        # Parse "X,Y WxH"
+        Y0=$(echo "$GEO" | cut -d',' -f2 | awk '{print $1}')
         WH=$(echo "$GEO" | awk '{print $2}')
         W=$(echo "$WH" | cut -dx -f1)
         H=$(echo "$WH" | cut -dx -f2)
+        Y_BOTTOM=$((Y0 + H))
+        SCROLL_ZONE=80   # px from bottom edge that triggers a Page Down
 
-        # Scroll the focused window to the top, then capture frame by frame
-        ${pkgs.wtype}/bin/wtype -M ctrl -k Home -m ctrl
-        sleep 0.3
+        ${pkgs.libnotify}/bin/notify-send "Scrollshot active" \
+            "Hold cursor at bottom of selection to scroll — auto-stops when done" -t 3000
 
         COUNT=0
         PREV_SHA=""
-        while [ $COUNT -lt 30 ]; do
+        STILL=0
+
+        while [ $STILL -lt 15 ]; do
+            # Proximity scroll: if cursor is in the bottom SCROLL_ZONE, press Page Down
+            CUR_Y=$(${pkgs.hyprland}/bin/hyprctl cursorpos | awk -F'[, ]+' '{print $2}')
+            if [ "$CUR_Y" -gt "$((Y_BOTTOM - SCROLL_ZONE))" ]; then
+                ${pkgs.wtype}/bin/wtype -k Next
+            fi
+
+            # Capture frame and track changes
             F="$TMPDIR/$(printf '%04d' $COUNT).png"
             ${pkgs.grim}/bin/grim -g "$GEO" "$F"
             SHA=$(sha256sum "$F" | cut -c1-64)
             if [ "$SHA" = "$PREV_SHA" ]; then
                 rm -f "$F"
-                break
+                STILL=$((STILL+1))
+            else
+                PREV_SHA="$SHA"
+                COUNT=$((COUNT+1))
+                STILL=0
             fi
-            PREV_SHA="$SHA"
-            COUNT=$((COUNT+1))
-            ${pkgs.wtype}/bin/wtype -k Next
-            sleep 0.35
+
+            sleep 0.3
         done
 
         SHOTS=$(ls -1 "$TMPDIR"/[0-9]*.png 2>/dev/null | wc -l || echo 0)
@@ -119,7 +132,7 @@
         if [ "$SHOTS" -eq 1 ]; then
             ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPDIR/0000.png"
         else
-            # Page Down leaves ~40px overlap with the previous frame; crop it out
+            # Page Down overlaps ~40px with the previous frame; crop that out
             OVERLAP=40
             CROP_H=$((H - OVERLAP))
             IDX=1
