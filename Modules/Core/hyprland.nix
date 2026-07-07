@@ -75,6 +75,7 @@
       networkmanagerapplet
       udiskie
       copyq
+      imagemagick
     ];
 
     environment.etc."scripts/scrollshot.sh" = {
