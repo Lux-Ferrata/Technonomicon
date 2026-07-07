@@ -77,6 +77,19 @@
       copyq
     ];
 
+    environment.etc."scripts/screenshot.sh" = {
+      mode = "0755";
+      text = ''
+        #!/usr/bin/env bash
+        REGION=$(${pkgs.slurp}/bin/slurp) || exit 0
+        mkdir -p "$HOME/Pictures/Screenshots"
+        F="$HOME/Pictures/Screenshots/$(date +%Y%m%d_%H%M%S).png"
+        ${pkgs.grim}/bin/grim -g "$REGION" "$F"
+        ${pkgs.wl-clipboard}/bin/wl-copy < "$F"
+        ${pkgs.libnotify}/bin/notify-send "Screenshot saved" "$F"
+      '';
+    };
+
     environment.etc."scripts/net-info.sh" = {
       mode = "0755";
       text = ''
