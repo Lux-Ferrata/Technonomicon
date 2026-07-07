@@ -56,7 +56,7 @@
         ::1 news.google.com
     '';
 
-    time.timeZone = "America/Detroit";
+    time.timeZone = "America/New_York";
 
     environment.systemPackages = with pkgs; [
       impala
