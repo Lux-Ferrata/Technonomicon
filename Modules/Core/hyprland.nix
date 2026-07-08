@@ -59,8 +59,13 @@
         'nvim "$TMPFILE"; ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPFILE"; rm -f "$TMPFILE"'
     '';
 
+    wayscrollshot =
+      (inputs.wayscrollshot.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
+        patches = (old.patches or []) ++ [ (inputs.self + /patches/wayscrollshot-max-preview-height.patch) ];
+      }));
+
     scrollshot = pkgs.writeShellScript "scrollshot" ''
-      ${inputs.wayscrollshot.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/wayscrollshot --clipboard --preview-width 120
+      ${wayscrollshot}/bin/wayscrollshot --clipboard --max-preview-height 36
     '';
   in {
 
