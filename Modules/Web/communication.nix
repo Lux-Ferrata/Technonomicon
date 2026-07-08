@@ -12,6 +12,10 @@
       packages = [
         { appId = "com.discordapp.Discord"; origin = "flathub"; }
       ];
+      overrides."com.discordapp.Discord".Context.filesystems = [
+        "/etc/localtime:ro"
+        "/etc/zoneinfo:ro"
+      ];
     };
 
     environment.systemPackages = with pkgs; [
