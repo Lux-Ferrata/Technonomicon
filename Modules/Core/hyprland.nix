@@ -80,7 +80,7 @@
         IDLE_MS=$(( (NOW_NS - LAST_NS) / 1000000 ))
 
         if (( CY > SCREEN_H - EDGE_ZONE )); then
-          ${pkgs.ydotool}/bin/ydotool scroll --axis-y -3
+          ${pkgs.wtype}/bin/wtype -k Down -k Down -k Down -k Down -k Down
           sleep $SCROLL_DELAY
           ${pkgs.grim}/bin/grim -g "$REGION" "$TMPDIR/frame_$FRAME.png"
           FRAME=$((FRAME + 1))
