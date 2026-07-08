@@ -106,6 +106,8 @@
       python3Packages.jupyter-client
       python3Packages.nbformat
       python3Packages.cairosvg
+      # image.nvim — provides the magick luarock via nix instead of luarocks
+      luajitPackages.magick
     ];
 
     home-manager.users.xin.programs.vscodium = {
