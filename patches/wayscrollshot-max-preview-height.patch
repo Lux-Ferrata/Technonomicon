@@ -13,7 +13,7 @@
      pub algorithm: Algorithm,
 --- a/src/overlay.rs
 +++ b/src/overlay.rs
-@@ -57,6 +57,7 @@ impl LayerShellOverlay {
+@@ -57,10 +57,11 @@ impl LayerShellOverlay {
      pub fn new(
          command_tx: mpsc::Sender<UserCommand>,
          region: Region,
@@ -22,7 +22,7 @@
      ) -> Result<Self> {
          let (tx, rx) = mpsc::channel();
          let ready = Arc::new(AtomicBool::new(false));
-@@ -64,7 +65,7 @@ impl LayerShellOverlay {
+         let ready_clone = ready.clone();
          let handle = thread::spawn(move || {
              if let Err(err) =
 -                run_layer_shell_overlay(rx, command_tx, ready_clone, region, preview_width)
@@ -30,6 +30,8 @@
              {
                  log::warn!("layer-shell overlay failed: {err}");
              }
+--- a/src/overlay.rs
++++ b/src/overlay.rs
 @@ -650,8 +651,9 @@ fn run_layer_shell_overlay(
      rx: mpsc::Receiver<LayerMessage>,
      command_tx: mpsc::Sender<UserCommand>,
@@ -47,7 +49,7 @@
 +        max_height: max_preview_height.unwrap_or(region.h),
 --- a/src/session.rs
 +++ b/src/session.rs
-@@ -46,6 +46,7 @@ pub fn run(args: Args) -> Result<()> {
+@@ -50,7 +50,8 @@ pub fn run(args: Args) -> Result<()> {
          Some(LayerShellOverlay::new(
              command_tx.clone(),
              region.clone(),
