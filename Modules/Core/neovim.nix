@@ -186,6 +186,8 @@
     home-manager.users.xin = {
       imports = [ inputs.lazyvim.homeManagerModules.default ];
 
+      programs.neovim.extraLuaPackages = ps: [ ps.magick ];
+
       programs.lazyvim = {
         enable = true;
 
