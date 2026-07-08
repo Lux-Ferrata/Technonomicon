@@ -252,13 +252,9 @@
 
           hl.bind(mainMod .. " + M",          hl.dsp.layout("colresize +conf"))
 
-          hl.bind(mainMod .. " + mouse:272",  hl.dsp.window.drag(),                            { mouse = true })
-          hl.bind(mainMod .. " + mouse:273",  hl.dsp.window.resize(),                          { mouse = true })
-          hl.bind(mainMod .. " + mouse:274",  hl.dsp.exec_cmd("${scrollshotToggle}"),          { mouse = true })
-          hl.bind(mainMod .. " + J",          hl.dsp.exec_cmd("${scrollshotExtend} down"))
-          hl.bind(mainMod .. " + K",          hl.dsp.exec_cmd("${scrollshotExtend} up"))
-          hl.bind(mainMod .. " + mouse_down", hl.dsp.exec_cmd("${scrollshotExtend} down"))
-          hl.bind(mainMod .. " + mouse_up",   hl.dsp.exec_cmd("${scrollshotExtend} up"))
+          hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),                 { mouse = true })
+          hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),               { mouse = true })
+          hl.bind(mainMod .. " + mouse:274", hl.dsp.exec_cmd("${scrollshot}"),     { mouse = true })
 
         '';
 
