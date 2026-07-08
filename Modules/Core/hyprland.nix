@@ -60,10 +60,7 @@
     '';
 
     scrollshot = pkgs.writeShellScript "scrollshot" ''
-      FILE=$(mktemp /tmp/scrollshot-XXXXXX.png)
-      ${inputs.wayscrollshot.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/wayscrollshot "$FILE" \
-        && ${pkgs.wl-clipboard}/bin/wl-copy < "$FILE"
-      rm -f "$FILE"
+      ${inputs.wayscrollshot.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/wayscrollshot --clipboard
     '';
   in {
 
