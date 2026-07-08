@@ -259,6 +259,96 @@
               },
             }
           '';
+
+          image = ''
+            return {
+              "3rd/image.nvim",
+              opts = {
+                backend    = "kitty",
+                max_width  = 100,
+                max_height = 12,
+              },
+            }
+          '';
+
+          molten = ''
+            return {
+              "benlubas/molten-nvim",
+              build = ":UpdateRemotePlugins",
+              init = function()
+                vim.g.molten_image_provider        = "image.nvim"
+                vim.g.molten_output_win_max_height = 20
+                vim.g.molten_auto_open_output      = false
+                vim.g.molten_wrap_output           = true
+              end,
+              keys = {
+                { "<leader>mi", ":MoltenInit<CR>",                                 desc = "Initialize Molten" },
+                { "<leader>me", ":MoltenEvaluateOperator<CR>",                     desc = "Evaluate operator" },
+                { "<leader>ml", ":MoltenEvaluateLine<CR>",                         desc = "Evaluate line" },
+                { "<leader>mv", ":<C-u>MoltenEvaluateVisual<CR>", mode = "v",      desc = "Evaluate visual" },
+                { "<leader>mo", ":MoltenEnterOutput<CR>",                          desc = "Enter output" },
+                { "<leader>mh", ":MoltenHideOutput<CR>",                           desc = "Hide output" },
+              },
+            }
+          '';
+
+          quarto = ''
+            return {
+              {
+                "quarto-dev/quarto-nvim",
+                dependencies = { "jmbuhr/otter.nvim", "nvim-treesitter/nvim-treesitter" },
+                opts = {
+                  lspFeatures = {
+                    languages = { "python", "julia", "r", "lua", "bash" },
+                  },
+                },
+              },
+              {
+                "jmbuhr/otter.nvim",
+                opts = {},
+              },
+            }
+          '';
+
+          imgclip = ''
+            return {
+              "HakonHarnes/img-clip.nvim",
+              event = "VeryLazy",
+              opts = {
+                default = {
+                  embed_image_as_base64 = false,
+                  prompt_for_file_name  = false,
+                  drag_and_drop         = { insert_mode = true },
+                },
+              },
+              keys = {
+                { "<leader>P", "<cmd>PasteImage<cr>", desc = "Paste image" },
+              },
+            }
+          '';
+
+          nabla = ''
+            return {
+              "jbyuki/nabla.nvim",
+              keys = {
+                { "<leader>np", function() require("nabla").popup() end,       desc = "Preview equation" },
+                { "<leader>nt", function() require("nabla").toggle_virt() end, desc = "Toggle math virtual text" },
+              },
+            }
+          '';
+
+          bibtex = ''
+            return {
+              "nvim-telescope/telescope-bibtex.nvim",
+              dependencies = { "nvim-telescope/telescope.nvim" },
+              config = function()
+                require("telescope").load_extension("bibtex")
+              end,
+              keys = {
+                { "<leader>cb", "<cmd>Telescope bibtex<cr>", desc = "BibTeX references" },
+              },
+            }
+          '';
         };
 
         config = {
