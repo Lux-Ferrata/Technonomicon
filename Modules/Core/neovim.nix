@@ -102,6 +102,10 @@
       # Jupyter Notebooks
       zeromq
       python3Packages.jupyter
+      python3Packages.pynvim
+      python3Packages.jupyter-client
+      python3Packages.nbformat
+      python3Packages.cairosvg
     ];
 
     home-manager.users.xin.programs.vscodium = {
