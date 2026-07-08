@@ -311,8 +311,9 @@
 
           hl.bind(mainMod .. " + M",          hl.dsp.layout("colresize +conf"))
 
-          hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
-          hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+          hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),            { mouse = true })
+          hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),          { mouse = true })
+          hl.bind(mainMod .. " + mouse:274", hl.dsp.exec_cmd("${scrollshot}"), { mouse = true })
 
         '';
 
