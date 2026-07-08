@@ -60,7 +60,7 @@
     '';
 
     scrollshot = pkgs.writeShellScript "scrollshot" ''
-      SCREEN_H=$(${pkgs.hyprland}/bin/hyprctl monitors -j | ${pkgs.jq}/bin/jq '.[0].height')
+      SCREEN_H=$(${pkgs.hyprland}/bin/hyprctl monitors -j | ${pkgs.jq}/bin/jq '.[0].height / .[0].scale | floor')
       EDGE_ZONE=80
       SCROLL_DELAY=0.3
       IDLE_LIMIT_MS=1500
