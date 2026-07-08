@@ -60,36 +60,23 @@
     '';
 
     scrollshot = pkgs.writeShellScript "scrollshot" ''
-      SCREEN_H=$(${pkgs.hyprland}/bin/hyprctl monitors -j | ${pkgs.jq}/bin/jq '.[0].height / .[0].scale | floor')
-      EDGE_ZONE=80
-      SCROLL_DELAY=0.3
-      IDLE_LIMIT_MS=1500
+      SCROLL_STEPS=5
+      SCROLL_DELAY=0.4
       TMPDIR=$(mktemp -d)
       FRAME=0
-      SCROLLED=0
 
       REGION=$(${pkgs.slurp}/bin/slurp) || { rm -rf "$TMPDIR"; exit 1; }
 
+      sleep 0.3
+
       ${pkgs.grim}/bin/grim -g "$REGION" "$TMPDIR/frame_$FRAME.png"
       FRAME=$((FRAME + 1))
-      LAST_NS=$(date +%s%N)
 
-      while true; do
-        CY=$(${pkgs.hyprland}/bin/hyprctl cursorpos -j | ${pkgs.jq}/bin/jq '.y')
-        NOW_NS=$(date +%s%N)
-        IDLE_MS=$(( (NOW_NS - LAST_NS) / 1000000 ))
-
-        if (( CY > SCREEN_H - EDGE_ZONE )); then
-          ${pkgs.wtype}/bin/wtype -k Down -k Down -k Down -k Down -k Down
-          sleep $SCROLL_DELAY
-          ${pkgs.grim}/bin/grim -g "$REGION" "$TMPDIR/frame_$FRAME.png"
-          FRAME=$((FRAME + 1))
-          LAST_NS=$(date +%s%N)
-          SCROLLED=1
-        elif (( SCROLLED && IDLE_MS > IDLE_LIMIT_MS )); then
-          break
-        fi
-        sleep 0.05
+      for i in $(seq 1 $SCROLL_STEPS); do
+        ${pkgs.wtype}/bin/wtype -k Next
+        sleep $SCROLL_DELAY
+        ${pkgs.grim}/bin/grim -g "$REGION" "$TMPDIR/frame_$FRAME.png"
+        FRAME=$((FRAME + 1))
       done
 
       ${pkgs.python3.withPackages (ps: [ ps.pillow ps.numpy ])}/bin/python3 - "$TMPDIR" <<'PYEOF'
@@ -103,19 +90,21 @@
 
       def new_rows(prev, curr):
           h = prev.shape[0]
-          best_d, best_score = 1, float('inf')
-          for d in range(1, h * 3 // 4):
+          best_d, best_score = 10, float('inf')
+          for d in range(10, h - 10):
               overlap = h - d
-              score = np.mean(np.abs(prev[d:].astype(float) - curr[:overlap].astype(float)))
+              score = np.mean(np.abs(prev[d:, ::8].astype(float) - curr[:overlap, ::8].astype(float)))
               if score < best_score:
                   best_score, best_d = score, d
           return curr[h - best_d:]
 
       parts = [images[0]]
       for i in range(1, len(images)):
-          extra = new_rows(images[i-1], images[i])
-          if extra.shape[0] > 0:
-              parts.append(extra)
+          same = np.mean(np.abs(images[i-1].astype(float) - images[i].astype(float))) < 1.0
+          if not same:
+              extra = new_rows(images[i-1], images[i])
+              if extra.shape[0] > 0:
+                  parts.append(extra)
 
       Image.fromarray(np.vstack(parts).astype(np.uint8)).save(tmpdir + "/result.png")
       PYEOF
