@@ -1,0 +1,57 @@
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -44,6 +44,10 @@ pub struct Args {
+     #[arg(long)]
+     pub no_border: bool,
+
++    /// Maximum height of the preview window in pixels (defaults to capture region height)
++    #[arg(long)]
++    pub max_preview_height: Option<u32>,
++
+     /// Stitching algorithm to use
+     #[arg(short, long, value_enum, default_value_t = Algorithm::OpenCvOrb)]
+     pub algorithm: Algorithm,
+--- a/src/overlay.rs
++++ b/src/overlay.rs
+@@ -57,6 +57,7 @@ impl LayerShellOverlay {
+     pub fn new(
+         command_tx: mpsc::Sender<UserCommand>,
+         region: Region,
+         preview_width: u32,
++        max_preview_height: Option<u32>,
+     ) -> Result<Self> {
+         let (tx, rx) = mpsc::channel();
+         let ready = Arc::new(AtomicBool::new(false));
+@@ -64,7 +65,7 @@ impl LayerShellOverlay {
+         let handle = thread::spawn(move || {
+             if let Err(err) =
+-                run_layer_shell_overlay(rx, command_tx, ready_clone, region, preview_width)
++                run_layer_shell_overlay(rx, command_tx, ready_clone, region, preview_width, max_preview_height)
+             {
+                 log::warn!("layer-shell overlay failed: {err}");
+             }
+@@ -650,8 +651,9 @@ fn run_layer_shell_overlay(
+     rx: mpsc::Receiver<LayerMessage>,
+     command_tx: mpsc::Sender<UserCommand>,
+     ready: Arc<AtomicBool>,
+     region: Region,
+     preview_width: u32,
++    max_preview_height: Option<u32>,
+ ) -> Result<()> {
+     log::info!("Starting layer-shell overlay thread");
+     let output_rects = match probe_output_rects() {
+@@ -717,7 +719,7 @@ fn run_layer_shell_overlay(
+         width: initial_preview_width,
+         height: INITIAL_HEIGHT,
+-        max_height: region.h,
++        max_height: max_preview_height.unwrap_or(region.h),
+--- a/src/session.rs
++++ b/src/session.rs
+@@ -46,6 +46,7 @@ pub fn run(args: Args) -> Result<()> {
+         Some(LayerShellOverlay::new(
+             command_tx.clone(),
+             region.clone(),
+             args.preview_width,
++            args.max_preview_height,
+         )?)
+     };
