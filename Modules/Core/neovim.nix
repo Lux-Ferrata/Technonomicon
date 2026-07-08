@@ -184,9 +184,10 @@
         enable = true;
 
         extras = {
-          lang.nix        = { enable = true; };
-          lang.python     = { enable = true; installDependencies = false; };
-          lang.typescript = { enable = true; installDependencies = false; };
+          lang.nix              = { enable = true; };
+          lang.python           = { enable = true; installDependencies = false; };
+          lang.typescript       = { enable = true; installDependencies = false; };
+          editor."undo-tree"    = { enable = true; };
         };
 
         plugins = {
