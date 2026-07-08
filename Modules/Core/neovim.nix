@@ -187,6 +187,7 @@
           lang.nix              = { enable = true; };
           lang.python           = { enable = true; installDependencies = false; };
           lang.typescript       = { enable = true; installDependencies = false; };
+          lang.tex              = { enable = true; };
           editor."undo-tree"    = { enable = true; };
         };
 
