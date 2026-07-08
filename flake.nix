@@ -25,6 +25,8 @@
 
     lazyvim.url = "github:pfassina/lazyvim-nix";
     lazyvim.inputs.nixpkgs.follows = "nixpkgs";
+
+    wayscrollshot.url = "github:jswysnemc/wayscrollshot";
   };
 
   outputs = inputs@{ self, flake-parts, import-tree, ... }:
