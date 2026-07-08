@@ -29,28 +29,12 @@
     wayscrollshot.url = "github:jswysnemc/wayscrollshot";
   };
 
-  outputs = inputs@{ self, flake-parts, import-tree, nixpkgs, ... }:
+  outputs = inputs@{ self, flake-parts, import-tree, ... }:
   flake-parts.lib.mkFlake { inherit inputs; } {
     systems = [ "x86_64-linux" ];
     imports = [
       (import-tree ./Modules)
       (import-tree ./Hosts)
     ];
-
-    perSystem = { pkgs, system, ... }: {
-      _module.args.pkgs = import nixpkgs {
-        inherit system;
-        overlays = [
-          (final: prev: {
-            wayscrollshot-patched =
-              inputs.wayscrollshot.packages.${system}.default.overrideAttrs (old: {
-                patches = (old.patches or []) ++ [
-                  ./patches/wayscrollshot-max-preview-height.patch
-                ];
-              });
-          })
-        ];
-      };
-    };
   };
 }
