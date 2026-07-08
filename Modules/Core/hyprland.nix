@@ -111,8 +111,8 @@
           rm -rf "$SS_TMPDIR"
         else
           SS_TMPDIR=$(mktemp -d)
-          SS_REGION=$(${pkgs.slurp}/bin/slurp) || { rm -rf "$SS_TMPDIR"; exit 1; }
-          sleep 0.2
+          SS_REGION=$(${pkgs.hyprland}/bin/hyprctl activewindow -j \
+            | ${pkgs.jq}/bin/jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')
           ${pkgs.grim}/bin/grim -g "$SS_REGION" "$SS_TMPDIR/frame_0.png"
           printf '%s' "$SS_TMPDIR" > "$SD"
           printf '%s' "$SS_REGION" > "$SR"
