@@ -58,6 +58,72 @@
       ghostty --title=vim-edit -e bash -c \
         'nvim "$TMPFILE"; ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPFILE"; rm -f "$TMPFILE"'
     '';
+
+    scrollshot = pkgs.writeShellScript "scrollshot" ''
+      SCREEN_H=$(${pkgs.hyprland}/bin/hyprctl monitors -j | ${pkgs.jq}/bin/jq '.[0].height')
+      EDGE_ZONE=80
+      SCROLL_DELAY=0.3
+      IDLE_LIMIT_MS=1500
+      TMPDIR=$(mktemp -d)
+      FRAME=0
+      SCROLLED=0
+
+      REGION=$(${pkgs.slurp}/bin/slurp) || { rm -rf "$TMPDIR"; exit 1; }
+
+      ${pkgs.grim}/bin/grim -g "$REGION" "$TMPDIR/frame_$FRAME.png"
+      FRAME=$((FRAME + 1))
+      LAST_NS=$(date +%s%N)
+
+      while true; do
+        CY=$(${pkgs.hyprland}/bin/hyprctl cursorpos -j | ${pkgs.jq}/bin/jq '.y')
+        NOW_NS=$(date +%s%N)
+        IDLE_MS=$(( (NOW_NS - LAST_NS) / 1000000 ))
+
+        if (( CY > SCREEN_H - EDGE_ZONE )); then
+          ${pkgs.ydotool}/bin/ydotool scroll --axis-y 3
+          sleep $SCROLL_DELAY
+          ${pkgs.grim}/bin/grim -g "$REGION" "$TMPDIR/frame_$FRAME.png"
+          FRAME=$((FRAME + 1))
+          LAST_NS=$(date +%s%N)
+          SCROLLED=1
+        elif (( SCROLLED && IDLE_MS > IDLE_LIMIT_MS )); then
+          break
+        fi
+        sleep 0.05
+      done
+
+      ${pkgs.python3.withPackages (ps: [ ps.pillow ps.numpy ])}/bin/python3 - "$TMPDIR" <<'PYEOF'
+      import sys, glob
+      from PIL import Image
+      import numpy as np
+
+      tmpdir = sys.argv[1]
+      frames = sorted(glob.glob(tmpdir + "/frame_*.png"))
+      images = [np.array(Image.open(f)) for f in frames]
+
+      def new_rows(prev, curr):
+          h = prev.shape[0]
+          best_d, best_score = 1, float('inf')
+          for d in range(1, h * 3 // 4):
+              overlap = h - d
+              score = np.mean(np.abs(prev[d:].astype(float) - curr[:overlap].astype(float)))
+              if score < best_score:
+                  best_score, best_d = score, d
+          return curr[h - best_d:]
+
+      parts = [images[0]]
+      for i in range(1, len(images)):
+          extra = new_rows(images[i-1], images[i])
+          if extra.shape[0] > 0:
+              parts.append(extra)
+
+      Image.fromarray(np.vstack(parts).astype(np.uint8)).save(tmpdir + "/result.png")
+      PYEOF
+
+      ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPDIR/result.png"
+      ${pkgs.libnotify}/bin/notify-send "ScrollShot" "Copied to clipboard ($FRAME frames)"
+      rm -rf "$TMPDIR"
+    '';
   in {
 
     programs.hyprland.enable = true;
