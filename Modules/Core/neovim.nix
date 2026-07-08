@@ -193,7 +193,6 @@
           lang.typescript       = { enable = true; installDependencies = false; };
           lang.tex              = { enable = true; };
           coding.luasnip        = { enable = true; };
-          editor."undo-tree"    = { enable = true; };
         };
 
         plugins = {
