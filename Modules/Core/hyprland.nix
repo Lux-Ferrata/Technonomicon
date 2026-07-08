@@ -59,81 +59,11 @@
         'nvim "$TMPFILE"; ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPFILE"; rm -f "$TMPFILE"'
     '';
 
-    scrollshotToggle =
-      let py = pkgs.python3.withPackages (ps: [ ps.pillow ps.numpy ]);
-      in pkgs.writeShellScript "scrollshot-toggle" ''
-        SD=/tmp/scrollshot-tmpdir
-        SR=/tmp/scrollshot-region
-        SF=/tmp/scrollshot-frame
-
-        if [ -f "$SD" ]; then
-          SS_TMPDIR=$(cat "$SD")
-          SS_REGION=$(cat "$SR")
-          SS_FRAME=$(cat "$SF")
-          rm -f "$SD" "$SR" "$SF"
-
-          ${py}/bin/python3 - "$SS_TMPDIR" <<'PYEOF'
-          import sys, glob
-          from PIL import Image
-          import numpy as np
-
-          tmpdir = sys.argv[1]
-          frames = sorted(glob.glob(tmpdir + "/frame_*.png"))
-          images = [np.array(Image.open(f)) for f in frames]
-
-          def new_rows(prev, curr):
-              h = prev.shape[0]
-              best_d, best_score = 10, float('inf')
-              for d in range(10, h - 10):
-                  overlap = h - d
-                  score = np.mean(np.abs(prev[d:, ::8].astype(float) - curr[:overlap, ::8].astype(float)))
-                  if score < best_score:
-                      best_score, best_d = score, d
-              return curr[h - best_d:]
-
-          parts = [images[0]]
-          for i in range(1, len(images)):
-              same = np.mean(np.abs(images[i-1].astype(float) - images[i].astype(float))) < 1.0
-              if not same:
-                  extra = new_rows(images[i-1], images[i])
-                  if extra.shape[0] > 0:
-                      parts.append(extra)
-
-          Image.fromarray(np.vstack(parts).astype(np.uint8)).save(tmpdir + "/result.png")
-          PYEOF
-
-          if [ -f "$SS_TMPDIR/result.png" ]; then
-            ${pkgs.wl-clipboard}/bin/wl-copy < "$SS_TMPDIR/result.png"
-            ${pkgs.libnotify}/bin/notify-send "ScrollShot" "Copied to clipboard ($SS_FRAME frames)"
-          else
-            ${pkgs.libnotify}/bin/notify-send "ScrollShot" "Stitch failed"
-          fi
-          rm -rf "$SS_TMPDIR"
-        else
-          SS_TMPDIR=$(mktemp -d)
-          SS_REGION=$(${pkgs.hyprland}/bin/hyprctl activewindow -j \
-            | ${pkgs.jq}/bin/jq -r '"\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])"')
-          ${pkgs.grim}/bin/grim -g "$SS_REGION" "$SS_TMPDIR/frame_0.png"
-          printf '%s' "$SS_TMPDIR" > "$SD"
-          printf '%s' "$SS_REGION" > "$SR"
-          printf '%s' 1            > "$SF"
-          ${pkgs.libnotify}/bin/notify-send "ScrollShot" "Started — J/K or scroll to extend, middle-click to finish"
-        fi
-      '';
-
-    scrollshotExtend = pkgs.writeShellScript "scrollshot-extend" ''
-      [ -f /tmp/scrollshot-tmpdir ] || exit 0
-      SS_TMPDIR=$(cat /tmp/scrollshot-tmpdir)
-      SS_REGION=$(cat /tmp/scrollshot-region)
-      SS_FRAME=$(cat /tmp/scrollshot-frame)
-      if [ "$1" = "up" ]; then
-        ${pkgs.wtype}/bin/wtype -k Prior
-      else
-        ${pkgs.wtype}/bin/wtype -k Next
-      fi
-      sleep 0.35
-      ${pkgs.grim}/bin/grim -g "$SS_REGION" "$SS_TMPDIR/frame_$SS_FRAME.png"
-      printf '%s' $((SS_FRAME + 1)) > /tmp/scrollshot-frame
+    scrollshot = pkgs.writeShellScript "scrollshot" ''
+      FILE=$(mktemp /tmp/scrollshot-XXXXXX.png)
+      ${inputs.wayscrollshot.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/wayscrollshot "$FILE" \
+        && ${pkgs.wl-clipboard}/bin/wl-copy < "$FILE"
+      rm -f "$FILE"
     '';
   in {
 
