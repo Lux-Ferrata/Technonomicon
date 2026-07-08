@@ -60,7 +60,7 @@
     '';
 
     scrollshot = pkgs.writeShellScript "scrollshot" ''
-      ${inputs.wayscrollshot.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/wayscrollshot --clipboard
+      ${inputs.wayscrollshot.packages.${pkgs.stdenv.hostPlatform.system}.default}/bin/wayscrollshot --clipboard --no-preview
     '';
   in {
 
