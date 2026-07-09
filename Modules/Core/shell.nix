@@ -45,8 +45,8 @@
       programs.git = {
         enable = true;
         settings = {
-          user.name = "xin";
-          user.email = "git@ironshark.org";
+          user.name  = config.tn.full_name;
+          user.email = config.tn.email_address;
           alias = {
             save = "! msg=$(gum write --placeholder 'Commit message...') && [ -n \"$msg\" ] && git add . && git commit -m \"$msg\"";
             send = "! git status && echo -n 'Commit Message: ' && read -r CommitMessage && git add . && git commit -m \"$CommitMessage\" && git push";
