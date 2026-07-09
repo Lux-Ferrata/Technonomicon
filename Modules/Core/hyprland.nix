@@ -61,7 +61,7 @@
 
     wayscrollshot =
       (inputs.wayscrollshot.packages.${pkgs.stdenv.hostPlatform.system}.default.overrideAttrs (old: {
-        patches = (old.patches or []) ++ [ (inputs.self + /patches/wayscrollshot-max-preview-height.patch) ];
+        patches = (old.patches or []) ++ [ ../../patches/wayscrollshot-max-preview-height.patch ];
       }));
 
     scrollshot = pkgs.writeShellScript "scrollshot" ''
