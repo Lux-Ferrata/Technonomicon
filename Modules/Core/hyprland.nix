@@ -511,10 +511,10 @@
           hl.bind(mainMod .. " + V",          hl.dsp.exec_cmd("hyprctl dispatch togglefloating"))
           hl.bind(mainMod .. " + Tab",        hl.dsp.exec_cmd("hyprctl dispatch workspace r-1"))
           hl.bind(mainMod .. " + comma",      hl.dsp.exec_cmd("hyprctl dispatch workspace r+1"))
-          hl.bind(mainMod .. " + minus",      hl.dsp.exec_cmd("hyprctl dispatch resizeactive -100 0"))
-          hl.bind(mainMod .. " + equal",      hl.dsp.exec_cmd("hyprctl dispatch resizeactive 100 0"))
+          hl.bind(mainMod .. " + minus",         hl.dsp.exec_cmd("hyprctl dispatch resizeactive -100 0"))
+          hl.bind(mainMod .. " + equal",         hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 100"))
           hl.bind(mainMod .. " + SHIFT + minus", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 -100"))
-          hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 100"))
+          hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 100 0"))
           hl.bind("CTRL + " .. mainMod .. " + V", hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
 
