@@ -147,11 +147,6 @@
         desc = "Permanently delete"
       '';
 
-      ".config/ghostty/config".text = ''
-        confirm-close-surface = false
-        command = zellij
-      '';
-
       ".config/zellij/config.kdl".text = ''
         pane_frames false
         simplified_ui true
