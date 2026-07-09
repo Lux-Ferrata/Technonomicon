@@ -94,6 +94,9 @@
       hyprpicker
       hyprsunset
       libnotify
+      satty
+      wf-recorder
+      nwg-look
     ];
 
     environment.etc."scripts/net-info.sh" = {
