@@ -23,8 +23,6 @@
       lean4
       # Reproducible documents (integrates R, Python, Julia)
       quarto
-      # Modern document preparation
-      typst
     ];
   };
 }
