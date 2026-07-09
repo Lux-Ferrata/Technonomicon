@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this repo is
 
 Personal NixOS system configuration ("Technonomicon") for two machines:
-- **Akmon** — desktop with Nvidia GPU, Kinesis Advantage2 keyboard, runs bash
+- **Akmon** — desktop with Nvidia GPU, Kinesis Advantage2 keyboard
 - **Kvasir** — Lenovo ThinkPad T480s laptop, runs xonsh
 
 ## Building and deploying
@@ -52,16 +52,38 @@ The flake uses `flake-parts` + `import-tree` to auto-import all `.nix` files und
 ### Module naming convention
 
 All shared modules are prefixed `Tn-` (Technonomicon):
+
+**Core/**
+- `Tn-desktop` — wayland/wm, greetd, kanata, pipewire, fonts, dconf, GTK theme
+- `Tn-hyprland` — Hyprland WM, Quickshell bar, hypridle, hyprlock, keybindings, Ghostty terminal config
+- `Tn-neovim` — LazyVim + Neovim, dev tooling (LSPs, compilers, formatters), VSCodium, Zellij, Yazi
+- `Tn-shell` — xonsh, direnv, starship, git, core CLI tools
+- `Tn-network` — networking
 - `Tn-nix` — nix daemon settings, nh, nix-index/comma
-- `Tn-desktop` — wayland/ewm, greetd, kanata, pipewire, fonts, dconf
-- `Tn-emacs` — doom-emacs-unstraightened, dev tooling (LSPs, compilers)
-- `Tn-shell` — xonsh, direnv, starship, core CLI tools
-- `Tn-web-browsers`, `Tn-web-apps` — Brave + PWA desktop entries
-- `Tn-network`, `Tn-sound`, `Tn-pdf`, `Tn-games`, `Tn-learning`, `Tn-art`, `Tn-utf`, `Tn-virtualization`
+- `Tn-sound` — PipeWire / audio
+- `Tn-theme` — colorscheme settings
+- `Tn-utf` — Unicode / input method
+- `Tn-virtualization` — libvirt / QEMU
+
+**Knowledge/**
+- `Tn-learning` — hledger (+ ui/web), fava, beancount, visidata, datasette, anki, zotero, foliate, wtfutil
+- `Tn-mind` — Obsidian, taskwarrior, timewarrior, pomodoro-gtk
+- `Tn-pdf` — sioyek (PDF viewer with inverse search to Neovim)
+- `Tn-science` — julia, R, octave, maxima, gnuplot, gap, sage, lean4, quarto
+
+**Web/**
+- `Tn-web-browsers` — Brave
+- `Tn-web-apps` — PWA desktop entries (Gmail, Calendar, etc.)
+- `Tn-communication` — Discord
+- `Tn-email` — aerc, notmuch, isync, msmtp, khal, vdirsyncer, calcurse
+- `Tn-games` — gaming tools
+
+**Art/**
+- `Tn-art` — creative tools; contains local derivations for PureRef and Allusion (proprietary AppImage-style packages not in nixpkgs)
 
 ### Home management
 
-Uses **hjem** (not home-manager) with the `hjem-impure` extension enabled for the `xin` user. Dotfiles are managed via `environment.etc` entries in modules (not hjem's file system).
+Uses **home-manager** for the `xin` user, configured inline within each module via `home-manager.users.xin = { ... }`. Dotfiles that live outside home-manager are managed via `environment.etc` entries.
 
 ### Secrets
 
@@ -88,10 +110,6 @@ The layout is Colemak-DH with:
 - Escape → num layer on hold (numpad layout on HJKL cluster)
 - One-shot modifiers on modifier keys (tap = one-shot, hold = sticky)
 
-### Custom packages
+### Dev toolchains installed system-wide (via Tn-neovim)
 
-`Modules/Art/` contains local derivations for PureRef and Allusion (proprietary AppImage-style packages not in nixpkgs).
-
-### Dev toolchains installed system-wide (via Tn-emacs)
-
-Haskell (GHC + cabal + HLS), Python (pyright + ruff + black), Nix (nixfmt + nixd), C (gcc + clangd), Zig (zig + zls), BQN (cbqn), Guile, Racket, NASM, GForth, Verilog/VHDL (verilator + verible + ghdl).
+Haskell (GHC + cabal + HLS), Python (pyright + ruff + black), Nix (nixfmt + nixd), C (clangd), Zig (zig + zls), BQN (cbqn), Guile, Racket, NASM, GForth, Verilog/VHDL (verilator + verible + ghdl), TypeScript (ts-ls + prettier), Typst (typst + tinymist).
