@@ -69,6 +69,8 @@ def _tnr(args):
     cd ~/Projects/Technonomicon
     ![claude --resume]
 aliases['tnr'] = _tnr
+aliases['cx'] = 'claude'
+aliases['cr'] = 'claude --resume'
 aliases['ps'] = 'cd ~/Projects/Personal-Blog/content/posts'
 aliases['pj'] = 'cd ~/Projects'
 aliases['dl'] = 'cd ~/Downloads'
