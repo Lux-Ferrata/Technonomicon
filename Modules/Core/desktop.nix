@@ -131,7 +131,16 @@
       adwaita-icon-theme
       kdePackages.skanlite
 
-      inputs.plover-flake.packages.${pkgs.stdenv.hostPlatform.system}.plover-full
+      ploverPkg
+      ploverOpen
+      (makeDesktopItem {
+        name        = "plover-open";
+        desktopName = "Plover";
+        exec        = "${ploverOpen}/bin/plover-open";
+        icon        = "plover";
+        terminal    = false;
+        categories  = [ "Utility" ];
+      })
     ];
 
     xdg.portal = {
