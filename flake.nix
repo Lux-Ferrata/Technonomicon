@@ -27,6 +27,11 @@
     lazyvim.inputs.nixpkgs.follows = "nixpkgs";
 
     wayscrollshot.url = "github:jswysnemc/wayscrollshot";
+
+    hyprland.url = "github:hyprwm/Hyprland";
+    hyprland.inputs.nixpkgs.follows = "nixpkgs";
+
+    nix-colors.url = "github:misterio77/nix-colors";
   };
 
   outputs = inputs@{ self, flake-parts, import-tree, ... }:
