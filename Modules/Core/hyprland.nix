@@ -150,6 +150,11 @@
         executable = true;
       };
 
+      home.file.".local/share/tn/bin/tn-group-daemon" = {
+        source     = tnGroupDaemon;
+        executable = true;
+      };
+
       programs.wofi = {
         enable = true;
         settings = {
