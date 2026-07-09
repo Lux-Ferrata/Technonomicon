@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Display hyprland keybindings from hyprland.lua in wofi
+
+LOCKFILE="/tmp/tn-show-keybindings.lock"
+exec 9>"$LOCKFILE"
+flock -n 9 || exit 0
+
+CONFIG="$HOME/.config/hypr/hyprland.lua"
+[ ! -f "$CONFIG" ] && exit 1
+
+grep 'hl\.bind(' "$CONFIG" \
+  | sed \
+      -e 's/.*hl\.bind(\(.*\))/\1/' \
+      -e 's/mainMod \.\. " + /SUPER + /g' \
+      -e 's/"//g' \
+      -e 's/,.*hl\.dsp\.exec_cmd(\(.*\)).*/  →  \1/' \
+      -e 's/,.*hl\.dsp\.window\.close().*/  →  close window/' \
+      -e 's/,.*hl\.dsp\.window\.move.*/  →  move window/' \
+      -e 's/,.*hl\.dsp\.window\.swap.*/  →  swap window/' \
+      -e 's/,.*hl\.dsp\.window\.drag.*/  →  drag window/' \
+      -e 's/,.*hl\.dsp\.window\.resize.*/  →  resize window/' \
+      -e 's/,.*hl\.dsp\.focus.*/  →  focus/' \
+      -e 's/,.*hl\.dsp\.exit().*/  →  exit hyprland/' \
+      -e 's/,.*hl\.dsp\.layout.*/  →  layout/' \
+      -e 's/,.*hl\.dsp\.workspace.*/  →  workspace/' \
+      -e 's/,.*hl\.dsp\..*/  →  action/' \
+      -e 's/^ *//' \
+  | wofi --dmenu --prompt "Keybindings" --insensitive --no-actions \
+         --width 700 --height 500
