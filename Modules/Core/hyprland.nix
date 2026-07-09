@@ -462,9 +462,6 @@
                 enabled = false,
               },
             },
-            gestures = {
-              workspace_swipe = false,
-            },
             decoration = {
               rounding = 4,
               blur = {
