@@ -67,7 +67,7 @@
 
         sops.secrets.xin-password.neededForUsers = true;
         sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
-        sops.defaultSopsFile = "${inputs.self}/_secrets.yaml";
+        sops.defaultSopsFile = ../../_secrets.yaml;
         sops.defaultSopsFormat = "yaml";
 
         networking.hostName = "Kvasir";
