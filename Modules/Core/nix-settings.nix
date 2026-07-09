@@ -20,5 +20,7 @@
     };
 
     nixpkgs.config.allowUnfree = true;
+
+    virtualisation.containers.enable = true;
   };
 }
