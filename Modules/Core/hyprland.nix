@@ -100,6 +100,7 @@
       hyprpicker
       hyprsunset
       libnotify
+      socat
     ];
 
     environment.etc."scripts/net-info.sh" = {
