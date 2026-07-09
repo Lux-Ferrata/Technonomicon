@@ -67,7 +67,7 @@ aliases['tnc'] = _tnc
 
 def _tnr(args):
     cd ~/Projects/Technonomicon
-    claude --resume
+    ![claude --resume]
 aliases['tnr'] = _tnr
 aliases['ps'] = 'cd ~/Projects/Personal-Blog/content/posts'
 aliases['pj'] = 'cd ~/Projects'
