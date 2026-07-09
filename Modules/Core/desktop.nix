@@ -78,6 +78,8 @@
       overpass
       fira-code
       fira-go
+      julia-mono
+      cm_unicode
     ];
 
     fonts.fontconfig.defaultFonts = {
