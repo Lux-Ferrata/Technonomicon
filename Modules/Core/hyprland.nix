@@ -75,6 +75,12 @@
     tnShowKeybindings = pkgs.writeShellScript "tn-show-keybindings"
       (builtins.readFile ../../bin/tn-show-keybindings);
 
+    tnBuffersWorkspace = pkgs.writeShellScript "tn-buffers-workspace"
+      (builtins.readFile ../../bin/tn-buffers-workspace);
+
+    tnBuffersAll = pkgs.writeShellScript "tn-buffers-all"
+      (builtins.readFile ../../bin/tn-buffers-all);
+
   in {
 
     programs.hyprland.enable = true;
