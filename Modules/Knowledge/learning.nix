@@ -3,14 +3,19 @@
 
     environment.systemPackages = with pkgs; [
       hledger
+      hledger-ui
+      hledger-web
       fava
       beancount
       gnucash
       visidata
+      datasette
       anki-bin
       zotero
+      foliate
       zathura
-pdfannots2json
+      pdfannots2json
+      wtfutil
       (symlinkJoin {
         name = "rnote-wrapped";
         paths = [ rnote ];
