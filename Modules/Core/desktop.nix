@@ -1,5 +1,15 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-desktop = { pkgs, pkgs-stable, config, ... }: {
+  flake.nixosModules.Tn-desktop = { pkgs, pkgs-stable, config, ... }:
+    let
+      ploverPkg = inputs.plover-flake.packages.${pkgs.stdenv.hostPlatform.system}.plover-full;
+      ploverOpen = pkgs.writeShellScriptBin "plover-open" ''
+        if pgrep -x plover > /dev/null; then
+          hyprctl dispatch focuswindow class:plover
+        else
+          exec env QT_QPA_PLATFORM=xcb ${ploverPkg}/bin/plover
+        fi
+      '';
+    in {
 
     hardware = {
       bluetooth.enable = true;
