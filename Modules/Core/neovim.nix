@@ -197,6 +197,7 @@
           lang.typescript       = { enable = true; installDependencies = false; };
           lang.tex              = { enable = true; };
           coding.luasnip        = { enable = true; };
+          ui.render-markdown    = { enable = true; };
         };
 
         plugins = {
