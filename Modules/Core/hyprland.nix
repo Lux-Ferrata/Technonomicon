@@ -465,7 +465,7 @@
               layout = "dwindle",
             },
             dwindle = {
-              force_split = 0,
+              force_split = 1,
             },
             group = {
               groupbar = {
