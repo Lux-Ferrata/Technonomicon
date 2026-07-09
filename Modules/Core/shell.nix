@@ -60,6 +60,11 @@
         };
         ignores = [ "*~" ".*~" "#*#" "\\#*\\#" ".*.swp" ];
       };
+
+      programs.gh = {
+        enable = true;
+        gitCredentialHelper.enable = true;
+      };
     };
 
     programs.starship = {
