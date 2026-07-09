@@ -136,6 +136,16 @@
         executable = true;
       };
 
+      home.file.".local/share/tn/bin/tn-buffers-workspace" = {
+        source     = tnBuffersWorkspace;
+        executable = true;
+      };
+
+      home.file.".local/share/tn/bin/tn-buffers-all" = {
+        source     = tnBuffersAll;
+        executable = true;
+      };
+
       programs.wofi = {
         enable = true;
         settings = {
