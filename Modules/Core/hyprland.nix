@@ -81,9 +81,6 @@
     programs.hyprland.package = hyprlandPkg;
     programs.hyprlock.enable = true;
 
-    xdg.portal.extraPortals   = [ pkgs.xdg-desktop-portal-hyprland ];
-    xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
-
     environment.systemPackages = with pkgs; [
       wlKbptr
       wofi
