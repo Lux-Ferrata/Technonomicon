@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Listen for new tiling windows and auto-group them on the workspace.
+# With dwindle force_split=1, new windows always land to the RIGHT of the
+# focused window, so the existing group is always to the LEFT — moveintogroup l
+# reliably finds it. If no group exists yet, togglegroup creates one.
+
+[ -z "$HYPRLAND_INSTANCE_SIGNATURE" ] && exit 1
+
+SOCK="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+
+socat -u "UNIX-CONNECT:$SOCK" - | while IFS= read -r line; do
+  [[ "$line" != openwindow\>\>* ]] && continue
+
+  data="${line#openwindow>>}"
+  addr="0x${data%%,*}"
+
+  sleep 0.1
+
+  # Skip floating windows
+  is_float=$(hyprctl clients -j | jq -r --arg a "$addr" \
+    '.[] | select(.address == $a) | .floating // false')
+  [ "$is_float" = "true" ] && continue
+
+  ws=$(hyprctl clients -j | jq --arg a "$addr" \
+    '.[] | select(.address == $a) | .workspace.id')
+  [ -z "$ws" ] && continue
+
+  # Check for an existing group on this workspace (other than the new window)
+  has_group=$(hyprctl clients -j | jq --argjson ws "$ws" --arg a "$addr" \
+    '[.[] | select(.workspace.id == $ws and .address != $a and (.grouped | length) > 0)] | length > 0')
+
+  hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1
+
+  if [ "$has_group" = "false" ]; then
+    hyprctl dispatch togglegroup >/dev/null 2>&1
+  else
+    hyprctl dispatch moveintogroup l >/dev/null 2>&1
+  fi
+done
