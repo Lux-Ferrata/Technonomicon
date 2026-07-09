@@ -38,6 +38,11 @@ Check a flake builds without activating:
 nix build .#nixosConfigurations.Akmon.config.system.build.toplevel
 ```
 
+After any `nix build` test, always delete the resulting `result` symlink:
+```bash
+rm result
+```
+
 ## Architecture
 
 ### Flake structure
