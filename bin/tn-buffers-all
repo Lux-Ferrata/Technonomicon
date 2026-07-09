@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# List all windows across workspaces; focus selected (switches workspace automatically).
+LOCKFILE="/tmp/tn-buffers-all.lock"
+exec 9>"$LOCKFILE"
+flock -n 9 || exit 0
+
+SELECTED=$(hyprctl clients -j \
+  | jq -r \
+    '.[] | select(.mapped) | "\(.address)  [ws:\(.workspace.id)]  [\(.class)]  \(.title)"' \
+  | wofi --dmenu --prompt "All Buffers" --insensitive --no-actions \
+         --matching fuzzy --width 700 --height 400)
+
+[ -z "$SELECTED" ] && exit 0
+hyprctl dispatch focuswindow "address:$(echo "$SELECTED" | awk '{print $1}')"
