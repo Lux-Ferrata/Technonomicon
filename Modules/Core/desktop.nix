@@ -64,10 +64,17 @@
       jetbrains-mono
       sarasa-gothic
       noto-fonts
+      noto-fonts-color-emoji
       overpass
       fira-code
       fira-go
     ];
+
+    fonts.fontconfig.defaultFonts = {
+      serif      = [ "Noto Serif" ];
+      sansSerif  = [ "Noto Sans" ];
+      monospace  = [ "Iosevka" ];
+    };
 
     xdg.mime.defaultApplications = {
       "application/pdf" = "sioyek.desktop";
