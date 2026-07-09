@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# List windows on the active workspace; focus selected.
+LOCKFILE="/tmp/tn-buffers-workspace.lock"
+exec 9>"$LOCKFILE"
+flock -n 9 || exit 0
+
+WS_ID=$(hyprctl activeworkspace -j | jq '.id')
+
+SELECTED=$(hyprctl clients -j \
+  | jq -r --argjson ws "$WS_ID" \
+    '.[] | select(.workspace.id == $ws and .mapped) | "\(.address)  [\(.class)]  \(.title)"' \
+  | wofi --dmenu --prompt "Buffers (workspace)" --insensitive --no-actions \
+         --matching fuzzy --width 700 --height 400)
+
+[ -z "$SELECTED" ] && exit 0
+hyprctl dispatch focuswindow "address:$(echo "$SELECTED" | awk '{print $1}')"
