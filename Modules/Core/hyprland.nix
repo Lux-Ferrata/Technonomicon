@@ -75,15 +75,6 @@
     tnShowKeybindings = pkgs.writeShellScript "tn-show-keybindings"
       (builtins.readFile ../../bin/tn-show-keybindings);
 
-    tnBuffersWorkspace = pkgs.writeShellScript "tn-buffers-workspace"
-      (builtins.readFile ../../bin/tn-buffers-workspace);
-
-    tnBuffersAll = pkgs.writeShellScript "tn-buffers-all"
-      (builtins.readFile ../../bin/tn-buffers-all);
-
-    tnGroupDaemon = pkgs.writeShellScript "tn-group-daemon"
-      (builtins.readFile ../../bin/tn-group-daemon);
-
   in {
 
     programs.hyprland.enable = true;
@@ -103,7 +94,6 @@
       hyprpicker
       hyprsunset
       libnotify
-      socat
     ];
 
     environment.etc."scripts/net-info.sh" = {
@@ -140,21 +130,6 @@
         executable = true;
       };
 
-      home.file.".local/share/tn/bin/tn-buffers-workspace" = {
-        source     = tnBuffersWorkspace;
-        executable = true;
-      };
-
-      home.file.".local/share/tn/bin/tn-buffers-all" = {
-        source     = tnBuffersAll;
-        executable = true;
-      };
-
-      home.file.".local/share/tn/bin/tn-group-daemon" = {
-        source     = tnGroupDaemon;
-        executable = true;
-      };
-
       programs.wofi = {
         enable = true;
         settings = {
@@ -165,7 +140,7 @@
           filter_rate  = 100;
           allow_markup = true;
           allow_images = true;
-          image_size   = 40;
+          image_size   = 64;
           insensitive  = true;
           no_actions   = true;
         };
@@ -422,10 +397,8 @@
             fullscreen = true,
           })
 
-
           hl.on("hyprland.start", function()
             hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE GDK_BACKEND")
-            hl.exec_cmd("$HOME/.local/share/tn/bin/tn-group-daemon")
             hl.exec_cmd("quickshell")
             hl.exec_cmd("udiskie --tray")
             hl.exec_cmd("blueman-applet")
@@ -458,15 +431,7 @@
                 active_border   = "rgba(${palette.base0D}ee)",
                 inactive_border = "rgba(${palette.base03}aa)",
               },
-              layout = "dwindle",
-            },
-            dwindle = {
-              force_split = 1,
-            },
-            group = {
-              groupbar = {
-                enabled = false,
-              },
+              layout = "scrolling",
             },
             decoration = {
               rounding = 4,
@@ -481,6 +446,9 @@
             },
             animations = {
               enabled = true,
+            },
+            scrolling = {
+              explicit_column_widths = "0.5, 1.0",
             },
             cursor = {
               inactive_timeout = 0.5,
@@ -513,10 +481,10 @@
           hl.bind(mainMod .. " + V",          hl.dsp.exec_cmd("hyprctl dispatch togglefloating"))
           hl.bind(mainMod .. " + Tab",        hl.dsp.exec_cmd("hyprctl dispatch workspace r-1"))
           hl.bind(mainMod .. " + comma",      hl.dsp.exec_cmd("hyprctl dispatch workspace r+1"))
-          hl.bind(mainMod .. " + minus",         hl.dsp.exec_cmd("hyprctl dispatch resizeactive -100 0"))
-          hl.bind(mainMod .. " + equal",         hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 100"))
+          hl.bind(mainMod .. " + minus",      hl.dsp.exec_cmd("hyprctl dispatch resizeactive -100 0"))
+          hl.bind(mainMod .. " + equal",      hl.dsp.exec_cmd("hyprctl dispatch resizeactive 100 0"))
           hl.bind(mainMod .. " + SHIFT + minus", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 -100"))
-          hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 100 0"))
+          hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 100"))
           hl.bind("CTRL + " .. mainMod .. " + V", hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
 
@@ -547,12 +515,8 @@
           hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"))
 
           hl.bind("Print",           hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
-          hl.bind(mainMod .. " + Y",          hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
-          hl.bind(mainMod .. " + B",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-buffers-workspace"))
-          hl.bind(mainMod .. " + SHIFT + B",  hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-buffers-all"))
-          hl.bind(mainMod .. " + W",          hl.dsp.exec_cmd("hyprctl keyword dwindle:force_split 1; hyprctl dispatch moveoutofgroup"))
-          hl.bind(mainMod .. " + SHIFT + W",  hl.dsp.exec_cmd("hyprctl keyword dwindle:force_split 2; hyprctl dispatch moveoutofgroup"))
-          hl.bind(mainMod .. " + M",          hl.dsp.exec_cmd("hyprctl dispatch moveintogroup l || hyprctl dispatch moveintogroup r || hyprctl dispatch moveintogroup u || hyprctl dispatch moveintogroup d"))
+          hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
+          hl.bind(mainMod .. " + M", hl.dsp.layout("colresize +conf"))
 
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),             { mouse = true })
           hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),           { mouse = true })
