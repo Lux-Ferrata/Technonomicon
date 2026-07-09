@@ -60,6 +60,7 @@
         "dndlcbaomdoggooaficldplkcmkfpgff;https://clients2.google.com/service/update2/crx" # New Tab, New Window
         "abnjjjimjlbgandfdmgggedmkamigpcp;https://clients2.google.com/service/update2/crx" # Monkey Brain
         "emhhlhigmokehndjjmgnailciakdmoba;https://clients2.google.com/service/update2/crx" # 101weiqiLocalizer
+        "mnjggcdmjocbbbhaepdhchncahnbgone;https://clients2.google.com/service/update2/crx" # SponsorBlock
       ];
 
       "URLBlocklist" = [
