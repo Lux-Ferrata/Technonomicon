@@ -9,7 +9,6 @@
       beancount
       gnucash
       visidata
-      datasette
       anki-bin
       zotero
       foliate
