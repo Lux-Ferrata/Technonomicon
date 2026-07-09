@@ -415,7 +415,6 @@
 
           hl.window_rule({
             name     = "buffer-maximize",
-            match    = { floating = false },
             maximize = true,
           })
 
