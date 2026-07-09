@@ -146,6 +146,8 @@
       git-lfs
       jujutsu
       lazyjj
+      lazydocker
+      docker-compose
       btop
       nmon
       kmon
@@ -172,7 +174,6 @@
       caligula
       gum
       sc-im
-      gh
       glab
       jq
       yq
@@ -187,10 +188,14 @@
       aria2
       bzip3
       nemo-with-extensions
+      powertop
       # bitwarden-cli
       # bitwarden-desktop
       nvtopPackages.full
       sops
+    ] ++ pkgs.lib.optionals (pkgs.stdenv.hostPlatform.system == "x86_64-linux") [
+      typora
+      github-desktop
     ];
   };
 }
