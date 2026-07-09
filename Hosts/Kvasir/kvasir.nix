@@ -40,6 +40,14 @@
       ({ pkgs, config, ... }: {
         system.stateVersion = "23.11";
 
+        tn.full_name          = "xin";
+        tn.email_address      = "git@ironshark.org";
+        tn.theme              = "nord";
+        tn.primary_font       = "Iosevka";
+        tn.scale              = 1;
+        tn.quick_app_bindings = {};
+        # tn.wallpaper_path  = "/home/xin/Projects/Technonomicon/.wallpapers/wallpaper.png";
+
         boot.kernelModules = [ "uinput" ];
         boot.kernelPackages = pkgs.linuxPackages;
         boot.blacklistedKernelModules = [ "wacom" ];
