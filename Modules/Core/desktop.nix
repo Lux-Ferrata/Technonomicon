@@ -9,6 +9,8 @@
       sane.extraBackends = [ pkgs.sane-airscan ];
     };
 
+    security.rtkit.enable = true;
+
     services = {
       greetd = {
         enable = true;
