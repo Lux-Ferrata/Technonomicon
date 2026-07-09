@@ -73,8 +73,10 @@
       pdf2svg
       # PDF Tooling
       poppler
-      # LaTeX
+      # LaTeX / Typst
       texlive.combined.scheme-full
+      typst
+      tinymist
       # Spell Checking
       hunspell
       hunspellDicts.en_US
