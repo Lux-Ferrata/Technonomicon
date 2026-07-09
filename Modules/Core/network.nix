@@ -71,6 +71,8 @@
 
     networking.firewall.trustedInterfaces = [ "p2p-wl+" ];
 
+    services.resolved.enable = true;
+
     services.avahi = {
       enable = true;
       nssmdns4 = true;
