@@ -412,7 +412,7 @@
             hl.exec_cmd("hyprsunset")
             hl.exec_cmd("systemctl --user start hyprpolkitagent")
             hl.exec_cmd("obsidian")
-            hl.exec_cmd("plover")
+            hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
             hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
           end)
 
