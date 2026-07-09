@@ -414,8 +414,8 @@
           })
 
           hl.window_rule({
-            name     = "buffer-maximize",
-            maximize = true,
+            name  = "buffer-group",
+            group = "set always",
           })
 
           hl.on("hyprland.start", function()
