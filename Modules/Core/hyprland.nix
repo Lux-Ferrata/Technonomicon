@@ -81,6 +81,9 @@
     tnBuffersAll = pkgs.writeShellScript "tn-buffers-all"
       (builtins.readFile ../../bin/tn-buffers-all);
 
+    tnGroupDaemon = pkgs.writeShellScript "tn-group-daemon"
+      (builtins.readFile ../../bin/tn-group-daemon);
+
   in {
 
     programs.hyprland.enable = true;
