@@ -545,8 +545,11 @@
           hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"))
 
           hl.bind("Print",           hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
-          hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
-          hl.bind(mainMod .. " + M", hl.dsp.layout("colresize +conf"))
+          hl.bind(mainMod .. " + Y",          hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
+          hl.bind(mainMod .. " + B",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-buffers-workspace"))
+          hl.bind(mainMod .. " + SHIFT + B",  hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-buffers-all"))
+          hl.bind(mainMod .. " + W",          hl.dsp.exec_cmd("hyprctl dispatch fullscreen 1; hyprctl keyword dwindle:force_split 1"))
+          hl.bind(mainMod .. " + SHIFT + W",  hl.dsp.exec_cmd("hyprctl dispatch fullscreen 1; hyprctl keyword dwindle:force_split 2"))
 
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),             { mouse = true })
           hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),           { mouse = true })
