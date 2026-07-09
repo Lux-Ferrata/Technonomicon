@@ -193,6 +193,8 @@
       # bitwarden-desktop
       nvtopPackages.full
       sops
+      presenterm
+      frogmouth
     ] ++ pkgs.lib.optionals (pkgs.stdenv.hostPlatform.system == "x86_64-linux") [
       typora
       github-desktop
