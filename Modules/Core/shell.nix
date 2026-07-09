@@ -1,5 +1,5 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-shell = { pkgs, ... }: {
+  flake.nixosModules.Tn-shell = { pkgs, config, ... }: {
 
     programs.xonsh = {
       enable = true;
