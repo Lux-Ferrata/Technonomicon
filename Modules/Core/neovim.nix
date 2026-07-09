@@ -201,6 +201,20 @@
 
         plugins = {
 
+          render-markdown = ''
+            return {
+              "MeanderingProgrammer/render-markdown.nvim",
+              dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+              ft = { "markdown", "quarto" },
+              opts = {
+                checkbox = {
+                  unchecked = { icon = "☐ " },
+                  checked   = { icon = "✓ " },
+                },
+              },
+            }
+          '';
+
           undotree = ''
             return {
               "mbbill/undotree",
