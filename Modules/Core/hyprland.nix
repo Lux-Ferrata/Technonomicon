@@ -447,7 +447,18 @@
                 active_border   = "rgba(${palette.base0D}ee)",
                 inactive_border = "rgba(${palette.base03}aa)",
               },
-              layout = "scrolling",
+              layout = "dwindle",
+            },
+            dwindle = {
+              force_split = 0,
+            },
+            group = {
+              groupbar = {
+                enabled = false,
+              },
+            },
+            gestures = {
+              workspace_swipe = false,
             },
             decoration = {
               rounding = 4,
