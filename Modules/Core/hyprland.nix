@@ -1,6 +1,10 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-hyprland = { pkgs, ... }:
+  flake.nixosModules.Tn-hyprland = { pkgs, config, lib, ... }:
   let
+    nixosCfg = config;
+
+    hyprlandPkg = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+
     activateObsidian = pkgs.writeShellScript "activate-obsidian" ''
       ITEMS=$(${pkgs.glib}/bin/gdbus call --session \
         --dest org.kde.StatusNotifierWatcher \
@@ -34,8 +38,8 @@
 
     wlKbptrFloat = pkgs.writeShellScript "wl-kbptr-float" ''
       while true; do
-        WS=$(${pkgs.hyprland}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
-        WINS=$(${pkgs.hyprland}/bin/hyprctl clients -j \
+        WS=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
+        WINS=$(${hyprlandPkg}/bin/hyprctl clients -j \
           | ${pkgs.jq}/bin/jq -r --argjson ws "$WS" \
             '.[] | select(.workspace.id == $ws and .mapped) | "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"')
         echo "$WINS" | ${wlKbptr}/bin/wl-kbptr -o modes=floating -o cancellation_status_code=1 || break
@@ -67,23 +71,32 @@
     scrollshot = pkgs.writeShellScript "scrollshot" ''
       ${wayscrollshot}/bin/wayscrollshot --clipboard --max-preview-height 36
     '';
+
+    tnShowKeybindings = pkgs.writeShellScript "tn-show-keybindings"
+      (builtins.readFile ../../bin/tn-show-keybindings);
+
   in {
 
     programs.hyprland.enable = true;
+    programs.hyprland.package = hyprlandPkg;
     programs.hyprlock.enable = true;
 
-    xdg.portal.extraPortals  = [ pkgs.xdg-desktop-portal-hyprland ];
+    xdg.portal.extraPortals   = [ pkgs.xdg-desktop-portal-hyprland ];
     xdg.portal.configPackages = [ pkgs.xdg-desktop-portal-hyprland ];
 
     environment.systemPackages = with pkgs; [
       wlKbptr
-      anyrun
+      wofi
+      quickshell
       hypridle
       bibata-cursors
-      quickshell
       networkmanagerapplet
       udiskie
-      copyq
+      clipse
+      wl-clip-persist
+      hyprpicker
+      hyprsunset
+      libnotify
     ];
 
     environment.etc."scripts/net-info.sh" = {
@@ -98,7 +111,12 @@
       '';
     };
 
-    home-manager.users.xin = {
+    home-manager.users.xin = { config, lib, ... }:
+    let
+      palette      = config.colorScheme.palette;
+      hasWallpaper = nixosCfg.tn.wallpaper_path != null;
+      wallpaperPath = if hasWallpaper then nixosCfg.tn.wallpaper_path else "";
+    in {
 
       home.pointerCursor = {
         package    = pkgs.bibata-cursors;
@@ -108,7 +126,187 @@
         x11.enable = true;
       };
 
+      home.sessionPath = [ "$HOME/.local/share/tn/bin" ];
+
+      home.file.".local/share/tn/bin/tn-show-keybindings" = {
+        source     = tnShowKeybindings;
+        executable = true;
+      };
+
+      programs.wofi = {
+        enable = true;
+        settings = {
+          width        = 600;
+          height       = 350;
+          location     = "center";
+          show         = "drun";
+          filter_rate  = 100;
+          allow_markup = true;
+          allow_images = true;
+          image_size   = 40;
+          insensitive  = true;
+          no_actions   = true;
+        };
+        style = ''
+          * {
+            font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+            font-size: 14px;
+          }
+          window {
+            background-color: #${palette.base00};
+            border: 1px solid #${palette.base03};
+            border-radius: 4px;
+          }
+          #input {
+            background-color: #${palette.base01};
+            color: #${palette.base05};
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin: 8px;
+          }
+          #input:focus { outline: none; }
+          #inner-box { margin: 0 8px 8px 8px; }
+          #entry {
+            padding: 6px 10px;
+            border-radius: 4px;
+          }
+          #entry:selected {
+            background-color: #${palette.base02};
+            color: #${palette.base0D};
+          }
+          #text { color: #${palette.base05}; }
+          #text:selected { color: #${palette.base0D}; }
+        '';
+      };
+
+      programs.ghostty = {
+        enable = true;
+        settings = {
+          font-family           = nixosCfg.tn.primary_font;
+          font-size             = 12;
+          "window-decoration"   = "none";
+          theme                 = "tn";
+          keybind               = "ctrl+k=reset";
+          command               = "zellij";
+          "confirm-close-surface" = false;
+        };
+      };
+
+      home.file.".config/ghostty/themes/tn".text = ''
+        background = #${palette.base00}
+        foreground = #${palette.base05}
+        selection-background = #${palette.base02}
+        selection-foreground = #${palette.base00}
+        cursor-color = #${palette.base05}
+        palette = 0=#${palette.base00}
+        palette = 1=#${palette.base08}
+        palette = 2=#${palette.base0B}
+        palette = 3=#${palette.base0A}
+        palette = 4=#${palette.base0D}
+        palette = 5=#${palette.base0E}
+        palette = 6=#${palette.base0C}
+        palette = 7=#${palette.base05}
+        palette = 8=#${palette.base03}
+        palette = 9=#${palette.base08}
+        palette = 10=#${palette.base0B}
+        palette = 11=#${palette.base0A}
+        palette = 12=#${palette.base0D}
+        palette = 13=#${palette.base0E}
+        palette = 14=#${palette.base0C}
+        palette = 15=#${palette.base07}
+      '';
+
+      home.file.".config/btop/btop.conf".text = ''
+        color_theme = "tn"
+        rounded_corners = True
+        graph_symbol = braille
+        vim_keys = True
+        shown_boxes = cpu mem net proc
+        update_ms = 2000
+        proc_sorting = cpu lazy
+        temp_scale = celsius
+        draw_clock =
+      '';
+
+      home.file.".config/btop/themes/tn.theme".text = ''
+        # TN btop theme — mapped from Nord base16 palette
+        theme[main_bg]         = "#${palette.base00}"
+        theme[main_fg]         = "#${palette.base05}"
+        theme[title]           = "#${palette.base0D}"
+        theme[hi_fg]           = "#${palette.base0C}"
+        theme[selected_bg]     = "#${palette.base02}"
+        theme[selected_fg]     = "#${palette.base0D}"
+        theme[inactive_fg]     = "#${palette.base03}"
+        theme[graph_text]      = "#${palette.base04}"
+        theme[meter_bg]        = "#${palette.base01}"
+        theme[proc_misc]       = "#${palette.base0A}"
+        theme[cpu_box]         = "#${palette.base02}"
+        theme[mem_box]         = "#${palette.base02}"
+        theme[net_box]         = "#${palette.base02}"
+        theme[proc_box]        = "#${palette.base02}"
+        theme[div_line]        = "#${palette.base03}"
+        theme[temp_start]      = "#${palette.base0B}"
+        theme[temp_mid]        = "#${palette.base0A}"
+        theme[temp_end]        = "#${palette.base08}"
+        theme[cpu_start]       = "#${palette.base0D}"
+        theme[cpu_mid]         = "#${palette.base0C}"
+        theme[cpu_end]         = "#${palette.base0B}"
+        theme[free_start]      = "#${palette.base0B}"
+        theme[free_mid]        = "#${palette.base0C}"
+        theme[free_end]        = "#${palette.base0D}"
+        theme[cached_start]    = "#${palette.base0E}"
+        theme[cached_mid]      = "#${palette.base0D}"
+        theme[cached_end]      = "#${palette.base0C}"
+        theme[available_start] = "#${palette.base0B}"
+        theme[available_mid]   = "#${palette.base0C}"
+        theme[available_end]   = "#${palette.base0D}"
+        theme[used_start]      = "#${palette.base08}"
+        theme[used_mid]        = "#${palette.base09}"
+        theme[used_end]        = "#${palette.base0A}"
+        theme[download_start]  = "#${palette.base0D}"
+        theme[download_mid]    = "#${palette.base0C}"
+        theme[download_end]    = "#${palette.base0B}"
+        theme[upload_start]    = "#${palette.base0E}"
+        theme[upload_mid]      = "#${palette.base0D}"
+        theme[upload_end]      = "#${palette.base0C}"
+        theme[process_start]   = "#${palette.base0D}"
+        theme[process_mid]     = "#${palette.base0C}"
+        theme[process_end]     = "#${palette.base0B}"
+      '';
+
+      services.hypridle = {
+        enable = true;
+        settings = {
+          general = {
+            lock_cmd         = "pidof hyprlock || hyprlock";
+            before_sleep_cmd = "loginctl lock-session";
+            after_sleep_cmd  = "hyprctl dispatch dpms on";
+          };
+          listener = [
+            {
+              timeout    = 300;
+              on-timeout = "loginctl lock-session";
+            }
+            {
+              timeout    = 330;
+              on-timeout = "hyprctl dispatch dpms off";
+              on-resume  = "hyprctl dispatch dpms on && brightnessctl -r";
+            }
+          ];
+        };
+      };
+
+      services.hyprpaper = lib.mkIf hasWallpaper {
+        enable = true;
+        settings = {
+          preload   = [ wallpaperPath ];
+          wallpaper = [ ",${wallpaperPath}" ];
+        };
+      };
+
       home.file = {
+
         ".config/hypr/hyprland.lua".text = ''
           hl.monitor({
             output   = "",
@@ -120,9 +318,15 @@
           local terminal = "ghostty"
           local mainMod  = "SUPER"
 
-          hl.env("XCURSOR_SIZE",  "24")
-          hl.env("XCURSOR_THEME", "Bibata-Modern-Classic")
-          hl.env("HYPRCURSOR_SIZE", "24")
+          hl.env("XCURSOR_SIZE",       "24")
+          hl.env("XCURSOR_THEME",      "Bibata-Modern-Classic")
+          hl.env("HYPRCURSOR_SIZE",    "24")
+          hl.env("SDL_VIDEODRIVER",    "wayland")
+          hl.env("MOZ_ENABLE_WAYLAND", "1")
+          hl.env("QT_STYLE_OVERRIDE",  "kvantum")
+          hl.env("EDITOR",             "nvim")
+          hl.env("GTK_THEME",          "Adwaita:dark")
+          hl.env("GDK_SCALE",          "${toString nixosCfg.tn.scale}")
 
           hl.config({ ['xwayland.force_zero_scaling'] = true })
 
@@ -164,13 +368,47 @@
             center = true,
           })
 
+          hl.window_rule({
+            name  = "pavucontrol-float",
+            match = { class = "pavucontrol" },
+            float = true,
+          })
+
+          hl.window_rule({
+            name  = "blueberry-float",
+            match = { class = "blueberry.py" },
+            float = true,
+          })
+
+          hl.window_rule({
+            name   = "clipse-float",
+            match  = { class = "clipse" },
+            float  = true,
+            size   = "700 400",
+            center = true,
+          })
+
+          hl.window_rule({
+            name       = "steam-float",
+            match      = { class = "steam" },
+            float      = true,
+          })
+
+          hl.window_rule({
+            name       = "retroarch-fullscreen",
+            match      = { class = "com.libretro.RetroArch" },
+            fullscreen = true,
+          })
+
           hl.on("hyprland.start", function()
             hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE GDK_BACKEND")
-            hl.exec_cmd("hypridle")
             hl.exec_cmd("quickshell")
             hl.exec_cmd("udiskie --tray")
             hl.exec_cmd("blueman-applet")
-            hl.exec_cmd("copyq --start-server")
+            hl.exec_cmd("wl-clip-persist --clipboard regular")
+            hl.exec_cmd("clipse -listen")
+            hl.exec_cmd("hyprsunset")
+            hl.exec_cmd("systemctl --user start hyprpolkitagent")
             hl.exec_cmd("obsidian")
             hl.exec_cmd("plover")
             hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
@@ -178,51 +416,84 @@
 
           hl.config({
             input = {
-              kb_layout    = "us",
+              kb_layout                 = "us",
               follow_mouse              = 0,
               float_switch_override_focus = 0,
-              touchpad     = { natural_scroll = true, disable_while_typing = true, drag_lock = false },
+              sensitivity               = 0,
+              touchpad = {
+                natural_scroll      = false,
+                disable_while_typing = true,
+                drag_lock           = false,
+              },
+            },
+            gestures = {
+              workspace_swipe = false,
             },
             general = {
               gaps_in     = 5,
-              gaps_out    = 0,
+              gaps_out    = 10,
               border_size = 2,
               col = {
-                active_border   = "rgba(00ffffee)",
-                inactive_border = "rgba(595959aa)",
+                active_border   = "rgba(${palette.base0D}ee)",
+                inactive_border = "rgba(${palette.base03}aa)",
               },
               layout = "scrolling",
             },
             decoration = {
-              rounding = 8,
+              rounding = 4,
+              blur = {
+                enabled = true,
+                size    = 5,
+                passes  = 2,
+              },
+              shadow = {
+                enabled = false,
+              },
+            },
+            animations = {
+              enabled = true,
             },
             scrolling = {
-              explicit_column_widths   = "0.5, 1.0",
+              explicit_column_widths = "0.5, 1.0",
             },
             cursor = {
               inactive_timeout = 0.5,
             },
             misc = {
-              disable_hyprland_logo   = true,
+              disable_hyprland_logo    = true,
               disable_splash_rendering = true,
-              background_color        = "rgb(000000)",
+              background_color         = "rgb(${palette.base00})",
+            },
+            ecosystem = {
+              no_update_news = true,
             },
           })
 
-          hl.bind(mainMod .. " + Return",    hl.dsp.exec_cmd("anyrun"))
-          hl.bind(mainMod .. " + T",         hl.dsp.exec_cmd(terminal))
-          hl.bind(mainMod .. " + S",         hl.dsp.exec_cmd("brave"))
-          hl.bind(mainMod .. " + D",         hl.dsp.window.close())
-          hl.bind(mainMod .. " + Q",         hl.dsp.exec_cmd("hyprlock"))
-          hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("${pkgs.systemd}/bin/systemd-run --user --no-block --collect /etc/scripts/clean-power-off.sh"))
-          hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exit())
-          hl.bind(mainMod .. " + F",         hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
-          hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("nemo"))
-          hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("${activateObsidian}"))
-          hl.bind(mainMod .. " + 0",         hl.dsp.exec_cmd("ghostty --title=grimoire-inbox -e nvim $HOME/Grimoire/Inbox.md"))
-          hl.bind(mainMod .. " + SHIFT + 0", hl.dsp.exec_cmd("ghostty --title=technonomicon -e nvim $HOME/Projects/Technonomicon/README.md"))
-          hl.bind(mainMod .. " + Z",         hl.dsp.exec_cmd("${vimEdit}"))
-          hl.bind(mainMod .. " + C",         hl.dsp.exec_cmd("qalculate-gtk"))
+          hl.bind(mainMod .. " + Space",      hl.dsp.exec_cmd("wofi --show drun --sort-order=alphabetical"))
+          hl.bind(mainMod .. " + T",          hl.dsp.exec_cmd(terminal))
+          hl.bind(mainMod .. " + S",          hl.dsp.exec_cmd("brave"))
+          hl.bind(mainMod .. " + D",          hl.dsp.window.close())
+          hl.bind(mainMod .. " + Q",          hl.dsp.exec_cmd("hyprlock"))
+          hl.bind(mainMod .. " + SHIFT + Q",  hl.dsp.exec_cmd("${pkgs.systemd}/bin/systemd-run --user --no-block --collect /etc/scripts/clean-power-off.sh"))
+          hl.bind(mainMod .. " + SHIFT + E",  hl.dsp.exit())
+          hl.bind(mainMod .. " + F",          hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
+          hl.bind(mainMod .. " + SHIFT + F",  hl.dsp.exec_cmd("nemo"))
+          hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("${activateObsidian}"))
+          hl.bind(mainMod .. " + 0",          hl.dsp.exec_cmd("ghostty --title=grimoire-inbox -e nvim $HOME/Grimoire/Inbox.md"))
+          hl.bind(mainMod .. " + SHIFT + 0",  hl.dsp.exec_cmd("ghostty --title=technonomicon -e nvim $HOME/Projects/Technonomicon/README.md"))
+          hl.bind(mainMod .. " + Z",          hl.dsp.exec_cmd("${vimEdit}"))
+          hl.bind(mainMod .. " + C",          hl.dsp.exec_cmd("qalculate-gtk"))
+          hl.bind(mainMod .. " + H",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-keybindings"))
+          hl.bind(mainMod .. " + V",          hl.dsp.exec_cmd("hyprctl dispatch togglefloating"))
+          hl.bind(mainMod .. " + Tab",        hl.dsp.exec_cmd("hyprctl dispatch workspace r-1"))
+          hl.bind(mainMod .. " + comma",      hl.dsp.exec_cmd("hyprctl dispatch workspace r+1"))
+          hl.bind(mainMod .. " + minus",      hl.dsp.exec_cmd("hyprctl dispatch resizeactive -100 0"))
+          hl.bind(mainMod .. " + equal",      hl.dsp.exec_cmd("hyprctl dispatch resizeactive 100 0"))
+          hl.bind(mainMod .. " + SHIFT + minus", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 -100"))
+          hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 100"))
+          hl.bind("CTRL + " .. mainMod .. " + V", hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
+          hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
+
           hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left"  }))
           hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down"  }))
           hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up"    }))
@@ -242,51 +513,53 @@
             hl.bind(mainMod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
           end
 
-          hl.bind("XF86AudioRaiseVolume",      hl.dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"))
-          hl.bind("XF86AudioLowerVolume",      hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"))
-          hl.bind("XF86AudioMute",             hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
-          hl.bind("XF86AudioMicMute",          hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
-          hl.bind("XF86MonBrightnessUp",       hl.dsp.exec_cmd("brightnessctl set 10%+"))
-          hl.bind("XF86MonBrightnessDown",     hl.dsp.exec_cmd("brightnessctl set 10%-"))
+          hl.bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"))
+          hl.bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"))
+          hl.bind("XF86AudioMute",         hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
+          hl.bind("XF86AudioMicMute",      hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
+          hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 10%+"))
+          hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"))
 
-          hl.bind("Print",            hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
+          hl.bind("Print",           hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
           hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
+          hl.bind(mainMod .. " + M", hl.dsp.layout("colresize +conf"))
 
-          hl.bind(mainMod .. " + M",          hl.dsp.layout("colresize +conf"))
+          hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),             { mouse = true })
+          hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),           { mouse = true })
+          hl.bind(mainMod .. " + mouse:274", hl.dsp.exec_cmd("${scrollshot}"), { mouse = true })
 
-          hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),                 { mouse = true })
-          hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),               { mouse = true })
-          hl.bind(mainMod .. " + mouse:274", hl.dsp.exec_cmd("${scrollshot}"),     { mouse = true })
-
+          ${lib.concatStringsSep "\n          " (lib.mapAttrsToList (key: cmd: ''hl.bind(mainMod .. " + ${key}", hl.dsp.exec_cmd("${cmd}"))''
+          ) nixosCfg.tn.quick_app_bindings)}
         '';
 
         ".config/hypr/hyprlock.conf".text = ''
+          general {
+            disable_loading_bar = true
+          }
+
           background {
-            color       = rgba(00ffffee)
+            path        = "${wallpaperPath}"
+            color       = rgba(${palette.base00}ff)
             blur_passes = 3
             blur_size   = 7
           }
 
           input-field {
-            size             = 300, 50
-            position         = 0, -100
+            size             = 600, 100
+            position         = 0, 0
             halign           = center
             valign           = center
-            placeholder_text = Password
+            outer_color      = rgba(${palette.base01}ff)
+            inner_color      = rgba(${palette.base01}ff)
+            font_color       = rgba(${palette.base05}ff)
+            check_color      = rgba(${palette.base0D}ff)
+            fail_color       = rgba(${palette.base08}ff)
+            font_family      = JetBrainsMono Nerd Font
+            font_size        = 32
+            placeholder_text = <span foreground="##${palette.base04}"> </span>
             dots_center      = true
-          }
-        '';
-
-        ".config/hypr/hypridle.conf".text = ''
-          general {
-            lock_cmd         = hyprlock
-            before_sleep_cmd = hyprlock
-            after_sleep_cmd  = hyprctl dispatch dpms on
-          }
-
-          listener {
-            timeout    = 600
-            on-timeout = bash -c '[ "$(cat /sys/class/power_supply/AC*/online 2>/dev/null | head -1)" = "0" ] && systemctl suspend'
+            rounding         = 0
+            fade_on_empty    = false
           }
         '';
 
@@ -323,7 +596,7 @@
 
               anchors { top: true; left: true; right: true }
               implicitHeight: 36
-              color: Qt.rgba(0.04, 0.04, 0.08, 0.92)
+              color: "#eb${palette.base00}"
 
               PwObjectTracker { objects: [ Pipewire.defaultAudioSink ] }
               Process { id: pavuProcess; command: ["${pkgs.pavucontrol}/bin/pavucontrol"] }
@@ -331,7 +604,7 @@
               Rectangle {
                   anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
                   height: 1
-                  color: Qt.rgba(0, 1, 1, 0.3)
+                  color: "#4d${palette.base0C}"
               }
 
               RowLayout {
@@ -350,13 +623,13 @@
                               anchors.centerIn: parent
                               width: 22; height: 22; radius: 4
                               color: wsBtn.modelData === Hyprland.focusedWorkspace
-                                  ? "#00ffff" : "transparent"
+                                  ? "#${palette.base0D}" : "transparent"
 
                               Text {
                                   anchors.centerIn: parent
                                   text: wsBtn.modelData.id
                                   color: wsBtn.modelData === Hyprland.focusedWorkspace
-                                      ? "#0a0a14" : "#555555"
+                                      ? "#${palette.base00}" : "#${palette.base03}"
                                   font.pixelSize: 12
                                   font.family: "JetBrains Mono"
                                   font.bold: true
@@ -374,7 +647,7 @@
 
                   Text {
                       id: clockText
-                      color: "#cdd6f4"
+                      color: "#${palette.base05}"
                       font.pixelSize: 13
                       font.family: "JetBrains Mono"
                       font.bold: true
@@ -402,7 +675,7 @@
                               anchors.verticalCenter: parent.verticalCenter
                               font.pixelSize: 20
                               font.family: "JetBrainsMono Nerd Font Mono"
-                              color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "#555555" : "#cdd6f4"
+                              color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "#${palette.base03}" : "#${palette.base05}"
                               text: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "󰸈" :
                                     (Pipewire.defaultAudioSink?.audio.volume ?? 0) > 0.66 ? "󰕾" :
                                     (Pipewire.defaultAudioSink?.audio.volume ?? 0) > 0.33 ? "󰖀" : "󰕿"
@@ -412,7 +685,7 @@
                               anchors.verticalCenter: parent.verticalCenter
                               font.pixelSize: 12
                               font.family: "JetBrains Mono"
-                              color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "#555555" : "#cdd6f4"
+                              color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "#${palette.base03}" : "#${palette.base05}"
                               text: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "mute" :
                                     Math.round((Pipewire.defaultAudioSink?.audio.volume ?? 0) * 100) + "%"
                           }
@@ -477,7 +750,7 @@
                           anchors.centerIn: parent
                           font.pixelSize: 18
                           font.family: "JetBrainsMono Nerd Font Mono"
-                          color: netWidget.connType === "none" ? "#555555" : "#cdd6f4"
+                          color: netWidget.connType === "none" ? "#${palette.base03}" : "#${palette.base05}"
                           text: netWidget.connType === "wifi" ? "󰤨" :
                                 netWidget.connType === "ethernet" ? "󰈀" : "󰤭"
                       }
@@ -533,7 +806,7 @@
                           font.family: "JetBrainsMono Nerd Font Mono"
                           color: (UPower.displayDevice !== null
                               && UPower.displayDevice.state !== UPowerDeviceState.Charging
-                              && UPower.displayDevice.percentage <= 0.20) ? "#ff5555" : "#cdd6f4"
+                              && UPower.displayDevice.percentage <= 0.20) ? "#${palette.base08}" : "#${palette.base05}"
                           text: UPower.displayDevice === null ? "" :
                               (UPower.displayDevice.state === UPowerDeviceState.Charging
                                || UPower.displayDevice.state === UPowerDeviceState.PendingCharge)
@@ -551,7 +824,7 @@
                           font.family: "JetBrains Mono"
                           color: (UPower.displayDevice !== null
                               && UPower.displayDevice.state !== UPowerDeviceState.Charging
-                              && UPower.displayDevice.percentage <= 0.20) ? "#ff5555" : "#cdd6f4"
+                              && UPower.displayDevice.percentage <= 0.20) ? "#${palette.base08}" : "#${palette.base05}"
                           text: UPower.displayDevice === null ? "" :
                                 Math.round((UPower.displayDevice.percentage ?? 0) * 100) + "%"
                       }
@@ -595,10 +868,10 @@
 
                               Layout.fillWidth: true
                               implicitHeight: notifInner.implicitHeight + 20
-                              color: Qt.rgba(0.04, 0.04, 0.08, 0.95)
-                              border.color: "#00ffff"
+                              color: "#eb${palette.base00}"
+                              border.color: "#${palette.base0D}"
                               border.width: 1
-                              radius: 8
+                              radius: 4
 
                               ColumnLayout {
                                   id: notifInner
@@ -607,7 +880,7 @@
 
                                   Text {
                                       text: notif.modelData.summary
-                                      color: "#cdd6f4"
+                                      color: "#${palette.base05}"
                                       font.pixelSize: 13
                                       font.family: "JetBrains Mono"
                                       font.bold: true
@@ -617,7 +890,7 @@
 
                                   Text {
                                       text: notif.modelData.body
-                                      color: "#999999"
+                                      color: "#${palette.base04}"
                                       font.pixelSize: 12
                                       font.family: "JetBrains Mono"
                                       Layout.fillWidth: true
@@ -642,26 +915,6 @@
                   }
               }
           }
-        '';
-
-        ".config/anyrun/config.ron".text = ''
-          Config(
-              x: Fraction(0.5),
-              y: Fraction(0.3),
-              width: Absolute(800),
-              hide_icons: false,
-              ignore_exclusive_zones: false,
-              layer: Overlay,
-              hide_plugin_info: true,
-              close_on_click: false,
-              show_results_immediately: false,
-              max_entries: Some(8),
-              plugins: [
-                  "${pkgs.anyrun}/lib/libapplications.so",
-                  "${pkgs.anyrun}/lib/librink.so",
-                  "${pkgs.anyrun}/lib/libshell.so",
-              ],
-          )
         '';
       };
     };
