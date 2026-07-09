@@ -172,7 +172,12 @@
             background-color: #${palette.base02};
             color: #${palette.base0D};
           }
-          #text { color: #${palette.base05}; }
+          #text {
+            color: #${palette.base05};
+            font-size: 16px;
+            font-weight: 600;
+            padding-left: 8px;
+          }
           #text:selected { color: #${palette.base0D}; }
         '';
       };
