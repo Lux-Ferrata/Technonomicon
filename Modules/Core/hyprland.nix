@@ -423,9 +423,6 @@
                 drag_lock           = false,
               },
             },
-            gestures = {
-              workspace_swipe = false,
-            },
             general = {
               gaps_in     = 5,
               gaps_out    = 10,
