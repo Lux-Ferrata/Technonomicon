@@ -422,10 +422,6 @@
             fullscreen = true,
           })
 
-          hl.window_rule({
-            name  = "buffer-group",
-            group = "set always",
-          })
 
           hl.on("hyprland.start", function()
             hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE GDK_BACKEND")
