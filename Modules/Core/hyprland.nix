@@ -425,7 +425,7 @@
             },
             general = {
               gaps_in     = 5,
-              gaps_out    = 10,
+              gaps_out    = 0,
               border_size = 2,
               col = {
                 active_border   = "rgba(${palette.base0D}ee)",
