@@ -1,9 +1,9 @@
---- a/src/cli.rs
-+++ b/src/cli.rs
-@@ -44,6 +44,10 @@ pub struct Args {
+--- a/src/cli.rs	1969-12-31 19:00:01.000000000 -0500
++++ b/src/cli.rs	2026-07-08 11:20:36.396426910 -0400
+@@ -44,6 +44,10 @@
      #[arg(long)]
      pub no_border: bool,
-
+ 
 +    /// Maximum height of the preview window in pixels (defaults to capture region height)
 +    #[arg(long)]
 +    pub max_preview_height: Option<u32>,
@@ -11,10 +11,14 @@
      /// Stitching algorithm to use
      #[arg(short, long, value_enum, default_value_t = Algorithm::OpenCvOrb)]
      pub algorithm: Algorithm,
---- a/src/overlay.rs
-+++ b/src/overlay.rs
-@@ -57,10 +57,11 @@ impl LayerShellOverlay {
-     pub fn new(
+@@ -109,3 +113,4 @@
+         assert_eq!(args.slurp_output().as_deref(), Some("10,20 300x400"));
+     }
+ }
++
+--- a/src/overlay.rs	1969-12-31 19:00:01.000000000 -0500
++++ b/src/overlay.rs	2026-07-08 11:20:49.947153859 -0400
+@@ -58,13 +58,14 @@
          command_tx: mpsc::Sender<UserCommand>,
          region: Region,
          preview_width: u32,
@@ -30,11 +34,7 @@
              {
                  log::warn!("layer-shell overlay failed: {err}");
              }
---- a/src/overlay.rs
-+++ b/src/overlay.rs
-@@ -650,8 +651,9 @@ fn run_layer_shell_overlay(
-     rx: mpsc::Receiver<LayerMessage>,
-     command_tx: mpsc::Sender<UserCommand>,
+@@ -653,6 +654,7 @@
      ready: Arc<AtomicBool>,
      region: Region,
      preview_width: u32,
@@ -42,18 +42,22 @@
  ) -> Result<()> {
      log::info!("Starting layer-shell overlay thread");
      let output_rects = match probe_output_rects() {
-@@ -717,7 +719,7 @@ fn run_layer_shell_overlay(
+@@ -717,7 +719,7 @@
+         input_size: None,
          width: initial_preview_width,
          height: INITIAL_HEIGHT,
 -        max_height: region.h,
 +        max_height: max_preview_height.unwrap_or(region.h),
---- a/src/session.rs
-+++ b/src/session.rs
-@@ -50,7 +50,8 @@ pub fn run(args: Args) -> Result<()> {
-         Some(LayerShellOverlay::new(
+         region,
+         configured: false,
+         exit: false,
+--- a/src/session.rs	1969-12-31 19:00:01.000000000 -0500
++++ b/src/session.rs	2026-07-08 11:20:55.539479542 -0400
+@@ -54,6 +54,7 @@
              command_tx.clone(),
              region.clone(),
              args.preview_width,
 +            args.max_preview_height,
          )?)
      };
+ 

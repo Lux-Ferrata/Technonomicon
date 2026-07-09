@@ -18,7 +18,13 @@
       "Bash(journalctl *)",
       "Bash(hyprctl monitors *)",
       "Bash(hyprctl clients *)",
-      "Bash(systemctl --user show-environment)"
+      "Bash(systemctl --user show-environment)",
+      "WebFetch(domain:wiki.hyprland.org)",
+      "Bash(gdbus call *)",
+      "Bash(gdbus --version)",
+      "Bash(ghostty --help)",
+      "Bash(ghostty +show-config)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }
