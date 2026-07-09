@@ -16,6 +16,8 @@
       inputs.sops-nix.nixosModules.sops
       inputs.home-manager.nixosModules.home-manager
 
+      self.nixosModules.Tn-user-settings
+      self.nixosModules.Tn-theme
       self.nixosModules.Tn-nix
       self.nixosModules.Tn-desktop
       self.nixosModules.Tn-hyprland
