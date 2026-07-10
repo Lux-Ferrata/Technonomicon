@@ -4,12 +4,12 @@
       ploverPkg = inputs.plover-flake.packages.${pkgs.stdenv.hostPlatform.system}.plover-full;
       ploverOpen = pkgs.writeShellScriptBin "plover-open" ''
         if pgrep -x plover > /dev/null; then
-          if hyprctl clients -j | grep -qi '"class": *"plover"'; then
-            hyprctl dispatch focuswindow class:plover
+          WID=$(${pkgs.xdotool}/bin/xdotool search --class plover 2>/dev/null | head -1)
+          if [ -n "$WID" ]; then
+            ${pkgs.xdotool}/bin/xdotool windowmap "$WID"
+            ${pkgs.xdotool}/bin/xdotool windowactivate --sync "$WID"
           else
-            pkill plover
-            sleep 0.3
-            exec env QT_QPA_PLATFORM=xcb ${ploverPkg}/bin/plover
+            hyprctl dispatch focuswindow class:plover
           fi
         else
           exec env QT_QPA_PLATFORM=xcb ${ploverPkg}/bin/plover
