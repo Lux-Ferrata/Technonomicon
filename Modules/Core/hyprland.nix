@@ -121,7 +121,7 @@
           '.[] | select(.workspace.id == $ws and .floating == false) |
            [.title, .class, .address] | @tsv' | \
         awk -F'\t' '{ printf "%-50s %-25s  %s\n", $1, $2, $3 }' | \
-        ${pkgs.wofi}/bin/wofi --dmenu -p "pull to follow")
+        ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "pull to follow")
       TARGET=$(echo "$CHOICE" | awk '{ print $NF }')
       [ -z "$TARGET" ] && exit 0
 
