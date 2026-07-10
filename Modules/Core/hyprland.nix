@@ -581,9 +581,9 @@
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))
 
           hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(
-            "sh -c 'LAYOUT=$(${hyprlandPkg}/bin/hyprctl getoption general:layout -j | ${pkgs.jq}/bin/jq -r .str); " ..
+            "LAYOUT=$(${hyprlandPkg}/bin/hyprctl getoption general:layout -j | ${pkgs.jq}/bin/jq -r .str); " ..
             "if [ \"$LAYOUT\" = scrolling ]; then ${hyprlandPkg}/bin/hyprctl keyword general:layout monocle; " ..
-            "else ${hyprlandPkg}/bin/hyprctl keyword general:layout scrolling; fi'"
+            "else ${hyprlandPkg}/bin/hyprctl keyword general:layout scrolling; fi"
           ))
 
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),             { mouse = true })
