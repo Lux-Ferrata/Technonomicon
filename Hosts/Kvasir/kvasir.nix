@@ -54,17 +54,6 @@
       ({ pkgs, config, ... }: {
         system.stateVersion = "23.11";
 
-        # throttled 0.12 added a dbus-next dependency that nixpkgs' package
-        # doesn't propagate yet, so the service crashes with a
-        # ModuleNotFoundError on startup. Patch it in until upstream catches up.
-        nixpkgs.overlays = [
-          (final: prev: {
-            throttled = prev.throttled.overrideAttrs (old: {
-              pythonPath = old.pythonPath ++ [ final.python3Packages.dbus-next ];
-            });
-          })
-        ];
-
         tn.full_name          = "xin";
         tn.email_address      = "git@ironshark.org";
         tn.theme              = "nord";
