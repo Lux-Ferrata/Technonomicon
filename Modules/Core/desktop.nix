@@ -4,7 +4,13 @@
       ploverPkg = inputs.plover-flake.packages.${pkgs.stdenv.hostPlatform.system}.plover-full;
       ploverOpen = pkgs.writeShellScriptBin "plover-open" ''
         if pgrep -x plover > /dev/null; then
-          hyprctl dispatch focuswindow class:plover
+          if hyprctl clients -j | grep -qi '"class": *"plover"'; then
+            hyprctl dispatch focuswindow class:plover
+          else
+            pkill plover
+            sleep 0.3
+            exec env QT_QPA_PLATFORM=xcb ${ploverPkg}/bin/plover
+          fi
         else
           exec env QT_QPA_PLATFORM=xcb ${ploverPkg}/bin/plover
         fi
