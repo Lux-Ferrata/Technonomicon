@@ -468,7 +468,7 @@
                 active_border   = "rgba(${palette.base0D}ee)",
                 inactive_border = "rgba(${palette.base03}aa)",
               },
-              layout = "scrolling",
+              layout = "monocle",
             },
             decoration = {
               rounding = 4,
