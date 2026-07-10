@@ -523,10 +523,8 @@
           hl.bind("CTRL + " .. mainMod .. " + V", hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
 
-          hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left"  }))
-          hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down"  }))
-          hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up"    }))
-          hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
+          hl.bind(mainMod .. " + left",  hl.dsp.layout("cycleprev"))
+          hl.bind(mainMod .. " + right", hl.dsp.layout("cyclenext"))
 
           hl.bind(mainMod .. " + SHIFT + H",     hl.dsp.window.move({ direction = "left"  }))
           hl.bind(mainMod .. " + SHIFT + J",     hl.dsp.window.move({ direction = "down"  }))
