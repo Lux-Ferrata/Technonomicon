@@ -575,6 +575,17 @@
           hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPicker}"))
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))
 
+          local inScrolling = false
+          hl.bind(mainMod .. " + SHIFT + W", function()
+            if inScrolling then
+              inScrolling = false
+              hl.exec_cmd("hyprctl keyword general:layout monocle")
+            else
+              inScrolling = true
+              hl.exec_cmd("hyprctl keyword general:layout scrolling")
+            end
+          end)
+
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),             { mouse = true })
           hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),           { mouse = true })
           hl.bind(mainMod .. " + mouse:274", hl.dsp.exec_cmd("${scrollshot}"), { mouse = true })
