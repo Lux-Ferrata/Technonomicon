@@ -93,7 +93,7 @@
           sort_by(if .focusHistoryID == 0 then 999999 else .focusHistoryID end) |
           .[] | [(.title | clean_title), (.class | clean_class), (.workspace.id | tostring), .address] | @tsv' | \
         awk -F'\t' '{ printf "%-50s %-12s ws:%-2s  %s\n", $1, $2, $3, $4 }' | \
-        ${pkgs.wofi}/bin/wofi --dmenu -p "window")
+        ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "window")
       ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
       ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
