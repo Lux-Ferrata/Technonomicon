@@ -17,6 +17,20 @@
       inputs.sops-nix.nixosModules.sops
       inputs.home-manager.nixosModules.home-manager
 
+      # throttled 0.12 (pulled in by the t480s hardware module above) added a
+      # dbus-next dependency that nixpkgs' package doesn't propagate yet, so
+      # the service crashes with a ModuleNotFoundError on startup. Patch it
+      # in until upstream catches up.
+      ({ ... }: {
+        nixpkgs.overlays = [
+          (final: prev: {
+            throttled = prev.throttled.overrideAttrs (old: {
+              pythonPath = old.pythonPath ++ [ final.python3Packages.dbus-next ];
+            });
+          })
+        ];
+      })
+
       self.nixosModules.Tn-user-settings
       self.nixosModules.Tn-theme
       self.nixosModules.Tn-nix
