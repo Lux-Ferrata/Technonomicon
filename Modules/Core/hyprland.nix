@@ -448,14 +448,6 @@
             hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
           end)
 
-          local inMonocle = false
-          hl.on("window.open", function()
-            if not inMonocle then
-              inMonocle = true
-              hl.exec_cmd("hyprctl keyword general:layout monocle")
-            end
-          end)
-
           hl.config({
             input = {
               kb_layout                 = "us",
