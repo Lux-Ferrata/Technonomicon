@@ -452,7 +452,7 @@
           hl.on("window.open", function()
             if not inMonocle then
               inMonocle = true
-              hl.dispatch(hl.dsp.layout("monocle"))
+              hl.exec_cmd("hyprctl keyword general:layout monocle")
             end
           end)
 
