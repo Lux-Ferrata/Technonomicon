@@ -448,11 +448,11 @@
             hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
           end)
 
-          local monocleInitialized = false
+          local inMonocle = false
           hl.on("window.open", function()
-            if not monocleInitialized then
-              monocleInitialized = true
-              hl.dispatch(hl.dsp.layout("setmode monocle"))
+            if not inMonocle then
+              inMonocle = true
+              hl.dispatch(hl.dsp.layout("monocle"))
             end
           end)
 
