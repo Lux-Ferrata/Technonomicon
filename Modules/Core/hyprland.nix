@@ -77,7 +77,9 @@
 
     winPicker = pkgs.writeShellScript "tn-win-picker" ''
       CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
-        ${pkgs.jq}/bin/jq -r '.[] | [.title, .class, (.workspace.id | tostring), .address] | @tsv' | \
+        ${pkgs.jq}/bin/jq -r '
+          sort_by(if .focusHistoryID == 0 then 999999 else .focusHistoryID end) |
+          .[] | [.title, .class, (.workspace.id | tostring), .address] | @tsv' | \
         awk -F'\t' '{ printf "%-50s %-25s ws:%-2s  %s\n", $1, $2, $3, $4 }' | \
         ${pkgs.wofi}/bin/wofi --dmenu -p "window")
       ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
@@ -87,8 +89,10 @@
     winPickerWs = pkgs.writeShellScript "tn-win-picker-ws" ''
       WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
       CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
-        ${pkgs.jq}/bin/jq -r --argjson ws "$WS_ID" \
-          '.[] | select(.workspace.id == $ws) | [.title, .class, .address] | @tsv' | \
+        ${pkgs.jq}/bin/jq -r --argjson ws "$WS_ID" '
+          map(select(.workspace.id == $ws)) |
+          sort_by(if .focusHistoryID == 0 then 999999 else .focusHistoryID end) |
+          .[] | [.title, .class, .address] | @tsv' | \
         awk -F'\t' '{ printf "%-50s %-25s  %s\n", $1, $2, $3 }' | \
         ${pkgs.wofi}/bin/wofi --dmenu -p "workspace window")
       ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
