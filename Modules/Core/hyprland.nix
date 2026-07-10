@@ -446,7 +446,14 @@
             hl.exec_cmd("obsidian")
             hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
             hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
-            hl.dispatch(hl.dsp.layout("setmode monocle"))
+          end)
+
+          local monocleInitialized = false
+          hl.on("openwindow", function()
+            if not monocleInitialized then
+              monocleInitialized = true
+              hl.dispatch(hl.dsp.layout("setmode monocle"))
+            end
           end)
 
           hl.config({
