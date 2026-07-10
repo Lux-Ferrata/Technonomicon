@@ -195,10 +195,12 @@
         };
       };
 
-      xdg.desktopEntries.plover = {
-        name = "Plover";
-        noDisplay = true;
-      };
+      home.file.".local/share/applications/plover.desktop".text = ''
+        [Desktop Entry]
+        Name=Plover
+        NoDisplay=true
+        Type=Application
+      '';
 
       xdg.userDirs = {
         enable = true;
