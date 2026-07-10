@@ -84,6 +84,17 @@
       ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
 
+    winPickerWs = pkgs.writeShellScript "tn-win-picker-ws" ''
+      WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
+      CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
+        ${pkgs.jq}/bin/jq -r --argjson ws "$WS_ID" \
+          '.[] | select(.workspace.id == $ws) | [.title, .class, .address] | @tsv' | \
+        awk -F'\t' '{ printf "%-50s %-25s  %s\n", $1, $2, $3 }' | \
+        ${pkgs.wofi}/bin/wofi --dmenu -p "workspace window")
+      ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
+    '';
+
     winPull = pkgs.writeShellScript "tn-win-pull" ''
       WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
       ACTIVE=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address')
