@@ -589,14 +589,7 @@
           hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPicker}"))
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))
 
-          hl.bind(mainMod .. " + SHIFT + W", function()
-            local current = hl.config().general.layout
-            if current == "scrolling" then
-              hl.config({ general = { layout = "monocle" } })
-            else
-              hl.config({ general = { layout = "scrolling" } })
-            end
-          end)
+          hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("${layoutToggle}"))
 
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),             { mouse = true })
           hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),           { mouse = true })
