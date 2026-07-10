@@ -76,8 +76,14 @@
       (builtins.readFile ../../bin/tn-show-keybindings);
 
     cleanWin = ''
-      def clean_title: gsub("^[a-z][a-z-]* \\| [\\u2800-\\u28ff] "; "");
-      def clean_class: gsub("^([a-z0-9]+\\.)+"; "") | split("-") | .[0] | (.[0:1] | ascii_upcase) + .[1:];
+      def clean_title:
+        gsub("^[a-z][a-z-]* \\| "; "") |
+        gsub("^[^\\x00-\\x7F] "; "") |
+        gsub("^/\\S+ \\| "; "");
+      def clean_class:
+        gsub("^([a-z0-9]+\\.)+"; "") |
+        split("-") | .[0] |
+        (.[0:1] | ascii_upcase) + .[1:];
     '';
 
     winPicker = pkgs.writeShellScript "tn-win-picker" ''
