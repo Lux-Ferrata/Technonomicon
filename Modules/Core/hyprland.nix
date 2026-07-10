@@ -484,9 +484,6 @@
             animations = {
               enabled = true,
             },
-            scrolling = {
-              explicit_column_widths = "0.5, 1.0",
-            },
             cursor = {
               inactive_timeout = 0.5,
             },
