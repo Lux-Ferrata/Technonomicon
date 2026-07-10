@@ -3,7 +3,7 @@
     let
       ploverPkg = inputs.plover-flake.packages.${pkgs.stdenv.hostPlatform.system}.plover-full;
       ploverOpen = pkgs.writeShellScriptBin "plover-open" ''
-        pkill plover 2>/dev/null || true
+        pkill -f '\.plover-wrapped' 2>/dev/null || true
         sleep 0.5
         exec env QT_QPA_PLATFORM=xcb ${ploverPkg}/bin/plover
       '';
