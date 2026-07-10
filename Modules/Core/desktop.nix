@@ -203,6 +203,11 @@
         };
       };
 
+      xdg.desktopEntries.plover = {
+        name = "Plover";
+        noDisplay = true;
+      };
+
       xdg.userDirs = {
         enable = true;
         createDirectories = false;
