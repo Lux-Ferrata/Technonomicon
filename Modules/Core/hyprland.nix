@@ -449,7 +449,7 @@
           end)
 
           local monocleInitialized = false
-          hl.on("hyprland.window.open", function()
+          hl.on("window.open", function()
             if not monocleInitialized then
               monocleInitialized = true
               hl.dispatch(hl.dsp.layout("setmode monocle"))
