@@ -97,11 +97,11 @@
       TARGET=$(echo "$CHOICE" | awk '{ print $NF }')
       [ -z "$TARGET" ] && exit 0
 
-      ${hyprlandPkg}/bin/hyprctl dispatch focuswindow "address:$TARGET"
-      for i in $(seq 1 25); do ${hyprlandPkg}/bin/hyprctl dispatch movewindow left; done
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$TARGET'}))"
+      for i in $(seq 1 25); do ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.window.move({direction='left'}))"; done
 
-      ${hyprlandPkg}/bin/hyprctl dispatch focuswindow "address:$ACTIVE"
-      for i in $(seq 1 25); do ${hyprlandPkg}/bin/hyprctl dispatch movewindow left; done
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ACTIVE'}))"
+      for i in $(seq 1 25); do ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.window.move({direction='left'}))"; done
     '';
 
   in {
