@@ -566,10 +566,10 @@
           hl.bind(mainMod .. " + SHIFT + M", function()
             if inMonocle then
               inMonocle = false
-              hl.dispatch(hl.dsp.layout("row"))
+              hl.exec_cmd("hyprctl keyword general:layout scrolling")
             else
               inMonocle = true
-              hl.dispatch(hl.dsp.layout("monocle"))
+              hl.exec_cmd("hyprctl keyword general:layout monocle")
             end
           end)
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPicker}"))
