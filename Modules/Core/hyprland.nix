@@ -551,16 +551,6 @@
 
           hl.bind("Print",           hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
           hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
-          hl.bind(mainMod .. " + M",         hl.dsp.layout("colresize +conf"))
-          hl.bind(mainMod .. " + SHIFT + M", function()
-            if inMonocle then
-              inMonocle = false
-              hl.exec_cmd("hyprctl keyword general:layout scrolling")
-            else
-              inMonocle = true
-              hl.exec_cmd("hyprctl keyword general:layout monocle")
-            end
-          end)
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPicker}"))
           hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("${winPull}"))
 
