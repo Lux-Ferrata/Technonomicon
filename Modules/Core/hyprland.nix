@@ -81,7 +81,7 @@
         awk -F'\t' '{ printf "%-50s %-25s ws:%-2s  %s\n", $1, $2, $3, $4 }' | \
         ${pkgs.wofi}/bin/wofi --dmenu -p "window")
       ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
-      ${hyprlandPkg}/bin/hyprctl dispatch focuswindow "address:$ADDR"
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
 
     winPull = pkgs.writeShellScript "tn-win-pull" ''
