@@ -560,7 +560,8 @@
 
           hl.bind("Print",           hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
           hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
-          hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPicker}"))
+          hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd("${winPickerWs}"))
+          hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPicker}"))
           hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("${winPull}"))
 
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),             { mouse = true })
