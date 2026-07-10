@@ -90,7 +90,7 @@
       CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
         ${pkgs.jq}/bin/jq -r '
           ${cleanWin}
-          sort_by(if .focusHistoryID == 0 then 999999 else .focusHistoryID end) |
+          map(select(.focusHistoryID != 0)) | sort_by(.focusHistoryID) |
           .[] | [(.title | clean_title), (.class | clean_class), (.workspace.id | tostring), .address] | @tsv' | \
         awk -F'\t' '{ printf "%-50s %-12s ws:%-2s  %s\n", $1, $2, $3, $4 }' | \
         ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "window")
@@ -103,8 +103,7 @@
       CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
         ${pkgs.jq}/bin/jq -r --argjson ws "$WS_ID" '
           ${cleanWin}
-          map(select(.workspace.id == $ws)) |
-          sort_by(if .focusHistoryID == 0 then 999999 else .focusHistoryID end) |
+          map(select(.workspace.id == $ws and .focusHistoryID != 0)) | sort_by(.focusHistoryID) |
           .[] | [(.title | clean_title), (.class | clean_class), .address] | @tsv' | \
         awk -F'\t' '{ printf "%-50s %-12s  %s\n", $1, $2, $3 }' | \
         ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "workspace window")
