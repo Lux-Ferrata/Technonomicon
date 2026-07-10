@@ -563,7 +563,15 @@
           hl.bind("Print",           hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
           hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
           hl.bind(mainMod .. " + M",         hl.dsp.layout("colresize +conf"))
-          hl.bind(mainMod .. " + SHIFT + M", hl.dsp.layout("togglemonocle"))
+          hl.bind(mainMod .. " + SHIFT + M", function()
+            if inMonocle then
+              inMonocle = false
+              hl.dispatch(hl.dsp.layout("row"))
+            else
+              inMonocle = true
+              hl.dispatch(hl.dsp.layout("monocle"))
+            end
+          end)
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPicker}"))
           hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("${winPull}"))
 
