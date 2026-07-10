@@ -111,6 +111,15 @@
       ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
 
+    layoutToggle = pkgs.writeShellScript "tn-layout-toggle" ''
+      LAYOUT=$(${hyprlandPkg}/bin/hyprctl getoption general:layout -j | ${pkgs.jq}/bin/jq -r .str)
+      if [ "$LAYOUT" = scrolling ]; then
+        ${hyprlandPkg}/bin/hyprctl eval "hl.config({general = {layout = 'monocle'}})"
+      else
+        ${hyprlandPkg}/bin/hyprctl eval "hl.config({general = {layout = 'scrolling'}})"
+      fi
+    '';
+
     winPull = pkgs.writeShellScript "tn-win-pull" ''
       WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
       ACTIVE=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address')
