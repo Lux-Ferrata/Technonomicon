@@ -75,6 +75,35 @@
     tnShowKeybindings = pkgs.writeShellScript "tn-show-keybindings"
       (builtins.readFile ../../bin/tn-show-keybindings);
 
+    winPicker = pkgs.writeShellScript "tn-win-picker" ''
+      CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
+        ${pkgs.jq}/bin/jq -r '.[] | [.title, .class, (.workspace.id | tostring), .address] | @tsv' | \
+        awk -F'\t' '{ printf "%-50s %-25s ws:%-2s  %s\n", $1, $2, $3, $4 }' | \
+        ${pkgs.wofi}/bin/wofi --dmenu -p "window")
+      ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
+      ${hyprlandPkg}/bin/hyprctl dispatch focuswindow "address:$ADDR"
+    '';
+
+    winPull = pkgs.writeShellScript "tn-win-pull" ''
+      WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
+      ACTIVE=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address')
+
+      CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
+        ${pkgs.jq}/bin/jq -r --argjson ws "$WS_ID" \
+          '.[] | select(.workspace.id == $ws and .floating == false) |
+           [.title, .class, .address] | @tsv' | \
+        awk -F'\t' '{ printf "%-50s %-25s  %s\n", $1, $2, $3 }' | \
+        ${pkgs.wofi}/bin/wofi --dmenu -p "pull to follow")
+      TARGET=$(echo "$CHOICE" | awk '{ print $NF }')
+      [ -z "$TARGET" ] && exit 0
+
+      ${hyprlandPkg}/bin/hyprctl dispatch focuswindow "address:$TARGET"
+      for i in $(seq 1 25); do ${hyprlandPkg}/bin/hyprctl dispatch movewindow left; done
+
+      ${hyprlandPkg}/bin/hyprctl dispatch focuswindow "address:$ACTIVE"
+      for i in $(seq 1 25); do ${hyprlandPkg}/bin/hyprctl dispatch movewindow left; done
+    '';
+
   in {
 
     programs.hyprland.enable = true;
