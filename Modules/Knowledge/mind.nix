@@ -3,6 +3,7 @@
     environment.systemPackages = with pkgs; [
       obsidian
       taskwarrior3
+      vit
       timewarrior
 
       pomodoro-gtk
