@@ -13,7 +13,10 @@ pkgs.rustPlatform.buildRustPackage {
   pname = "task2habitica";
   inherit version src;
 
-  cargoLock.lockFile = "${src}/Cargo.lock";
+  cargoLock.lockFile = ./Cargo.lock;
+  postPatch = ''
+    cp ${./Cargo.lock} Cargo.lock
+  '';
 
   nativeBuildInputs = [ pkgs.pkg-config ];
   buildInputs = [ pkgs.openssl ];
