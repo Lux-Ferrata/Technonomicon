@@ -632,7 +632,7 @@
             fail_color       = rgba(${palette.base08}ff)
             font_family      = JetBrainsMono Nerd Font
             font_size        = 32
-            placeholder_text = <span foreground="#${palette.base04}"> </span>
+            placeholder_text = <span foreground="##${palette.base04}"> </span>
             dots_center      = true
             rounding         = 0
             fade_on_empty    = false
