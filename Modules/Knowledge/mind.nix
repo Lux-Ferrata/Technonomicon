@@ -86,7 +86,23 @@
             #!/usr/bin/env bash
             ${habiticaEnvExport}
             if command -v task2habitica >/dev/null; then
-                task2habitica exit
+                output="$(task2habitica exit)"
+                echo "$output"
+                while IFS= read -r line; do
+                    case "$line" in
+                        "LEVEL UP!"*)
+                            ${pkgs.libnotify}/bin/notify-send -i trophy-gold "Habitica: Level Up!" "$line"
+                            ;;
+                        "LEVEL LOST!"*)
+                            ${pkgs.libnotify}/bin/notify-send -i dialog-warning "Habitica: Level Lost" "$line"
+                            ;;
+                        HP:* | MP:* | Exp:* | Gold:* | "")
+                            ;;
+                        *)
+                            ${pkgs.libnotify}/bin/notify-send -i emblem-favorite "Habitica: Item Found" "$line"
+                            ;;
+                    esac
+                done <<< "$output"
             else
                 echo "task2habitica is not installed. Taskwarrior is not syncing with Habitica." >&2
                 exit 0
