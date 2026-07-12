@@ -439,6 +439,14 @@
           })
 
           hl.window_rule({
+            name   = "taskwarrior-tui-float",
+            match  = { title = "taskwarrior-tui" },
+            float  = true,
+            size   = "900 600",
+            center = true,
+          })
+
+          hl.window_rule({
             name  = "pavucontrol-float",
             match = { class = "pavucontrol" },
             float = true,
