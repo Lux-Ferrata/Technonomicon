@@ -80,6 +80,26 @@
           '';
         };
 
+        systemd.user.services.task2habitica-sync = {
+          Unit.Description = "Sync Taskwarrior tasks with Habitica";
+          Service = {
+            Type = "oneshot";
+            ExecStart = pkgs.writeShellScript "task2habitica-sync" ''
+              ${habiticaEnvExport}
+              exec ${task2habitica}/bin/task2habitica sync
+            '';
+          };
+        };
+
+        systemd.user.timers.task2habitica-sync = {
+          Unit.Description = "Periodically sync Taskwarrior tasks with Habitica";
+          Timer = {
+            OnBootSec = "2m";
+            OnUnitActiveSec = "15m";
+          };
+          Install.WantedBy = [ "timers.target" ];
+        };
+
         home.file.".local/share/task/hooks/on-exit.task2habitica" = {
           executable = true;
           text = ''
