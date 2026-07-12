@@ -11,5 +11,12 @@
     xdg.mime.defaultApplications = {
       "x-scheme-handler/obsidian" = "obsidian.desktop";
     };
+
+    home-manager.users.xin = {
+      programs.taskwarrior = {
+        enable = true;
+        package = pkgs.taskwarrior3;
+      };
+    };
   };
 }
