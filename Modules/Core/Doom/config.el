@@ -57,7 +57,10 @@
 
 (use-package! exec-path-from-shell
   :config
-  (when (memq window-system '(mac ns x pgtk))
+  ;; Daemon startup has no window-system yet, so also check `daemonp' —
+  ;; otherwise exec-path-from-shell never runs and clients inherit whatever
+  ;; minimal PATH the daemon's own launch environment happened to have.
+  (when (or (daemonp) (memq window-system '(mac ns x pgtk)))
     (exec-path-from-shell-initialize)))
 
 (setq initial-major-mode 'org-mode)
