@@ -28,14 +28,15 @@
         (switch-to-buffer (doom-fallback-buffer)))))))
 
 (when (daemonp)
+  ;; `doom-init-ui-h' (which shows the dashboard) runs on `window-setup-hook',
+  ;; which fires once at daemon boot, before any client frame exists. Doom's
+  ;; own font/theme hooks already defer correctly to `server-after-make-frame-hook'
+  ;; (see doom-emacs.el), but the dashboard doesn't, so the first client frame
+  ;; needs an explicit nudge once its own theme/fonts have settled.
   (add-hook 'after-make-frame-functions
             (defun +doom-daemon-frame-init-h (frame)
               (when (display-graphic-p frame)
                 (remove-hook 'after-make-frame-functions #'+doom-daemon-frame-init-h)
-                (with-selected-frame frame
-                  (run-hooks 'server-after-make-frame-hook))
-                ;; +doom-dashboard-init-h ran before this graphical frame existed
-                ;; and couldn't render. Explicitly open dashboard once theme/fonts settle.
                 (run-with-idle-timer 0.1 nil #'Tn/open-dashboard frame)))))
 
 ;; =============================================================================
