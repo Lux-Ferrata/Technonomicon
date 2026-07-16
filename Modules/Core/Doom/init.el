@@ -75,5 +75,6 @@
        (sh +tree-sitter)             ; she sells {ba,z,fi}sh shells on the C xor
 
        :config
-       literate
+       ;; NOTE: `literate' has no effect under nix-doom-emacs-unstraightened
+       ;; (config.el is loaded directly, not tangled from a literate org file).
        (default +bindings +smartparens))
