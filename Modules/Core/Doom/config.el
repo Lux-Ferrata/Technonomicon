@@ -1,7 +1,4 @@
 ;; doom.d/config.el
-;; =============================================================================
-;; 1. PERSONAL IDENTITY & SYSTEM (continued below with modeline setup)
-;; =============================================================================
 
 (after! doom-modeline
   (setq display-time-default-load-average nil)
@@ -10,12 +7,6 @@
   (setq doom-modeline-persp-name t)
   (display-time-mode 1)
   (display-battery-mode 1))
-
-(defun +ewm-force-buffer-context-h ()
-  "Force Emacs' Lisp engine to target the visible EWM buffer before running a hotkey command."
-  (let ((visible-buf (window-buffer (selected-window))))
-    (when (with-current-buffer visible-buf (derived-mode-p 'ewm-mode))
-      (set-buffer visible-buf))))
 
 (after! vterm
   (advice-add #'vterm--redraw :around
