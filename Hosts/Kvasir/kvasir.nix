@@ -37,6 +37,7 @@
       self.nixosModules.Tn-desktop
       self.nixosModules.Tn-hyprland
       self.nixosModules.Tn-neovim
+      self.nixosModules.Tn-emacs
       self.nixosModules.Tn-web-browsers
       self.nixosModules.Tn-web-apps
       self.nixosModules.Tn-network
