@@ -164,7 +164,7 @@
   :after evil
   :config
   (setq fcitx-use-dbus nil)
-  (setq fcitx-remote-command "fcitx5-remote")
+  (setq fcitx-remote-command "/run/current-system/sw/bin/fcitx5-remote")
   (fcitx-aggressive-setup))
 
 (use-package! aidermacs
