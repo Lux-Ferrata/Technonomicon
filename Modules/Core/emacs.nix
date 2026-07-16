@@ -9,7 +9,7 @@
         doomDir = ./Doom;
         doomLocalDir = "~/.local/share/nix-doom";
 
-        emacs = pkgs.emacs-lucid;
+        emacs = pkgs.emacs;
 
         extraPackages = epkgs: [
           epkgs.treesit-grammars.with-all-grammars
