@@ -26,6 +26,8 @@
     lazyvim.url = "github:pfassina/lazyvim-nix";
     lazyvim.inputs.nixpkgs.follows = "nixpkgs";
 
+    doom-emacs-unstraightened.url = "github:marienz/nix-doom-emacs-unstraightened";
+
     wayscrollshot.url = "github:jswysnemc/wayscrollshot";
 
     hyprland.url = "github:hyprwm/Hyprland";
