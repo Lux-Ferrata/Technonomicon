@@ -81,5 +81,11 @@
       python3Packages.jupyter-client
       python3Packages.nbformat
     ];
+
+    home-manager.users.xin.services.emacs = {
+      enable = true;
+      package = doomEmacs;
+      startWithUserSession = "graphical";
+    };
   };
 }
