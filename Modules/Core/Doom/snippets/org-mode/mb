@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: Math Block
+# key: mb
+# --
+$$
+$1
+$$
+$0

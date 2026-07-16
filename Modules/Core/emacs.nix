@@ -1,20 +1,23 @@
 { inputs, ... }: {
 
-  flake.nixosModules.Tn-emacs = { pkgs, ... }: {
+  flake.nixosModules.Tn-emacs = { pkgs, ... }:
+  let
+    doomEmacs = pkgs.emacsWithDoom {
+      doomDir = ./Doom;
+      doomLocalDir = "~/.local/share/nix-doom";
+
+      emacs = pkgs.emacs;
+
+      extraPackages = epkgs: [
+        epkgs.treesit-grammars.with-all-grammars
+      ];
+    };
+  in {
 
     nixpkgs.overlays = [ inputs.doom-emacs-unstraightened.overlays.default ];
 
     environment.systemPackages = with pkgs; [
-      (pkgs.emacsWithDoom {
-        doomDir = ./Doom;
-        doomLocalDir = "~/.local/share/nix-doom";
-
-        emacs = pkgs.emacs;
-
-        extraPackages = epkgs: [
-          epkgs.treesit-grammars.with-all-grammars
-        ];
-      })
+      doomEmacs
 
       # General Tooling
       claude-code
