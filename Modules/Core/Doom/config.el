@@ -13,6 +13,31 @@
               (lambda (orig-fun &rest args)
                 (let ((cursor-type cursor-type))
                   (apply orig-fun args)))))
+
+(defun Tn/open-dashboard (&optional frame)
+  "Open the Doom dashboard in FRAME, with fallback if the autoload is unavailable."
+  (let ((frame (or frame (selected-frame))))
+    (cond
+     ((fboundp '+doom-dashboard/open)
+      (+doom-dashboard/open frame))
+     ((require 'doom-dashboard nil t)
+      (when (fboundp '+doom-dashboard/open)
+        (+doom-dashboard/open frame)))
+     (t
+      (with-selected-frame frame
+        (switch-to-buffer (doom-fallback-buffer)))))))
+
+(when (daemonp)
+  (add-hook 'after-make-frame-functions
+            (defun +doom-daemon-frame-init-h (frame)
+              (when (display-graphic-p frame)
+                (remove-hook 'after-make-frame-functions #'+doom-daemon-frame-init-h)
+                (with-selected-frame frame
+                  (run-hooks 'server-after-make-frame-hook))
+                ;; +doom-dashboard-init-h ran before this graphical frame existed
+                ;; and couldn't render. Explicitly open dashboard once theme/fonts settle.
+                (run-with-idle-timer 0.1 nil #'Tn/open-dashboard frame)))))
+
 ;; =============================================================================
 ;; 1. PERSONAL IDENTITY & SYSTEM
 ;; =============================================================================
