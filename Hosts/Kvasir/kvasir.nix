@@ -103,13 +103,12 @@
 
         networking.hostName = "Kvasir";
 
-        # TODO(hibernate phase 2): once /var/lib/swapfile exists on disk (after the
-        # next switch) and its resume_offset has been read back with
-        # `filefrag -v /var/lib/swapfile`, add boot.resumeDevice + a resume_offset
-        # kernel param, THEN flip this to "suspend-then-hibernate" and re-enable
-        # the [Sleep] settings below. Left at plain "suspend" until resume is
-        # verified working, so nothing can auto-hibernate into an image the
-        # kernel can't find yet.
+        # TODO(hibernate phase 3): resumeDevice + resume_offset are now wired up
+        # above. Before flipping this to "suspend-then-hibernate" (which can
+        # auto-hibernate unattended after 20min unplugged), manually test
+        # `systemctl hibernate` (or SUPER+SHIFT+Q) once and confirm it actually
+        # resumes your session rather than cold-booting. Once confirmed, flip
+        # this to "suspend-then-hibernate" and re-enable the [Sleep] settings.
         services.logind.settings.Login.HandleLidSwitch = "suspend";
         # systemd.sleep.settings.Sleep = {
         #   HibernateDelaySec = "20min";
