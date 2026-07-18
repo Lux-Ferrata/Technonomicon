@@ -33,6 +33,10 @@
 ;; --- Stage 4 (tree-sitter across languages — suspect #2) ---
 (package! evil-textobj-tree-sitter)
 
+;; --- Stage 7 (AI tooling & remaining misc) ---
+(package! aidermacs)
+(package! fcitx)
+
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)
 
