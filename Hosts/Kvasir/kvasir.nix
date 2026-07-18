@@ -97,16 +97,18 @@
 
         networking.hostName = "Kvasir";
 
-        # Lid close suspends immediately either way. While on AC, HibernateOnACPower=false
-        # keeps the HibernateDelaySec countdown from ever starting, so it just stays
-        # suspended indefinitely. The moment AC is disconnected (including while already
-        # suspended), the countdown starts and it hibernates after HibernateDelaySec —
-        # plus systemd's own low-battery ACPI alarm can trigger hibernate sooner regardless.
-        services.logind.settings.Login.HandleLidSwitch = "suspend-then-hibernate";
-        systemd.sleep.settings.Sleep = {
-          HibernateDelaySec = "20min";
-          HibernateOnACPower = false;
-        };
+        # TODO(hibernate phase 2): once /var/lib/swapfile exists on disk (after the
+        # next switch) and its resume_offset has been read back with
+        # `filefrag -v /var/lib/swapfile`, add boot.resumeDevice + a resume_offset
+        # kernel param, THEN flip this to "suspend-then-hibernate" and re-enable
+        # the [Sleep] settings below. Left at plain "suspend" until resume is
+        # verified working, so nothing can auto-hibernate into an image the
+        # kernel can't find yet.
+        services.logind.settings.Login.HandleLidSwitch = "suspend";
+        # systemd.sleep.settings.Sleep = {
+        #   HibernateDelaySec = "20min";
+        #   HibernateOnACPower = false;
+        # };
 
         home-manager = {
           useGlobalPkgs = true;
