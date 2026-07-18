@@ -169,7 +169,8 @@
 (use-package! bqn-mode :mode "\\.bqn$")
 (use-package! forth-mode :mode "\\.\\(fs\\|fth\\)$")
 (add-to-list 'auto-mode-alist '("\\.asm\\'" . asm-mode))
-;; NOTE: verilog/vhdl `lsp!' hooks deferred to the LSP stage (Stage 6).
+(add-hook 'verilog-mode-hook #'lsp!)
+(add-hook 'vhdl-mode-hook #'lsp!)
 
 (after! eww
   (setq eww-auto-rename-buffer t)
