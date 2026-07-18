@@ -484,3 +484,107 @@
                :auto-todo t
                :order 100)
               )))))
+
+;; =============================================================================
+;; STAGE 3 (org-roam ecosystem — suspect #1: org-roam-ui-open-on-start
+;; launches a websocket server and opens a browser tab on every startup)
+;; =============================================================================
+
+;; =============================================================================
+;; 7. ORG ROAM & HUGO (THE FIX)
+;; =============================================================================
+
+(use-package! websocket :after org-roam)
+
+(after! org-roam
+  (setq org-roam-directory "~/Grimoire/Notes/")
+  (setq org-roam-dailies-directory "Journal/")
+
+  ;; --- Unified Capture Templates ---
+  (setq org-roam-capture-templates
+        '(("d" "default" plain "%?"
+           :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                              "#+title: ${title}\n")
+           :unnarrowed t)
+
+          ("b" "Blog Post" plain "%?"
+           :target (file+head "~/Grimoire/Notes/Blog/%<%Y%m%d%H%M%S>-${slug}.org"
+                              "#+title: ${title}\n#+author: Xin IronShark\n#+date: %<%Y-%m-%d>\n#+description: temp description\n#+PANDOC_METADATA: draft=false\n#+PANDOC_METADATA: categories=General\n#+PANDOC_METADATA: image=thumbnail.png\n#+export_file_name: ~/Projects/Personal-Blog/posts/${slug}/index.qmd\n\n")
+           :unnarrowed t)
+
+          ))
+
+
+  ;; --- Org Roam UI ---
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
+
+(defun my/open-daily-journal ()
+  "Create today's journal from template if missing, then open it."
+  (interactive)
+  (require 'org-roam)
+  (require 'org-roam-dailies)
+  (let* ((daily-dir (expand-file-name org-roam-dailies-directory "~/Grimoire/Notes/"))
+         (today-file (expand-file-name (format-time-string "%Y-%m-%d.org") daily-dir))
+         (template-file (expand-file-name "~/Grimoire/Templates/daily.org")))
+    (unless (file-exists-p today-file)
+      (make-directory daily-dir t)
+      (with-temp-file today-file
+        (if (file-exists-p template-file)
+            (progn
+              (insert-file-contents template-file)
+              (goto-char (point-min))
+              (while (search-forward "{{date}}" nil t)
+                (replace-match (format-time-string "%Y-%m-%d"))))
+          (insert (format-time-string "#+title: %Y-%m-%d\n\n* Error: Could not find %s") template-file))))
+    (find-file today-file)
+    (delete-other-windows)))
+
+(use-package! ox-pandoc
+  :after org
+  :config
+  (add-to-list 'org-pandoc-menu-entry '(markdown "to markdown" 100))
+  (setq org-pandoc-options '((standalone . t)))
+  (setq org-pandoc-format-extensions '(markdown+tex_math_dollars)))
+
+;; =============================================================================
+;; 11. QUARTO PUBLISHING SYSTEM
+;; =============================================================================
+
+(defun my/publish-to-quarto ()
+  "Ensure the export directory exists, then safely export via Pandoc."
+  (interactive)
+  (let* ((export-file (org-export-output-file-name ".qmd"))
+         (export-dir (file-name-directory export-file)))
+    ;; 1. Automatically create the folder if it doesn't exist
+    (unless (file-exists-p export-dir)
+      (make-directory export-dir t))
+    ;; 2. Run the export
+    (org-pandoc-export-to-markdown)
+    (message "🚀 Successfully published to: %s" export-dir)))
+
+;; Bind it to your standard shortcut
+(map! :leader
+      :desc "Publish to Quarto" "n q" #'my/publish-to-quarto)
+
+;; --- BIBLIOGRAPHY / ZOTERO INTEGRATION ---
+
+;; Tell Citar where your auto-exported Zotero library is
+(setq citar-bibliography '("~/Grimoire/bibtex.bib"))
+
+;; Tell Citar where Zotero stores the actual PDF files
+(setq citar-library-paths '("~/.zotero/zotero/storage/"))
+
+(setq org-drawio-executable-path (executable-find "drawio"))
+(setq org-drawio-output-dir "/home/xin/Grimoire/Notes/Assets")
+(setq org-drawio-input-dir "/home/xin/Grimoire/Notes/Assets")
+
+;; (use-package! org-drawio
+;;   :config
+;;   (add-hook 'org-mode-hook #'org-drawio-inline-images-mode))
+
+;; (after! vterm
+;;   (map! :map vterm-mode-map
+;;         "C-S-v" #'vterm-yank))
