@@ -584,6 +584,12 @@
 ;; Tell Citar where Zotero stores the actual PDF files
 (setq citar-library-paths '("~/.zotero/zotero/storage/"))
 
+;; Ensure Citar uses the Better BibTeX citation keys (currently broken)
+;; (setq citar-symbols
+;;       `((file . ,(all-the-icons-faicon "file-pdf-o" :face 'all-the-icons-red :v-adjust -0.1))
+;;         (note . ,(all-the-icons-material "insert_comment" :face 'all-the-icons-blue :v-adjust -0.3))
+;;         (link . ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01))))
+
 (setq org-drawio-executable-path (executable-find "drawio"))
 (setq org-drawio-output-dir "/home/xin/Grimoire/Notes/Assets")
 (setq org-drawio-input-dir "/home/xin/Grimoire/Notes/Assets")
