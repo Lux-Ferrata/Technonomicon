@@ -585,6 +585,31 @@
 ;;   :config
 ;;   (add-hook 'org-mode-hook #'org-drawio-inline-images-mode))
 
+;; (use-package! org-drawio
+;;   :config
+;;   (add-hook 'org-mode-hook #'org-drawio-inline-images-mode))
+
 ;; (after! vterm
 ;;   (map! :map vterm-mode-map
 ;;         "C-S-v" #'vterm-yank))
+
+;; =============================================================================
+;; STAGE 4 (tree-sitter across languages — suspect #2)
+;; =============================================================================
+
+;; --- Evil Text Objects (AST-based) ---
+;; Ensure this matches the corrected name in packages.el
+(use-package! evil-textobj-tree-sitter
+  :after evil
+  :config
+  ;; Standard AST Objects
+  (define-key evil-outer-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.outer"))
+  (define-key evil-inner-text-objects-map "f" (evil-textobj-tree-sitter-get-textobj "function.inner"))
+  (define-key evil-outer-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.outer"))
+  (define-key evil-inner-text-objects-map "c" (evil-textobj-tree-sitter-get-textobj "class.inner"))
+  (define-key evil-outer-text-objects-map "a" (evil-textobj-tree-sitter-get-textobj "parameter.outer"))
+  (define-key evil-inner-text-objects-map "a" (evil-textobj-tree-sitter-get-textobj "parameter.inner"))
+
+  ;; Jump motions
+  (map! :n "]f" (lambda () (interactive) (evil-textobj-tree-sitter-goto-textobj "function.outer"))
+        :n "[f" (lambda () (interactive) (evil-textobj-tree-sitter-goto-textobj "function.outer" t))))
