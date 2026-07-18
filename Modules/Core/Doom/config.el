@@ -286,7 +286,7 @@
         org-modern-star '("◉" "○" "●" "◦" "•")
         org-modern-list '((?- . "•"))
         org-modern-hide-stars t
-        org-modern-checkbox '((?\s . "󰄱") (?- . "󰄗") (?X . ""))
+        org-modern-checkbox '((?\s . "󰄱") (?- . "󰄗") (?X . "󱊧"))
         org-modern-todo-faces
         '(("TODO" :inverse-video t :weight bold)
           ("DONE" :inverse-video t :weight bold))
