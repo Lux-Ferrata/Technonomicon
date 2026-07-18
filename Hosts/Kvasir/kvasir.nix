@@ -72,6 +72,16 @@
           efi.efiSysMountPoint = "/boot";
         };
 
+        # 42000 MiB > 40953616 KiB total RAM, so a full-RAM hibernation image
+        # always fits. `boot.resumeDevice` + `resume_offset` are added once
+        # this swapfile actually exists on disk and its physical offset can
+        # be read back with `filefrag -v /var/lib/swapfile` (ext4 swapfiles
+        # need the offset explicitly; it can't be known before the file
+        # is created).
+        swapDevices = [
+          { device = "/var/lib/swapfile"; size = 42000; }
+        ];
+
         hardware = {
           uinput.enable = true;
           opentabletdriver = {
