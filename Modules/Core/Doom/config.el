@@ -193,3 +193,294 @@
 
 (map! :n "<up>"   #'evil-previous-visual-line
       :n "<down>" #'evil-next-visual-line)
+
+;; =============================================================================
+;; STAGE 2 (org base + visual extras, no roam/jupyter/LSP)
+;; =============================================================================
+
+;; =============================================================================
+;; 6. ORG MODE (BASE)
+;; =============================================================================
+
+(after! org
+  (require 'org-mouse)
+  (require 'org-habit)
+
+  (add-to-list 'org-modules 'org-habit t)
+
+  (setq org-log-into-drawer t)
+  (setq org-hide-emphasis-markers t)
+  (setq org-agenda-start-on-weekday 0)
+  (setq org-startup-with-inline-images t)
+  (setq org-fold-catch-invisible-edits 'smart)
+  (setq org-checkbox-hierarchical-statistics nil)
+  (setq org-hierarchical-todo-statistics nil)
+  (setq org-agenda-span 1)
+  (setq org-agenda-start-day "+0d")
+  (setq org-agenda-current-time-string "")
+  (setq org-agenda-time-grid '((daily) () "" ""))
+  (setq org-agenda-prefix-format '(
+                                   (agenda . "  %?-2i %t ")
+                                   (todo . " %i %-12:c")
+                                   (tags . " %i %-12:c")
+                                   (search . " %i %-12:c")))
+  (setq org-agenda-skip-timestamp-if-done t
+        org-agenda-skip-deadline-if-done t
+        org-agenda-skip-scheduled-if-done t
+        org-agenda-skip-scheduled-if-deadline-is-shown t
+        org-agenda-skip-timestamp-if-deadline-is-shown t)
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "NEXT(n)" "ACTIVE(a)" "PAUSED(p)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)" "ARCHIVE(A)")))
+  (setq org-habit-graph-column 30
+        org-habit-preceding-days 21
+        org-habit-following-days 7
+        org-habit-show-habits-only-for-today t))
+
+(defun my/org-reset-checkbox-state-maybe ()
+    "Reset all checkboxes in an entry if the `RESET_CHECK_BOXES' property is set."
+    (when (org-entry-get (point) "RESET_CHECK_BOXES")
+      (org-reset-checkbox-state-subtree)))
+
+  (add-hook 'org-todo-repeat-hook #'my/org-reset-checkbox-state-maybe)
+
+(setq +org-capture-todo-file "Inbox.org"
+      +org-capture-notes-file "Inbox.org"
+      +org-capture-projects-file "Projects.org"
+      +org-capture-journal-file "Notes/Journal/classic-journal.org")
+
+(defun my/org-checkbox-smart-space ()
+  "When pressing space inside `[]`, insert space, jump out, and add a trailing space."
+  (interactive)
+  (if (and (eq (char-before) ?\[) (eq (char-after) ?\]))
+      (progn (insert " ") (forward-char 1) (insert " "))
+    (insert " ")))
+
+(map! :after org
+      :map org-mode-map
+      :i "SPC" #'my/org-checkbox-smart-space)
+
+;; Configure Zen Mode (Writeroom)
+(after! writeroom-mode
+  (setq +zen-text-scale 1.0)   ;; Stop Zen from making your size-23 font even bigger
+  (setq writeroom-width 80))   ;; Force the centered column to exactly 80 characters
+
+(add-hook 'org-mode-hook
+          (lambda ()
+            ;; Check if the buffer is a real file AND is inside your Notes folder
+            (when (and (buffer-file-name)
+                       (string-prefix-p (expand-file-name "~/Grimoire/Notes/")
+                                        (buffer-file-name)))
+              (writeroom-mode 1))))
+
+;; =============================================================================
+;; 8. ORG EXTRAS (Modern, SVG, Appear, Autolist, Kanban)
+;; =============================================================================
+
+(use-package! org-modern
+  :hook (org-mode . org-modern-mode)
+  :hook (org-agenda-finalize . org-modern-agenda)
+  :config
+  (setq org-modern-todo nil
+        org-modern-tag nil
+        org-modern-star '("◉" "○" "●" "◦" "•")
+        org-modern-list '((?- . "•"))
+        org-modern-hide-stars t
+        org-modern-checkbox '((?\s . "󰄱") (?- . "󰄗") (?X . ""))
+        org-modern-todo-faces
+        '(("TODO" :inverse-video t :weight bold)
+          ("DONE" :inverse-video t :weight bold))
+        ))
+
+(use-package! svg-tag-mode
+  :hook (org-mode . svg-tag-mode)
+  :config
+  (defconst date-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}")
+  (defconst time-re "[0-9]\\{2\\}:[0-9]\\{2\\}")
+  (defconst day-re "[A-Za-z]\\{3\\}")
+  (defconst day-time-re (format "\\(%s\\)? ?\\(%s\\)?" day-re time-re))
+
+  (defun svg-progress-percent (value)
+    (save-match-data
+      (svg-image (svg-lib-concat
+                  (svg-lib-progress-bar  (/ (string-to-number value) 100.0)
+                                         nil :height 0.8 :margin 2 :stroke 2 :radius 3 :padding 1 :width 30)
+                  (svg-lib-tag (concat value "%")
+                               nil :height 0.8 :stroke 2 :margin 2)) :ascent 'center)))
+
+  (defun svg-progress-count (value)
+    (save-match-data
+      (let* ((seq (split-string value "/"))
+             (count (if (stringp (car seq)) (float (string-to-number (car seq))) 0))
+             (total (if (stringp (cadr seq)) (float (string-to-number (cadr seq))) 1000)))
+        (svg-image (svg-lib-concat
+                    (svg-lib-progress-bar (/ count total) nil
+                                          :height 0.8 :margin 2 :stroke 2 :radius 3 :padding 1 :width 30)
+                    (svg-lib-tag value nil :height 0.8 :stroke 2 :margin 2)) :ascent 'center))))
+
+  (setq svg-tag-tags
+        `(
+          ("^\\*+\\s-+\\(TODO\\)\\b" . ((lambda (tag) (string= tag "TODO") (svg-tag-make "TODO" :face 'warning :inverse t :margin 0 :padding 0))))
+          ("^\\*+\\s-+\\(ACTIVE\\)\\b" . ((lambda (tag) (string= tag "ACTIVE") (svg-tag-make "ACTIVE" :face 'info :inverse t :margin 0 :padding 0))))
+          ("^\\*+\\s-+\\(WAITING\\)\\b" . ((lambda (tag) (string= tag "WAITING") (svg-tag-make "WAITING" :face 'secondary :inverse t :margin 0 :padding 0))))
+          ("^\\*+\\s-+\\(DONE\\)\\b" . ((lambda (tag) (string= tag "DONE") (svg-tag-make "DONE" :face 'success :inverse t :margin 0 :padding 0))))
+          ("^\\*+\\s-+\\(NEXT\\)\\b" . ((lambda (tag) (string= tag "NEXT") (svg-tag-make "NEXT" :face 'success :inverse t :margin 0 :padding 0))))
+          ("^\\*+\\s-+\\(PAUSED\\)\\b" . ((lambda (tag) (string= tag "PAUSED") (svg-tag-make "PAUSED" :face 'shadow :inverse t :margin 0 :padding 0))))
+          ("^\\*+\\s-+\\(CANCELLED\\)\\b" . ((lambda (tag) (string= tag "CANCELLED") (svg-tag-make "CANCELLED" :face 'error :inverse t :margin 0 :padding 0))))
+          ("^\\*+\\s-+\\(ARCHIVE\\)\\b" . ((lambda (tag) (string= tag "ARCHIVE") (svg-tag-make "ARCHIVE" :face 'shadow :inverse t :margin 0 :padding 0))))
+          ("\\[#[A-Z]\\]" . ( (lambda (tag) (svg-tag-make tag :face 'error :beg 2 :end -1 :margin 3 :padding 1 :height 0.85))))
+          ("\\(\\[[0-9]\\{1,3\\}%\\]\\)" . ((lambda (tag) (svg-progress-percent (substring tag 1 -2)))))
+          ("\\(\\[[0-9]+/[0-9]+\\]\\)" . ((lambda (tag) (svg-progress-count (substring tag 1 -1)))))
+          (,(format "\\(<%s>\\)" date-re) . ((lambda (tag) (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'success))))
+          (,(format "\\(\\[%s\\]\\)" date-re) . ((lambda (tag) (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'shadow))))))
+
+  (defun org-agenda-show-svg ()
+    (let* ((case-fold-search nil)
+           (keywords (mapcar #'svg-tag--build-keywords svg-tag--active-tags))
+           (keyword (car keywords)))
+      (while keyword
+        (save-excursion
+          (while (re-search-forward (nth 0 keyword) nil t)
+            (overlay-put (make-overlay (match-beginning 0) (match-end 0))
+                         'display  (nth 3 (eval (nth 2 keyword)))) ))
+        (pop keywords)
+        (setq keyword (car keywords)))))
+
+  ;; (add-hook 'org-agenda-finalize-hook #'org-agenda-show-svg)
+
+  (defun my/org-agenda-remove-svg-bleed ()
+    "Strip SVG image display properties from the agenda, but keep alignment spaces intact."
+    (let ((inhibit-read-only t)
+          (pos (point-min)))
+      (while (not (= pos (point-max)))
+        (let ((prop (get-text-property pos 'display))
+              (next-pos (next-single-property-change pos 'display nil (point-max))))
+          ;; If the display property is specifically an image (like an SVG), strip it
+          (when (and (consp prop) (eq (car prop) 'image))
+            (remove-text-properties pos next-pos '(display nil)))
+          (setq pos next-pos)))))
+
+  (add-hook 'org-agenda-finalize-hook #'my/org-agenda-remove-svg-bleed)
+
+  (add-hook 'svg-tag-mode-hook
+            (lambda ()
+              (when (derived-mode-p 'org-mode)
+                (setq-local font-lock-keywords-case-fold-search nil)
+                (font-lock-flush)
+                (font-lock-ensure)))))
+
+(use-package! org-kanban :after org)
+(use-package! org-appear
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autoemphasis t
+        org-appear-autolinks t
+        org-appear-autosubmarkers t))
+(use-package! org-autolist :hook (org-mode . org-autolist-mode))
+
+;; =============================================================================
+;; 9. HYPRLAND STANDALONE LAUNCHERS (minus my/open-daily-journal, which needs
+;; org-roam-dailies — deferred to the org-roam stage, Stage 3)
+;; =============================================================================
+
+(defun my/popup-calc ()
+  "Launch calc and maximize it in the floating window."
+  (interactive)
+  (calc)
+  (delete-other-windows))
+
+(defun my/popup-capture ()
+  "Wake up org-capture and launch fleeting note."
+  (interactive)
+  (require 'org-capture)
+  (add-hook 'org-capture-after-finalize-hook #'kill-emacs)
+  (org-capture nil "f")
+  (delete-other-windows))
+
+(defun my/quick-write-clipboard ()
+  "Open a temporary buffer, copy contents to clipboard on exit, and close."
+  (interactive)
+  (switch-to-buffer (get-buffer-create "*Quick-Write*"))
+  (text-mode)
+  (visual-line-mode 1)
+  (evil-insert-state)
+  (insert "Write your text here. Press [C-c C-c] to copy to clipboard and close.\n\n")
+  (local-set-key (kbd "C-c C-c")
+                 (lambda ()
+                   (interactive)
+                   (goto-char (point-min))
+                   (forward-line 2)
+                   (delete-region (point-min) (point))
+                   (write-region (point-min) (point-max) "/tmp/emacs-quick-write.txt")
+                   (call-process-shell-command "wl-copy < /tmp/emacs-quick-write.txt" nil 0)
+                   (sleep-for 0.2)
+                   (if (daemonp) (delete-frame) (kill-emacs))))
+  (delete-other-windows))
+
+;; --- LaTeX Typing & Rendering ---
+(use-package! org-fragtog
+  :hook (org-mode . org-fragtog-mode))
+
+(after! org
+  ;; Turn on CDLaTeX in Org-mode for fast math typing
+  (add-hook 'org-mode-hook #'turn-on-org-cdlatex)
+
+  ;; Scale up the rendered equations to match your size 23 font
+  (setq org-format-latex-options
+        (plist-put org-format-latex-options :scale 3.5)))
+
+;; =============================================================================
+;; 10. DIAGRAMS Mermaid (minus ox-pandoc/citar, deferred to Stage 3 alongside
+;; the +pandoc org flag)
+;; =============================================================================
+
+;; --- Mermaid Charts ---
+(use-package! ob-mermaid
+  :config
+  ;; Nix places the executable simply as 'mmdc' in your PATH
+  (setq ob-mermaid-cli-path "mmdc"))
+
+(after! org
+  ;; Tell Org-Babel that it is allowed to execute Mermaid code blocks
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (append org-babel-load-languages
+           '((mermaid . t)
+             (latex . t)))))
+
+(use-package! anki-editor
+  :after org
+  :config
+  (setq anki-editor-org-tags-as-anki-tags t))
+
+(setq org-agenda-files '("~/Grimoire/Notes/"))
+
+(after! org-agenda
+  (after! org-habit
+    (use-package! org-super-agenda
+      :after org-agenda
+      :config
+      (add-hook 'org-trigger-hook #'save-buffer)
+      (org-super-agenda-mode t)
+      (setq org-super-agenda-groups
+            '(;; Each group has an implicit boolean OR operator between its selectors.
+              (:name "🌱 Daily Habits"
+               :tag "Dailies"
+               :order 99)
+              (:name "🔥 Overdue"
+               :deadline past
+               :and (:habit t :scheduled past)
+               :order 1)
+              (:name "⚡ Today"
+               :time-grid t
+               :scheduled today)
+              (:name "📚 Active Research"
+               :todo "ACTIVE")
+              (:name "⏳ Waiting On"
+               :todo "WAITING")
+              (:name "Inbox / Unprocessed"
+               :file-path "Inbox\\.org")
+              ;; Catch-all for everything else
+              (:name "📌 Upcoming / Backlog"
+               :auto-todo t
+               :order 100)
+              )))))
