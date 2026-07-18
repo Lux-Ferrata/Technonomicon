@@ -8,6 +8,12 @@
 ;;
 ;; Use 'C-h f package\!' to look up documentation for the `package!' macro.
 
+;; --- Stage 1 (cosmetics & non-blocking editor UX) ---
+(package! bqn-mode)
+(package! forth-mode)
+(package! highlight-parentheses)
+(package! exec-path-from-shell)
+(package! git-auto-commit-mode)
 
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)
