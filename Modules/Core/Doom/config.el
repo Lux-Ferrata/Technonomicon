@@ -91,6 +91,12 @@
           (lambda ()
             (setq wrap-prefix (propertize "  ↳ " 'face 'font-lock-comment-face))))
 
+;; (use-package! which-key-posframe
+;;   :after which-key
+;;   :config
+;;   (setq which-key-posframe-poshandler 'posframe-poshandler-frame-center)
+;;   (which-key-posframe-mode 1))
+
 (custom-set-faces!
   '(default :foreground "#CFDFDF")
   '(font-lock-comment-face :foreground "#8C98A6" :slant italic)
@@ -286,7 +292,7 @@
         org-modern-star '("◉" "○" "●" "◦" "•")
         org-modern-list '((?- . "•"))
         org-modern-hide-stars t
-        org-modern-checkbox '((?\s . "󰄱") (?- . "󰄗") (?X . "󱊧"))
+        org-modern-checkbox '((?\s . "󰄱") (?- . "󰄗") (?X . ""))
         org-modern-todo-faces
         '(("TODO" :inverse-video t :weight bold)
           ("DONE" :inverse-video t :weight bold))
