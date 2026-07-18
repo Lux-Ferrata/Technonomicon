@@ -590,6 +590,21 @@
 ;;         "C-S-v" #'vterm-yank))
 
 ;; =============================================================================
+;; STAGE 6 (LSP prewarm) — `lsp--require-packages' is a synchronous `require'
+;; loop with no async option (confirmed from lsp-mode.el source); it's guarded
+;; to run only once per Emacs session though, so pay that one-time cost during
+;; daemon idle startup instead of on your first LSP-enabled file open.
+;; =============================================================================
+
+(when (daemonp)
+  (run-with-idle-timer
+   2 nil
+   (lambda ()
+     (require 'lsp-mode nil t)
+     (when (fboundp 'lsp--require-packages)
+       (lsp--require-packages)))))
+
+;; =============================================================================
 ;; STAGE 4 (tree-sitter across languages — suspect #2)
 ;; =============================================================================
 
