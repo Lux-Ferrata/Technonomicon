@@ -30,6 +30,9 @@
 ;; --- Stage 3 (org-roam ecosystem — suspect #1 for startup slowness) ---
 (package! org-roam-ui)
 
+;; --- Stage 4 (tree-sitter across languages — suspect #2) ---
+(package! evil-textobj-tree-sitter)
+
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)
 
