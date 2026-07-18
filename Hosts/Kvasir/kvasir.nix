@@ -82,6 +82,12 @@
           { device = "/var/lib/swapfile"; size = 42000; }
         ];
 
+        # resume_offset read back via `sudo filefrag -v /var/lib/swapfile`
+        # (extent 0's physical_offset; this filesystem's block size is 4096,
+        # same as PAGE_SIZE, so no unit conversion is needed).
+        boot.resumeDevice = "/dev/disk/by-uuid/a045a989-af05-492d-9268-2a6479df0487";
+        boot.kernelParams = [ "resume_offset=27422720" ];
+
         hardware = {
           uinput.enable = true;
           opentabletdriver = {
