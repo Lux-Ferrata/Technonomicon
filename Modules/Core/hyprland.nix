@@ -350,7 +350,13 @@
         settings = {
           general = {
             lock_cmd         = "pidof hyprlock || hyprlock";
-            before_sleep_cmd = "loginctl lock-session";
+            # `loginctl lock-session` only asks logind to emit a Lock signal;
+            # hypridle then reacts to that signal by running `lock_cmd`. On
+            # lid-close, logind's own HandleLidSwitch=suspend proceeds as
+            # soon as this command *returns*, which can race ahead of hyprlock
+            # actually rendering/grabbing input. The trailing sleep buys
+            # hyprlock a moment to finish locking before sleep proceeds.
+            before_sleep_cmd = "loginctl lock-session && sleep 1";
             after_sleep_cmd  = "hyprctl dispatch dpms on";
           };
           listener = [
