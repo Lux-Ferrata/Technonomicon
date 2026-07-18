@@ -625,3 +625,44 @@
   ;; Jump motions
   (map! :n "]f" (lambda () (interactive) (evil-textobj-tree-sitter-goto-textobj "function.outer"))
         :n "[f" (lambda () (interactive) (evil-textobj-tree-sitter-goto-textobj "function.outer" t))))
+
+(setq-hook! 'python-mode-hook +format-with-lsp nil)
+(set-formatter! 'black "black -q -" :modes '(python-mode))
+
+;; =============================================================================
+;; STAGE 7 (AI tooling & remaining misc)
+;; =============================================================================
+
+;; =============================================================================
+;; 4. MODULES & AI
+;; =============================================================================
+
+(use-package! fcitx
+  :after evil
+  :config
+  (setq fcitx-use-dbus nil)
+  (setq fcitx-remote-command "/run/current-system/sw/bin/fcitx5-remote")
+  (fcitx-aggressive-setup))
+
+(use-package! aidermacs
+  :config
+  (setq aidermacs-backend 'vterm)
+  (map! :leader :desc "Aidermacs Menu" "o a" #'aidermacs-transient-menu))
+
+;; (use-package! minuet
+;;   :demand t
+;;   :config
+;;   (setq minuet-provider 'openai-fim-compatible)
+;;   (setq minuet-n-completions 1)
+;;   (plist-put minuet-openai-fim-compatible-options :end-point "http://localhost:11434/v1/completions")
+;;   (plist-put minuet-openai-fim-compatible-options :name "Ollama")
+;;   (plist-put minuet-openai-fim-compatible-options :model "qwen2.5-coder:1.5b")
+;;   (plist-put minuet-openai-fim-compatible-options :api-key "TERM")
+;;   (add-hook 'prog-mode-hook #'minuet-auto-suggestion-mode)
+;;   (map! :map minuet-active-mode-map
+;;         :i "TAB" #'minuet-accept-suggestion
+;;         :i "M-n" #'minuet-next-suggestion
+;;         :i "M-p" #'minuet-previous-suggestion
+;;         :i "M-e" #'minuet-dismiss-suggestion))
+
+(message "--- CONFIG LOADED SUCCESSFULLY ---")
