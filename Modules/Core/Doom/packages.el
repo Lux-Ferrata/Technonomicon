@@ -15,6 +15,18 @@
 (package! exec-path-from-shell)
 (package! git-auto-commit-mode)
 
+;; --- Stage 2 (org base + visual extras, no roam/jupyter/LSP) ---
+(package! org-modern)
+(package! svg-tag-mode)
+(package! org-kanban)
+(package! org-appear)
+(package! org-autolist)
+(package! org-fragtog)
+(package! which-key-posframe)
+(package! ob-mermaid)
+(package! anki-editor)
+(package! org-super-agenda)
+
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)
 
