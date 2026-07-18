@@ -97,7 +97,16 @@
 
         networking.hostName = "Kvasir";
 
-        services.logind.settings.Login.HandleLidSwitch = "suspend";
+        # Lid close suspends immediately either way. While on AC, HibernateOnACPower=false
+        # keeps the HibernateDelaySec countdown from ever starting, so it just stays
+        # suspended indefinitely. The moment AC is disconnected (including while already
+        # suspended), the countdown starts and it hibernates after HibernateDelaySec —
+        # plus systemd's own low-battery ACPI alarm can trigger hibernate sooner regardless.
+        services.logind.settings.Login.HandleLidSwitch = "suspend-then-hibernate";
+        systemd.sleep.extraConfig = ''
+          HibernateDelaySec=20min
+          HibernateOnACPower=false
+        '';
 
         home-manager = {
           useGlobalPkgs = true;
