@@ -27,6 +27,9 @@
 (package! anki-editor)
 (package! org-super-agenda)
 
+;; --- Stage 3 (org-roam ecosystem — suspect #1 for startup slowness) ---
+(package! org-roam-ui)
+
 ;; To install SOME-PACKAGE from MELPA, ELPA or emacsmirror:
 ;; (package! some-package)
 
