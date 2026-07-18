@@ -103,10 +103,10 @@
         # suspended), the countdown starts and it hibernates after HibernateDelaySec —
         # plus systemd's own low-battery ACPI alarm can trigger hibernate sooner regardless.
         services.logind.settings.Login.HandleLidSwitch = "suspend-then-hibernate";
-        systemd.sleep.extraConfig = ''
-          HibernateDelaySec=20min
-          HibernateOnACPower=false
-        '';
+        systemd.sleep.settings.Sleep = {
+          HibernateDelaySec = "20min";
+          HibernateOnACPower = false;
+        };
 
         home-manager = {
           useGlobalPkgs = true;
