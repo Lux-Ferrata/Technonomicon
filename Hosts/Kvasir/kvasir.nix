@@ -86,18 +86,7 @@
         # (extent 0's physical_offset; this filesystem's block size is 4096,
         # same as PAGE_SIZE, so no unit conversion is needed).
         boot.resumeDevice = "/dev/disk/by-uuid/a045a989-af05-492d-9268-2a6479df0487";
-        boot.kernelParams = [
-          "resume_offset=27422720"
-          # NVMe APST allows a power state with up to 10s wake latency
-          # ("D3 entry latency set to 10 seconds" in dmesg on every boot).
-          # libinput logged the compositor's own event loop stalling 21-23s
-          # right after resume ("event processing lagging behind ... your
-          # system is too slow") — any disk touch by Hyprland hitting a
-          # sleeping NVMe drive would explain exactly that. Cap the allowed
-          # latency at 5.5ms so the drive never enters a state that slow to
-          # wake, trading a little idle power draw for fast resume.
-          "nvme_core.default_ps_max_latency_us=5500"
-        ];
+        boot.kernelParams = [ "resume_offset=27422720" ];
 
         hardware = {
           uinput.enable = true;
