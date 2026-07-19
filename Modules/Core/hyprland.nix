@@ -176,6 +176,25 @@
       '';
     };
 
+    # hypridle's lock-notify inhibitor releases as soon as hyprlock's Wayland
+    # protocol handshake reports "locked" — apparently before hyprlock has
+    # actually rendered a usable frame (confirmed: disabling the background
+    # blur didn't help, so it's not render cost, it's that suspend proceeds
+    # before hyprlock gets anything on screen at all). systemd-sleep runs
+    # scripts in this directory with "pre"/"post" and *waits* for them to
+    # finish before actually suspending, so this guarantees real wall-clock
+    # time for hyprlock to become visually and functionally ready,
+    # independent of whatever the hypridle/hyprlock protocol race is doing.
+    environment.etc."systemd/system-sleep/hyprlock-render-delay.sh" = {
+      mode = "0755";
+      text = ''
+        #!/bin/sh
+        case "$1" in
+          pre) sleep 2 ;;
+        esac
+      '';
+    };
+
     home-manager.users.xin = { config, lib, ... }:
     let
       palette      = config.colorScheme.palette;
