@@ -189,11 +189,11 @@
       mode = "0755";
       text = ''
         #!/bin/sh
-        logger -t hyprlock-render-delay "got $1/$2 at $(date +%H:%M:%S.%N)"
+        ${pkgs.util-linux}/bin/logger -t hyprlock-render-delay "got $1/$2 at $(${pkgs.coreutils}/bin/date +%H:%M:%S.%N)"
         case "$1" in
           pre)
-            sleep 2
-            logger -t hyprlock-render-delay "pre-sleep delay finished at $(date +%H:%M:%S.%N)"
+            ${pkgs.coreutils}/bin/sleep 2
+            ${pkgs.util-linux}/bin/logger -t hyprlock-render-delay "pre-sleep delay finished at $(${pkgs.coreutils}/bin/date +%H:%M:%S.%N)"
             ;;
         esac
       '';
