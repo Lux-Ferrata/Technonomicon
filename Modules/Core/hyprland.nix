@@ -545,6 +545,13 @@
             ecosystem = {
               no_update_news = true,
             },
+            debug = {
+              -- disable_time defaults to true (Hyprland's own log file has no
+              -- timestamps by default), which makes it impossible to correlate
+              -- compositor-side events against journalctl/kernel timestamps
+              -- when debugging things like resume-from-suspend input lag.
+              disable_time = false,
+            },
           })
 
           hl.bind(mainMod .. " + Space",      hl.dsp.exec_cmd("wofi --show drun --sort-order=alphabetical"))
