@@ -189,8 +189,12 @@
       mode = "0755";
       text = ''
         #!/bin/sh
+        logger -t hyprlock-render-delay "got $1/$2 at $(date +%H:%M:%S.%N)"
         case "$1" in
-          pre) sleep 2 ;;
+          pre)
+            sleep 2
+            logger -t hyprlock-render-delay "pre-sleep delay finished at $(date +%H:%M:%S.%N)"
+            ;;
         esac
       '';
     };
