@@ -629,7 +629,11 @@
           background {
             path        = "${wallpaperPath}"
             color       = rgba(${palette.base00}ff)
-            blur_passes = 3
+            # DIAGNOSTIC: blur temporarily disabled to test whether the
+            # resume input-freeze is caused by suspend interrupting an
+            # in-flight blur render. Restore blur_passes=3/blur_size=7 (or
+            # tune down instead of to zero) once confirmed either way.
+            blur_passes = 0
             blur_size   = 7
           }
 
