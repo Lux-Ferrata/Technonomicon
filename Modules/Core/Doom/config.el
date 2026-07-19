@@ -354,19 +354,21 @@
 
   ;; (add-hook 'org-agenda-finalize-hook #'org-agenda-show-svg)
 
-  (defun my/org-agenda-remove-svg-bleed ()
-    "Strip SVG image display properties from the agenda, but keep alignment spaces intact."
-    (let ((inhibit-read-only t)
-          (pos (point-min)))
-      (while (not (= pos (point-max)))
-        (let ((prop (get-text-property pos 'display))
-              (next-pos (next-single-property-change pos 'display nil (point-max))))
-          ;; If the display property is specifically an image (like an SVG), strip it
-          (when (and (consp prop) (eq (car prop) 'image))
-            (remove-text-properties pos next-pos '(display nil)))
-          (setq pos next-pos)))))
 
-  (add-hook 'org-agenda-finalize-hook #'my/org-agenda-remove-svg-bleed)
+(defun my/org-agenda-remove-svg-bleed ()
+  "Strip SVG image display properties from the agenda, but keep alignment spaces intact."
+  (let ((inhibit-read-only t)
+        (pos (point-min)))
+    (while (not (= pos (point-max)))
+      (let ((prop (get-text-property pos 'display))
+            (next-pos (next-single-property-change pos 'display nil (point-max))))
+        ;; If the display property is specifically an image (like an SVG), strip it
+        (when (and (consp prop) (eq (car prop) 'image))
+          (remove-text-properties pos next-pos '(display nil)))
+        (setq pos next-pos)))))
+
+(add-hook 'org-agenda-finalize-hook #'my/org-agenda-remove-svg-bleed)
+
 
   (add-hook 'svg-tag-mode-hook
             (lambda ()

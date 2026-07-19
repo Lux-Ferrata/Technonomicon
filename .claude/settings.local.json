@@ -24,7 +24,8 @@
       "Bash(gdbus --version)",
       "Bash(ghostty --help)",
       "Bash(ghostty +show-config)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(systemctl status *)"
     ]
   }
 }

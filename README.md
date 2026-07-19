@@ -20,6 +20,7 @@ Zotero defaults to `~/Zotero`. To move it to a hidden directory:
 - [ ] Full Disk Encryption
 - [ ] Create Refrence Boot Image
 - [ ] Hyprland stacking Layout. (custom doom-emacs style buffer management)
+- [ ] Check for unified Matrix / Discord Client
 
 ### Not sure if it is worth actually making these changes
 - [ ] Switch Phone and Tablet to Graphene and Lineage OS ?
