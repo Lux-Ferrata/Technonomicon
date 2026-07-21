@@ -112,12 +112,11 @@
     '';
 
     layoutToggle = pkgs.writeShellScript "tn-layout-toggle" ''
-      LAYOUT=$(${hyprlandPkg}/bin/hyprctl getoption general:layout -j | ${pkgs.jq}/bin/jq -r .str)
-      if [ "$LAYOUT" = scrolling ]; then
-        ${hyprlandPkg}/bin/hyprctl eval "hl.config({general = {layout = 'monocle'}})"
-      else
-        ${hyprlandPkg}/bin/hyprctl eval "hl.config({general = {layout = 'scrolling'}})"
-      fi
+      ${hyprlandPkg}/bin/hyprctl eval \
+        "local ws = hl.get_active_workspace(); \
+         local new = ws.tiled_layout == 'scrolling' and 'monocle' or 'scrolling'; \
+         hl.workspace_rule({workspace = tostring(ws.id), layout = new}); \
+         hl.config({general = {layout = new}})"
     '';
 
     winPull = pkgs.writeShellScript "tn-win-pull" ''
