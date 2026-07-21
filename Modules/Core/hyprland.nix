@@ -477,6 +477,12 @@
             fullscreen = true,
           })
 
+          hl.on("workspace.active", function(ws)
+            if ws and ws.tiled_layout then
+              hl.config({general = {layout = ws.tiled_layout}})
+            end
+          end)
+
           hl.on("hyprland.start", function()
             hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE GDK_BACKEND")
             hl.exec_cmd("quickshell")
