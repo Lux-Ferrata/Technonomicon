@@ -50,6 +50,28 @@
       while ${wlKbptr}/bin/wl-kbptr -o modes=tile -o cancellation_status_code=1; do true; done
     '';
 
+    terminalClasses = [ "ghostty" "Alacritty" "kitty" "foot" "wezterm" "xterm" ];
+
+    smartCopy = pkgs.writeShellScript "smart-copy" ''
+      CLASS=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.class')
+      case "$CLASS" in
+        ${builtins.concatStringsSep "|" terminalClasses})
+          ${pkgs.wtype}/bin/wtype -M ctrl -M shift -k c ;;
+        *)
+          ${pkgs.wtype}/bin/wtype -M ctrl -k c ;;
+      esac
+    '';
+
+    smartPaste = pkgs.writeShellScript "smart-paste" ''
+      CLASS=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.class')
+      case "$CLASS" in
+        ${builtins.concatStringsSep "|" terminalClasses})
+          ${pkgs.wtype}/bin/wtype -M ctrl -M shift -k v ;;
+        *)
+          ${pkgs.wtype}/bin/wtype -M ctrl -k v ;;
+      esac
+    '';
+
     vimEdit = pkgs.writeShellScript "vim-edit" ''
       ${pkgs.wtype}/bin/wtype -M ctrl -k a
       sleep 0.15
