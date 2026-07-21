@@ -570,7 +570,7 @@
           hl.bind(mainMod .. " + H",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-keybindings"))
           hl.bind(mainMod .. " + V",           hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + semicolon",  hl.dsp.exec_cmd("hyprctl dispatch togglefloating"))
-          hl.bind(mainMod .. " + Tab",        hl.dsp.exec_cmd("hyprctl dispatch workspace r-1"))
+          hl.bind(mainMod .. " + Tab",        hl.dsp.window.cycle_next({prev = true}))
           hl.bind(mainMod .. " + comma",      hl.dsp.exec_cmd("hyprctl dispatch workspace r+1"))
           hl.bind(mainMod .. " + minus",      hl.dsp.exec_cmd("hyprctl dispatch resizeactive -100 0"))
           hl.bind(mainMod .. " + equal",      hl.dsp.exec_cmd("hyprctl dispatch resizeactive 100 0"))
