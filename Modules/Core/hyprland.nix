@@ -50,7 +50,7 @@
       while ${wlKbptr}/bin/wl-kbptr -o modes=tile -o cancellation_status_code=1; do true; done
     '';
 
-    terminalClasses = [ "ghostty" "Alacritty" "kitty" "foot" "wezterm" "xterm" ];
+    terminalClasses = [ "com.mitchellh.ghostty" "Alacritty" "kitty" "foot" "org.wezfurlong.wezterm" "xterm" ];
 
     smartCopy = pkgs.writeShellScript "smart-copy" ''
       CLASS=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.class')
