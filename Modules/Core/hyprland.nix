@@ -480,9 +480,13 @@
           })
 
           hl.on("workspace.active", function(ws)
-            if ws and ws.tiled_layout then
-              hl.config({general = {layout = ws.tiled_layout}})
+            local f = io.open("/tmp/tn-ws-layouts/" .. tostring(ws.id), "r")
+            local layout = "monocle"
+            if f then
+              layout = f:read("*l") or "monocle"
+              f:close()
             end
+            hl.config({general = {layout = layout}})
           end)
 
           hl.on("hyprland.start", function()
