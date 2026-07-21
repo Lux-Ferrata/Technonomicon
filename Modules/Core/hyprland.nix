@@ -5,6 +5,11 @@
 
     hyprlandPkg = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
 
+    activateObsidianHere = pkgs.writeShellScript "activate-obsidian-here" ''
+      ${hyprlandPkg}/bin/hyprctl dispatch movetoworkspace current,class:^(obsidian)$
+      ${hyprlandPkg}/bin/hyprctl dispatch focuswindow class:^(obsidian)$
+    '';
+
     activateObsidian = pkgs.writeShellScript "activate-obsidian" ''
       ITEMS=$(${pkgs.glib}/bin/gdbus call --session \
         --dest org.kde.StatusNotifierWatcher \
