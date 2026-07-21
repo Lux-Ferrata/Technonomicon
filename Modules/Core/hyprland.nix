@@ -431,7 +431,7 @@
 
           hl.window_rule({
             name      = "habitica-workspace",
-            match     = { class = "brave-habitica.com-Default" },
+            match     = { class = "brave-habitica.com__-Default" },
             workspace = 9,
           })
 
