@@ -6,13 +6,10 @@
     hyprlandPkg = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
 
     activateObsidianHere = pkgs.writeShellScript "activate-obsidian-here" ''
-      ADDR=$(${hyprlandPkg}/bin/hyprctl clients -j \
-        | ${pkgs.jq}/bin/jq -r '.[] | select(.class == "obsidian") | .address' \
-        | head -1)
-      [ -z "$ADDR" ] && exit 1
       WS=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq -r '.id')
-      ${hyprlandPkg}/bin/hyprctl dispatch movetoworkspace "$WS,address:$ADDR"
-      ${hyprlandPkg}/bin/hyprctl dispatch focuswindow "address:$ADDR"
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='class:^(obsidian)$'}))"
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.window.move({workspace=tonumber('$WS')}))"
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({workspace=tonumber('$WS')}))"
     '';
 
     activateObsidian = pkgs.writeShellScript "activate-obsidian" ''
