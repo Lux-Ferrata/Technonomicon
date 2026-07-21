@@ -599,7 +599,7 @@
           hl.bind(mainMod .. " + equal",      hl.dsp.exec_cmd("hyprctl dispatch resizeactive 100 0"))
           hl.bind(mainMod .. " + SHIFT + minus", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 -100"))
           hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.exec_cmd("hyprctl dispatch resizeactive 0 100"))
-          hl.bind("CTRL + " .. mainMod .. " + V", hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
+
           hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
 
           hl.bind(mainMod .. " + left",  hl.dsp.layout("cycleprev"))
