@@ -112,11 +112,13 @@
     '';
 
     layoutToggle = pkgs.writeShellScript "tn-layout-toggle" ''
-      ${hyprlandPkg}/bin/hyprctl eval \
-        "local ws = hl.get_active_workspace(); \
-         local new = ws.tiled_layout == 'scrolling' and 'monocle' or 'scrolling'; \
-         hl.workspace_rule({workspace = tostring(ws.id), layout = new}); \
-         hl.config({general = {layout = new}})"
+      LAYOUT_DIR=/tmp/tn-ws-layouts
+      mkdir -p "$LAYOUT_DIR"
+      WS=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq -r '.id')
+      CURRENT=$(cat "$LAYOUT_DIR/$WS" 2>/dev/null || echo monocle)
+      if [ "$CURRENT" = scrolling ]; then NEW=monocle; else NEW=scrolling; fi
+      echo "$NEW" > "$LAYOUT_DIR/$WS"
+      ${hyprlandPkg}/bin/hyprctl eval "hl.config({general = {layout = '$NEW'}})"
     '';
 
     winPull = pkgs.writeShellScript "tn-win-pull" ''
