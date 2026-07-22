@@ -3,14 +3,7 @@
 
     networking.nameservers = [ "1.1.1.3" "1.0.0.3" ];
 
-    programs.chromium = {
-      enable = true;
-      commandLineArgs = [
-        "--enable-features=UseOzonePlatform"
-        "--ozone-platform=wayland"
-        "--password-store=basic"
-      ];
-    };
+    programs.chromium.enable = true;
     environment.systemPackages = [
       pkgs.bitwarden-cli
       pkgs.bemenu
