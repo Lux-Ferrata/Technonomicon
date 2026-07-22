@@ -430,6 +430,15 @@
           })
 
           hl.window_rule({
+            name      = "qalculate-scratchpad",
+            match     = { class = "qalculate-gtk" },
+            float     = true,
+            size      = "800 500",
+            center    = true,
+            workspace = "special:qalculate",
+          })
+
+          hl.window_rule({
             name   = "technonomicon-float",
             match  = { title = "technonomicon" },
             float  = true,
