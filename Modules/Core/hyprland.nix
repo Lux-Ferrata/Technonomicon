@@ -573,25 +573,13 @@
           hl.bind(mainMod .. " + SHIFT + 0",  hl.dsp.exec_cmd("ghostty --title=technonomicon -e nvim $HOME/Projects/Technonomicon/README.md"))
           hl.bind(mainMod .. " + Return",      hl.dsp.exec_cmd("${vimEdit}"))
           hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd("ghostty --title=taskwarrior-tui -e taskwarrior-tui"))
-          local termClasses = {
-            ["com.mitchellh.ghostty"] = true,
-            ["Alacritty"]             = true,
-            ["kitty"]                 = true,
-            ["foot"]                  = true,
-            ["org.wezfurlong.wezterm"] = true,
-            ["xterm"]                 = true,
-          }
-          hl.bind(mainMod .. " + C", function()
-            local win = hl.get_active_window()
-            local mods = (win and termClasses[win.class]) and "-M ctrl -M shift" or "-M ctrl"
-            hl.exec_cmd("${pkgs.wtype}/bin/wtype " .. mods .. " -k c")
-          end)
+          -- Ctrl+Insert = copy, Shift+Insert = paste: work universally across terminals and GUI apps
+          -- send_key_state used instead of sendshortcut to avoid stuck-modifier bug in Hyprland 0.55
+          hl.bind(mainMod .. " + C", hl.dsp.send_key_state({mods = "ctrl",  state = "down", key = "Insert", window = "activewindow"}))
+          hl.bind(mainMod .. " + C", hl.dsp.send_key_state({mods = "ctrl",  state = "up",   key = "Insert", window = "activewindow"}), {release = true})
           hl.bind(mainMod .. " + H",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-keybindings"))
-          hl.bind(mainMod .. " + V", function()
-            local win = hl.get_active_window()
-            local mods = (win and termClasses[win.class]) and "-M ctrl -M shift" or "-M ctrl"
-            hl.exec_cmd("${pkgs.wtype}/bin/wtype " .. mods .. " -k v")
-          end)
+          hl.bind(mainMod .. " + V", hl.dsp.send_key_state({mods = "shift", state = "down", key = "Insert", window = "activewindow"}))
+          hl.bind(mainMod .. " + V", hl.dsp.send_key_state({mods = "shift", state = "up",   key = "Insert", window = "activewindow"}), {release = true})
           hl.bind(mainMod .. " + X",          hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + semicolon",  hl.dsp.exec_cmd("hyprctl dispatch togglefloating"))
           hl.bind(mainMod .. " + Tab",        hl.dsp.layout("cycleprev"))
