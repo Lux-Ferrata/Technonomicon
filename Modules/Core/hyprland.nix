@@ -731,11 +731,12 @@
                   spacing: 4
 
                   Repeater {
-                      model: Hyprland.workspaces.values.filter(ws => ws.id > 0)
+                      model: Hyprland.workspaces
                       delegate: Item {
                           id: wsBtn
                           required property HyprlandWorkspace modelData
-                          implicitWidth: 28
+                          visible: modelData.id > 0
+                          implicitWidth: modelData.id > 0 ? 28 : 0
                           implicitHeight: 28
 
                           Rectangle {
