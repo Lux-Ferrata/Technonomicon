@@ -7,6 +7,7 @@
     environment.systemPackages = [
       pkgs.bitwarden-cli
       pkgs.bemenu
+      pkgs.microsoft-edge
       ((pkgs.brave.override {
         commandLineArgs = [
           "--enable-features=UseOzonePlatform"
