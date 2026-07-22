@@ -65,6 +65,18 @@
         enable = true;
         gitCredentialHelper.enable = true;
       };
+
+      programs.broot = {
+        enable = true;
+        settings.verbs = [
+          {
+            key = "enter";
+            execution = "nvim {file}";
+            leave_broot = true;
+            apply_to = "file";
+          }
+        ];
+      };
     };
 
     programs.starship = {
