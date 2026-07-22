@@ -731,7 +731,7 @@
                   spacing: 4
 
                   Repeater {
-                      model: Hyprland.workspaces
+                      model: Hyprland.workspaces.values.filter(ws => ws.id > 0)
                       delegate: Item {
                           id: wsBtn
                           required property HyprlandWorkspace modelData
