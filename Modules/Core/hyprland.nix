@@ -111,6 +111,14 @@
       ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
 
+    toggleQalculate = pkgs.writeShellScript "tn-toggle-qalculate" ''
+      if ! ${hyprlandPkg}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "qalculate-gtk")' > /dev/null 2>&1; then
+        ${hyprlandPkg}/bin/hyprctl dispatch exec "[workspace special:qalculate silent] qalculate-gtk"
+        sleep 0.5
+      fi
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.workspace.toggle_special('qalculate'))"
+    '';
+
     layoutToggle = pkgs.writeShellScript "tn-layout-toggle" ''
       LAYOUT_DIR=/tmp/tn-ws-layouts
       mkdir -p "$LAYOUT_DIR"
