@@ -87,14 +87,17 @@
     };
 
     xdg.mime.defaultApplications = {
-      "application/pdf" = "sioyek.desktop";
-      "text/html" = "brave-browser.desktop";
-      "application/xhtml+xml" = "brave-browser.desktop";
-      "x-scheme-handler/http" = "brave-browser.desktop";
-      "x-scheme-handler/https" = "brave-browser.desktop";
-      "x-scheme-handler/about" = "brave-browser.desktop";
+      "application/pdf"          = "sioyek.desktop";
+      "text/plain"               = "nvim.desktop";
+      "text/markdown"            = "nvim.desktop";
+      "text/x-markdown"          = "nvim.desktop";
+      "text/html"                = "brave-browser.desktop";
+      "application/xhtml+xml"    = "brave-browser.desktop";
+      "x-scheme-handler/http"    = "brave-browser.desktop";
+      "x-scheme-handler/https"   = "brave-browser.desktop";
+      "x-scheme-handler/about"   = "brave-browser.desktop";
       "x-scheme-handler/unknown" = "brave-browser.desktop";
-      "x-scheme-handler/mailto" = "brave-browser.desktop";
+      "x-scheme-handler/mailto"  = "brave-browser.desktop";
     };
 
     services.udev.extraRules = ''
