@@ -167,6 +167,7 @@
       ripgrep
       ripgrep-all
       fd
+      fzf
       eza
       entr
       progress
