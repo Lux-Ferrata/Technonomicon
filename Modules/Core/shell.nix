@@ -168,6 +168,7 @@
         default_assumption_type=4
         default_assumption_sign=0
       '';
+      };
     };
 
     programs.starship = {
