@@ -78,7 +78,9 @@
         ];
       };
 
-      xdg.configFile."qalculate/qalculate-gtk.cfg".text = ''
+      xdg.configFile."qalculate/qalculate-gtk.cfg" = {
+        force = true;
+        text = ''
         [General]
         version=5.11.0
         allow_multiple_instances=0
