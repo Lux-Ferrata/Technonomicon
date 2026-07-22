@@ -430,12 +430,11 @@
           })
 
           hl.window_rule({
-            name      = "qalculate-scratchpad",
-            match     = { class = "qalculate-gtk" },
-            float     = true,
-            size      = "800 500",
-            center    = true,
-            workspace = "special:qalculate",
+            name   = "qalculate-scratchpad",
+            match  = { class = "qalculate-gtk" },
+            float  = true,
+            size   = "800 500",
+            center = true,
           })
 
           hl.window_rule({
