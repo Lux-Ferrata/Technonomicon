@@ -112,11 +112,11 @@
     '';
 
     toggleQalculate = pkgs.writeShellScript "tn-toggle-qalculate" ''
-      if ! ${hyprlandPkg}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "qalculate-gtk")' > /dev/null 2>&1; then
+      if ! pgrep -x qalculate-gtk > /dev/null; then
         ${hyprlandPkg}/bin/hyprctl dispatch exec "[workspace special:qalculate silent] qalculate-gtk"
-        sleep 0.5
+        sleep 0.8
       fi
-      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.workspace.toggle_special('qalculate'))"
+      ${hyprlandPkg}/bin/hyprctl dispatch togglespecialworkspace qalculate
     '';
 
     layoutToggle = pkgs.writeShellScript "tn-layout-toggle" ''
