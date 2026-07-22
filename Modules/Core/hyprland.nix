@@ -121,14 +121,6 @@
       ${hyprlandPkg}/bin/hyprctl eval "hl.config({general = {layout = '$NEW'}})"
     '';
 
-    toggleQalculate = pkgs.writeShellScript "tn-toggle-qalculate" ''
-      if ! ${hyprlandPkg}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -e '.[] | select(.class == "qalculate-gtk")' > /dev/null 2>&1; then
-        ${hyprlandPkg}/bin/hyprctl dispatch exec "[workspace special:qalculate silent] qalculate-gtk"
-        sleep 0.5
-      fi
-      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.workspace.toggle_special('qalculate'))"
-    '';
-
     winPull = pkgs.writeShellScript "tn-win-pull" ''
       WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
       ACTIVE=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address')
