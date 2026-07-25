@@ -208,6 +208,24 @@
         terminal = false;
         categories = [ "Application" "Network" ];
       })
+
+      (pkgs.makeDesktopItem {
+        name = "google-drive";
+        desktopName = "Google Drive";
+        exec = "${pkgs.brave}/bin/brave --app=https://drive.google.com/drive/my-drive --start-maximized";
+        icon = "${icons.googleDrive}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
+
+      (pkgs.makeDesktopItem {
+        name = "blog";
+        desktopName = "Blog";
+        exec = "${pkgs.brave}/bin/brave --app=https://lux-ferrata.org --start-maximized";
+        icon = "${icons.blog}";
+        terminal = false;
+        categories = [ "Application" "Network" ];
+      })
     ];
   };
 }
