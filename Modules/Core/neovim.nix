@@ -96,7 +96,7 @@
       nixfmt
       nixd
       # Python
-      python3 pyright ruff black
+      python3 pyright ruff black coconut
       # BQN
       cbqn
       # Bash / Shell
