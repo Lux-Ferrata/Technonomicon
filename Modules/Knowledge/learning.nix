@@ -1,5 +1,33 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-learning = { pkgs, config, ... }: {
+  flake.nixosModules.Tn-learning = { pkgs, config, ... }:
+  let
+    houdini-py = pkgs.python3Packages.buildPythonPackage rec {
+      pname = "houdini.py";
+      version = "0.1.0";
+      pyproject = true;
+      build-system = [ pkgs.python3Packages.setuptools ];
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/eb/c1/25aa4ed20e108a2d82efd3787c51457a2468bed382ebec7cd0a1fd5e8d9b/houdini.py-${version}.tar.gz";
+        sha256 = "0rpn4bl2hmjd7yzapgwc2allg1dp7jwrkjvyf31k974599ri1gfa";
+      };
+      doCheck = false;
+    };
+
+    ankdown = pkgs.python3Packages.buildPythonPackage rec {
+      pname = "ankdown";
+      version = "0.7.1";
+      pyproject = true;
+      build-system = [ pkgs.python3Packages.setuptools ];
+      src = pkgs.fetchurl {
+        url = "https://files.pythonhosted.org/packages/5a/92/482727daa95a7a20284cd8dba8883be82ca346366c1cd0b6b8ce68854d2b/ankdown-${version}.tar.gz";
+        sha256 = "0d9p4yxc4d9ad4m9k99j0rf9a5w64gp16jam27vqlvi81s5n50s7";
+      };
+      propagatedBuildInputs = with pkgs.python3Packages; [
+        genanki misaka docopt houdini-py pygments
+      ];
+      doCheck = false;
+    };
+  in {
 
     environment.systemPackages = with pkgs; [
       hledger
