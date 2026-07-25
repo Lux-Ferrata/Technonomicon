@@ -45,7 +45,7 @@ rm result
 
 **After making any changes to `.nix` files, always run a build to confirm correctness before reporting the task as done:**
 ```bash
-nix build .#nixosConfigurations.Kvasir.config.system.build.toplevel && rm result
+nix build .#nixosConfigurations.Kvasir.config.system.build.toplevel .#nixosConfigurations.Akmon.config.system.build.toplevel && rm result
 ```
 
 ## Architecture
