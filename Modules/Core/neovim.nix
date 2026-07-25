@@ -5,7 +5,8 @@
     mcpy = pkgs.python3Packages.buildPythonPackage rec {
       pname = "mcpy";
       version = "2.0.0";
-      format = "setuptools";
+      pyproject = true;
+      build-system = [ pkgs.python3Packages.setuptools ];
       src = pkgs.fetchurl {
         url = "https://files.pythonhosted.org/packages/c1/fb/b686ec3bb91b8d1f08092cabcbaedf78d6350cb9debe2dbbbbdde07c185d/mcpy-${version}.tar.gz";
         sha256 = "017sv0bjwqchl28nz7shfrsl72251aqqr8xb2d3qgxr6swv8ghv9";
