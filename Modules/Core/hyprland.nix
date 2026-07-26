@@ -141,6 +141,13 @@
       for i in $(seq 1 25); do ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.window.move({direction='left'}))"; done
     '';
 
+    pkillMenu = pkgs.writeShellScript "tn-pkill-menu" ''
+      CHOICE=$(${pkgs.procps}/bin/ps -u "$USER" -o comm= | sort -u | \
+        ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "pkill")
+      [ -z "$CHOICE" ] && exit 0
+      pkill -i -x "$CHOICE"
+    '';
+
   in {
 
     programs.hyprland.enable = true;
