@@ -6,11 +6,11 @@
       extraPackages = ps: [
         (ps.buildPythonPackage {
           pname = "xontrib-fzf-widgets";
-          version = "master";
+          version = "0-unstable-2020-10-16";
           src = pkgs.fetchFromGitHub {
             owner = "laloch";
             repo = "xontrib-fzf-widgets";
-            rev = "master";
+            rev = "8af47d1d684a14eb776485ef6f5c30c8e6807f60";
             hash = "sha256-lz0oiQSLCIQbnoQUi+NJwX82SbUvXJ+3dEsSbOb20q4=";
           };
           pyproject = true;
