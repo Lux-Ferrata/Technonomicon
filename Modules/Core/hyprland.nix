@@ -6,29 +6,27 @@
     hyprlandPkg = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
 
     activateObsidian = pkgs.writeShellScript "activate-obsidian" ''
-      ITEMS=$(${pkgs.glib}/bin/gdbus call --session \
-        --dest org.kde.StatusNotifierWatcher \
-        --object-path /StatusNotifierWatcher \
-        --method org.freedesktop.DBus.Properties.Get \
-        "org.kde.StatusNotifierWatcher" "RegisteredStatusNotifierItems" 2>/dev/null \
-        | grep -oP "'\K[^']+")
+      ADDR=$(${hyprlandPkg}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -r '
+        [.[] | select(.class == "obsidian")][0] | .address // empty')
 
-      for ITEM in $ITEMS; do
-        DEST="''${ITEM%%/*}"
-        OBJ="/''${ITEM#*/}"
+      if [ -z "$ADDR" ]; then
+        obsidian &
+        disown
+        exit 0
+      fi
 
-        TOOLTIP=$(${pkgs.glib}/bin/gdbus call --session \
-          --dest "$DEST" --object-path "$OBJ" \
-          --method org.freedesktop.DBus.Properties.Get \
-          "org.kde.StatusNotifierItem" "ToolTip" 2>/dev/null)
+      WORKSPACE=$(${hyprlandPkg}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -r \
+        --arg addr "$ADDR" '.[] | select(.address == $addr) | .workspace.name')
+      ACTIVE=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address // empty')
 
-        if echo "$TOOLTIP" | grep -q "Obsidian"; then
-          ${pkgs.glib}/bin/gdbus call --session \
-            --dest "$DEST" --object-path "$OBJ" \
-            --method org.kde.StatusNotifierItem.Activate 0 0
-          exit 0
-        fi
-      done
+      if [[ "$WORKSPACE" == special:* ]]; then
+        ${hyprlandPkg}/bin/hyprctl dispatch togglespecialworkspace obsidian
+        ${hyprlandPkg}/bin/hyprctl dispatch focuswindow address:$ADDR
+      elif [ "$ADDR" = "$ACTIVE" ]; then
+        ${hyprlandPkg}/bin/hyprctl dispatch movetoworkspacesilent "special:obsidian,address:$ADDR"
+      else
+        ${hyprlandPkg}/bin/hyprctl dispatch focuswindow address:$ADDR
+      fi
     '';
 
     wlKbptr = pkgs.wl-kbptr.overrideAttrs (oldAttrs: {
