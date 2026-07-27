@@ -15,18 +15,7 @@
         exit 0
       fi
 
-      WORKSPACE=$(${hyprlandPkg}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -r \
-        --arg addr "$ADDR" '.[] | select(.address == $addr) | .workspace.name')
-      ACTIVE=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address // empty')
-
-      if [[ "$WORKSPACE" == special:* ]]; then
-        ${hyprlandPkg}/bin/hyprctl dispatch togglespecialworkspace obsidian
-        ${hyprlandPkg}/bin/hyprctl dispatch focuswindow address:$ADDR
-      elif [ "$ADDR" = "$ACTIVE" ]; then
-        ${hyprlandPkg}/bin/hyprctl dispatch movetoworkspacesilent "special:obsidian,address:$ADDR"
-      else
-        ${hyprlandPkg}/bin/hyprctl dispatch focuswindow address:$ADDR
-      fi
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
 
     wlKbptr = pkgs.wl-kbptr.overrideAttrs (oldAttrs: {
