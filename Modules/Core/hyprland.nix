@@ -389,6 +389,12 @@
           })
 
           hl.window_rule({
+            name      = "obsidian-workspace",
+            match     = { class = "obsidian" },
+            workspace = 8,
+          })
+
+          hl.window_rule({
             name      = "habitica-workspace",
             match     = { class = "brave-habitica.com__-Default" },
             workspace = 9,
