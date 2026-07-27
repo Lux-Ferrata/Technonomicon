@@ -122,6 +122,21 @@
       pkill -i -x "$CHOICE"
     '';
 
+    smartCloseWindow = pkgs.writeShellScript "tn-smart-close-window" ''
+      CLASS=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.class')
+
+      if [ "$CLASS" = "obsidian" ]; then
+        COUNT=$(${hyprlandPkg}/bin/hyprctl clients -j | \
+          ${pkgs.jq}/bin/jq '[.[] | select(.class == "obsidian" and .mapped)] | length')
+        if [ "$COUNT" -le 1 ]; then
+          ${pkgs.libnotify}/bin/notify-send "Obsidian" "Last window open — use Super+Shift+D to force quit"
+          exit 0
+        fi
+      fi
+
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.window.close())"
+    '';
+
   in {
 
     programs.hyprland.enable = true;
@@ -166,6 +181,7 @@
     in {
 
       home.pointerCursor = {
+        enable     = true;
         package    = pkgs.bibata-cursors;
         name       = "Bibata-Modern-Classic";
         size       = 24;
@@ -557,7 +573,7 @@
           hl.bind(mainMod .. " + Space",      hl.dsp.exec_cmd("wofi --show drun --sort-order=alphabetical"))
           hl.bind(mainMod .. " + T",          hl.dsp.exec_cmd(terminal))
           hl.bind(mainMod .. " + S",          hl.dsp.exec_cmd("brave"))
-          hl.bind(mainMod .. " + D",          hl.dsp.window.close())
+          hl.bind(mainMod .. " + D",          hl.dsp.exec_cmd("${smartCloseWindow}"))
           hl.bind(mainMod .. " + SHIFT + D",  hl.dsp.exec_cmd("${pkillMenu}"))
           hl.bind(mainMod .. " + Q",          hl.dsp.exec_cmd("hyprlock"))
           hl.bind(mainMod .. " + SHIFT + Q",  hl.dsp.exec_cmd("${pkgs.systemd}/bin/systemd-run --user --no-block --collect /etc/scripts/clean-power-off.sh"))
