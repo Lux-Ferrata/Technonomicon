@@ -194,7 +194,7 @@
       dysk
       pastel
       gnumake
-      antigravity-fhs
+      antigravity-ide-fhs
       usbutils
       bat
       mpv
