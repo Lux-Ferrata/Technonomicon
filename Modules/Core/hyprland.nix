@@ -5,19 +5,6 @@
 
     hyprlandPkg = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
 
-    activateObsidian = pkgs.writeShellScript "activate-obsidian" ''
-      ADDR=$(${hyprlandPkg}/bin/hyprctl clients -j | ${pkgs.jq}/bin/jq -r '
-        [.[] | select(.class == "obsidian")][0] | .address // empty')
-
-      if [ -z "$ADDR" ]; then
-        obsidian &
-        disown
-        exit 0
-      fi
-
-      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
-    '';
-
     wlKbptr = pkgs.wl-kbptr.overrideAttrs (oldAttrs: {
       mesonFlags = (oldAttrs.mesonFlags or []) ++ [ "-Dopencv=enabled" ];
       buildInputs = (oldAttrs.buildInputs or []) ++ [ pkgs.opencv ];
