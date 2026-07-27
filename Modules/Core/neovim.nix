@@ -86,7 +86,7 @@
       # PDF Tooling
       poppler
       # LaTeX / Typst
-      texlive.combined.scheme-full
+      texliveFull
       typst
       tinymist
       # Spell Checking
@@ -249,15 +249,6 @@
                 },
                 follow_url_func = function(url)
                   vim.fn.jobstart({ "xdg-open", url })
-                end,
-                note_frontmatter_func = function(note)
-                  local out = { id = note.id, aliases = note.aliases, tags = note.tags, title = note.path.stem }
-                  if note.metadata ~= nil and not vim.tbl_isempty(note.metadata) then
-                    for k, v in pairs(note.metadata) do
-                      out[k] = v
-                    end
-                  end
-                  return out
                 end,
               },
             }
