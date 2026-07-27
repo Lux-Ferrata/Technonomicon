@@ -446,6 +446,9 @@
             vim.keymap.set("n", "<leader>t", function()
               vim.fn.jobstart({ "open-in-ghostty", vim.fn.expand("%:p") })
             end, { desc = "Open in Ghostty" })
+
+            vim.keymap.set("i", "<C-BS>", "<C-w>", { desc = "Delete word before cursor" })
+            vim.keymap.set("i", "<C-h>", "<C-w>", { desc = "Delete word before cursor" })
           '';
         };
       };
