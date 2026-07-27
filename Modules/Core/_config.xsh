@@ -69,6 +69,18 @@ def _tnr(args):
     cd ~/Projects/Technonomicon
     ![claude --resume]
 aliases['tnr'] = _tnr
+
+aliases['gr'] = 'cd ~/Grimoire'
+
+def _grc(args):
+    cd ~/Grimoire
+    claude
+aliases['grc'] = _grc
+
+def _grr(args):
+    cd ~/Grimoire
+    ![claude --resume]
+aliases['grr'] = _grr
 aliases['cx'] = 'claude'
 aliases['cr'] = 'claude --resume'
 aliases['tt'] = 'taskwarrior-tui'
