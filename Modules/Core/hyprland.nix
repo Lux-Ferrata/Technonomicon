@@ -565,7 +565,6 @@
           hl.bind(mainMod .. " + F",          hl.dsp.exec_cmd("ghostty -e broot $HOME"))
           hl.bind(mainMod .. " + SHIFT + F",  hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
           hl.bind(mainMod .. " + ALT + F",    hl.dsp.exec_cmd("nemo"))
-          hl.bind(mainMod .. " + N",          hl.dsp.focus({ workspace = 8 }))
           hl.bind(mainMod .. " + 0",          hl.dsp.exec_cmd("ghostty --title=grimoire-inbox -e nvim $HOME/Grimoire/Inbox.md"))
           hl.bind(mainMod .. " + SHIFT + 0",  hl.dsp.exec_cmd("ghostty --title=technonomicon -e nvim $HOME/Projects/Technonomicon/README.md"))
           hl.bind(mainMod .. " + Return",      hl.dsp.exec_cmd("${vimEdit}"))
