@@ -27,6 +27,21 @@
       ];
       doCheck = false;
     };
+
+    srl = pkgs.python3Packages.buildPythonPackage rec {
+      pname = "srl";
+      version = "20.0.0";
+      pyproject = true;
+      build-system = [ pkgs.python3Packages.setuptools ];
+      src = pkgs.fetchFromGitHub {
+        owner = "HayesBarber";
+        repo = "spaced-repetition-learning";
+        rev = "fb892232ab3d694348250722c696b7683c34a86a";
+        hash = "sha256-jPEkjCE+kLP8p/TojY4ty7exEgjfHStFv4zmzbwJPIM=";
+      };
+      propagatedBuildInputs = with pkgs.python3Packages; [ rich ];
+      doCheck = false;
+    };
   in {
 
     environment.systemPackages = with pkgs; [
