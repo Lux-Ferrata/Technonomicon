@@ -14,6 +14,7 @@
           "--ozone-platform=wayland"
           "--disable-features=BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
           "--hide-crash-restore-bubble"
+          "--disable-session-crashed-bubble"
           "--password-store=basic"
         ];
       }).overrideAttrs (oldAttrs: {
