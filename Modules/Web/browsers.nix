@@ -3,52 +3,60 @@
 
     networking.nameservers = [ "1.1.1.3" "1.0.0.3" ];
 
-    programs.chromium.enable = true;
-    environment.systemPackages = [
-      pkgs.bitwarden-cli
-      pkgs.bemenu
-      pkgs.microsoft-edge
-      (let
-        braveBase = (pkgs.brave.override {
-          commandLineArgs = [
-            "--enable-features=UseOzonePlatform"
-            "--ozone-platform=wayland"
-            "--disable-features=BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
-            "--hide-crash-restore-bubble"
-            "--password-store=basic"
-          ];
-        }).overrideAttrs (oldAttrs: {
-          postFixup = (oldAttrs.postFixup or "") + ''
-            for target_dir in "$out/lib/brave" "$out/libexec/brave" "$out/opt/brave" "$out/usr/lib/brave-browser"; do
-              if [ -d "$target_dir" ]; then
-                echo "Injecting initial_preferences into $target_dir"
-                echo '${builtins.toJSON { browser = { custom_chrome_frame = true; }; }}' > "$target_dir/initial_preferences"
-              fi
-            done
-          '';
-        });
-      in
-        # Wrap so every launch marks the profile as having exited cleanly.
-        # This is what actually kills the "Restore pages? Brave didn't shut
-        # down correctly" bubble — the flags only mask the state, not set it.
-        pkgs.symlinkJoin {
+    # Replace `brave` globally so *every* launch path — systemPackages, the
+    # PWA desktop entries in web-apps.nix, keybinds — goes through our wrapper.
+    # The wrapper rewrites the profile's exit_type to "Normal" before each
+    # launch, which is what actually kills the "Restore pages? Brave didn't
+    # shut down correctly" bubble. The --hide-crash-restore-bubble flag alone
+    # does not reliably suppress it in this Brave build.
+    nixpkgs.overlays = [
+      (final: prev: {
+        brave = let
+          braveBase = (prev.brave.override {
+            commandLineArgs = [
+              "--enable-features=UseOzonePlatform"
+              "--ozone-platform=wayland"
+              "--disable-features=BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
+              "--hide-crash-restore-bubble"
+              "--password-store=basic"
+            ];
+          }).overrideAttrs (oldAttrs: {
+            postFixup = (oldAttrs.postFixup or "") + ''
+              for target_dir in "$out/lib/brave" "$out/libexec/brave" "$out/opt/brave" "$out/usr/lib/brave-browser"; do
+                if [ -d "$target_dir" ]; then
+                  echo "Injecting initial_preferences into $target_dir"
+                  echo '${builtins.toJSON { browser = { custom_chrome_frame = true; }; }}' > "$target_dir/initial_preferences"
+                fi
+              done
+            '';
+          });
+        in prev.symlinkJoin {
           name = "brave";
           paths = [ braveBase ];
-          nativeBuildInputs = [ pkgs.makeWrapper ];
+          nativeBuildInputs = [ prev.makeWrapper ];
           postBuild = ''
             rm "$out/bin/brave"
             makeWrapper "${braveBase}/bin/brave" "$out/bin/brave" \
               --run '
                 for prefs in "$HOME"/.config/BraveSoftware/Brave-Browser/*/Preferences; do
                   [ -f "$prefs" ] || continue
-                  ${pkgs.gnused}/bin/sed -i \
+                  ${prev.gnused}/bin/sed -i \
                     -e '"'"'s/"exit_type":"[^"]*"/"exit_type":"Normal"/g'"'"' \
                     -e '"'"'s/"exited_cleanly":false/"exited_cleanly":true/g'"'"' \
                     "$prefs"
                 done
               '
           '';
-        })
+        };
+      })
+    ];
+
+    programs.chromium.enable = true;
+    environment.systemPackages = [
+      pkgs.bitwarden-cli
+      pkgs.bemenu
+      pkgs.microsoft-edge
+      pkgs.brave
     ];
 
     environment.etc."brave/policies/managed/default.json".text = builtins.toJSON {
