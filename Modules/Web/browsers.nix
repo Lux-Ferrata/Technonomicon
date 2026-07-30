@@ -8,25 +8,47 @@
       pkgs.bitwarden-cli
       pkgs.bemenu
       pkgs.microsoft-edge
-      ((pkgs.brave.override {
-        commandLineArgs = [
-          "--enable-features=UseOzonePlatform"
-          "--ozone-platform=wayland"
-          "--disable-features=BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
-          "--hide-crash-restore-bubble"
-          "--disable-session-crashed-bubble"
-          "--password-store=basic"
-        ];
-      }).overrideAttrs (oldAttrs: {
-        postFixup = (oldAttrs.postFixup or "") + ''
-          for target_dir in "$out/lib/brave" "$out/libexec/brave" "$out/opt/brave" "$out/usr/lib/brave-browser"; do
-            if [ -d "$target_dir" ]; then
-              echo "Injecting initial_preferences into $target_dir"
-              echo '${builtins.toJSON { browser = { custom_chrome_frame = true; }; }}' > "$target_dir/initial_preferences"
-            fi
-          done
-        '';
-      }))
+      (let
+        braveBase = (pkgs.brave.override {
+          commandLineArgs = [
+            "--enable-features=UseOzonePlatform"
+            "--ozone-platform=wayland"
+            "--disable-features=BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
+            "--hide-crash-restore-bubble"
+            "--password-store=basic"
+          ];
+        }).overrideAttrs (oldAttrs: {
+          postFixup = (oldAttrs.postFixup or "") + ''
+            for target_dir in "$out/lib/brave" "$out/libexec/brave" "$out/opt/brave" "$out/usr/lib/brave-browser"; do
+              if [ -d "$target_dir" ]; then
+                echo "Injecting initial_preferences into $target_dir"
+                echo '${builtins.toJSON { browser = { custom_chrome_frame = true; }; }}' > "$target_dir/initial_preferences"
+              fi
+            done
+          '';
+        });
+      in
+        # Wrap so every launch marks the profile as having exited cleanly.
+        # This is what actually kills the "Restore pages? Brave didn't shut
+        # down correctly" bubble — the flags only mask the state, not set it.
+        pkgs.symlinkJoin {
+          name = "brave";
+          paths = [ braveBase ];
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+          postBuild = ''
+            rm "$out/bin/brave"
+            makeWrapper "${braveBase}/bin/brave" "$out/bin/brave" \
+              --run '
+                for prefs in "$HOME"/.config/BraveSoftware/Brave-Browser/*/Preferences; do
+                  [ -f "$prefs" ] || continue
+                  ${pkgs.gnused}/bin/sed -i \
+                    -e '"'"'s/"exit_type":"[^"]*"/"exit_type":"Normal"/g'"'"' \
+                    -e '"'"'s/"exited_cleanly":false/"exited_cleanly":true/g'"'"' \
+                    "$prefs"
+                done
+              '
+          '';
+        })
     ];
 
     environment.etc."brave/policies/managed/default.json".text = builtins.toJSON {
