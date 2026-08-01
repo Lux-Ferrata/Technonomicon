@@ -57,6 +57,9 @@
       ankdown
       srl
       zotero
+      libreoffice-fresh
+      hunspell
+      hunspellDicts.en_US
       foliate
       zathura
       pdfannots2json
