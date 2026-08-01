@@ -57,20 +57,7 @@
       ankdown
       srl
       zotero
-      hunspell
-      hunspellDicts.en_US
-      # GTK3 backend misplaces clicks under Wayland (Base wizard buttons
-      # become unclickable); force XWayland like rnote below.
-      (symlinkJoin {
-        name = "libreoffice-x11";
-        paths = [ libreoffice-fresh ];
-        buildInputs = [ makeWrapper ];
-        postBuild = ''
-          for b in soffice libreoffice scalc swriter simpress sdraw smath sbase; do
-            [ -e "$out/bin/$b" ] && wrapProgram "$out/bin/$b" --set GDK_BACKEND x11
-          done
-        '';
-      })
+      onlyoffice-desktopeditors
       foliate
       zathura
       pdfannots2json
