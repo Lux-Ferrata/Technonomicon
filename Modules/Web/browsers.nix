@@ -1,8 +1,6 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-web-browsers = { pkgs, config, ... }: {
 
-    networking.nameservers = [ "1.1.1.3" "1.0.0.3" ];
-
     # Replace `brave` globally so *every* launch path — systemPackages, the
     # PWA desktop entries in web-apps.nix, keybinds — goes through our wrapper.
     # The wrapper rewrites the profile's exit_type to "Normal" before each
