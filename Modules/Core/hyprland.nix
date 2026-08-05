@@ -329,8 +329,8 @@
             }
             {
               timeout    = 330;
-              on-timeout = "hyprctl dispatch dpms off";
-              on-resume  = "hyprctl dispatch dpms on && brightnessctl -r";
+              on-timeout = "hyprctl eval \"hl.dispatch(hl.dsp.dpms('off'))\"";
+              on-resume  = "hyprctl eval \"hl.dispatch(hl.dsp.dpms('on'))\" && brightnessctl -r";
             }
           ];
         };
