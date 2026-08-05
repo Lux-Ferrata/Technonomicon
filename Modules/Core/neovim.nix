@@ -396,6 +396,19 @@
               end,
             })
 
+            -- Autosave on every switch to normal mode. Guarded so it never
+            -- errors on scratch/terminal/nameless/readonly buffers (E32).
+            vim.api.nvim_create_autocmd("InsertLeave", {
+              pattern = "*",
+              callback = function()
+                local buf = vim.api.nvim_get_current_buf()
+                if vim.bo[buf].buftype ~= "" then return end
+                if vim.api.nvim_buf_get_name(buf) == "" then return end
+                if not vim.bo[buf].modifiable or vim.bo[buf].readonly then return end
+                if vim.bo[buf].modified then vim.cmd("silent! write") end
+              end,
+            })
+
             vim.api.nvim_create_autocmd("FileType", {
               pattern = "markdown",
               callback = function()
