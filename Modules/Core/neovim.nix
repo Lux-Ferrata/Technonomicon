@@ -41,8 +41,9 @@
         "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1]))" \
         "$FILE_PATH")
       ${pkgs.xdg-utils}/bin/xdg-open "obsidian://open?path=$ENCODED_PATH"
-      hyprctl dispatch focuswindow "class:^(obsidian)$" \
-        || hyprctl dispatch focuswindow "class:^(Obsidian)$"
+      # This Hyprland build is Lua-only: `hyprctl dispatch` is rejected, so
+      # dispatches must go through `hyprctl eval "hl.dispatch(...)"`.
+      hyprctl eval "hl.dispatch(hl.dsp.focus({window='class:^([oO]bsidian)$'}))"
     '';
   in {
 
