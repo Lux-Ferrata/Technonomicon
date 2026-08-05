@@ -509,8 +509,6 @@
               touchpad = {
                 natural_scroll         = false,
                 disable_while_typing    = true,
-                -- Disable all "fancy" gesture features that cause the
-                -- cursor/scrollbar to "stick" after releasing the button.
                 tap-to-click           = false,
                 tap-and-drag           = false,
                 drag_lock              = false,
