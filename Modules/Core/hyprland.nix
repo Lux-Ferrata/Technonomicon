@@ -509,8 +509,8 @@
               touchpad = {
                 natural_scroll          = false,
                 disable_while_typing    = true,
-                ["tap-to-click"]        = false,
-                ["tap-and-drag"]        = false,
+                tap_to_click            = false,
+                tap_and_drag            = false,
                 drag_lock               = false,
                 clickfinger_behavior    = false,
                 middle_button_emulation = false,
