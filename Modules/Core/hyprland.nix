@@ -10,20 +10,6 @@
       buildInputs = (oldAttrs.buildInputs or []) ++ [ pkgs.opencv ];
     });
 
-    wlKbptrFloat = pkgs.writeShellScript "wl-kbptr-float" ''
-      while true; do
-        WS=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
-        WINS=$(${hyprlandPkg}/bin/hyprctl clients -j \
-          | ${pkgs.jq}/bin/jq -r --argjson ws "$WS" \
-            '.[] | select(.workspace.id == $ws and .mapped) | "\(.at[0]) \(.at[1]) \(.size[0]) \(.size[1])"')
-        echo "$WINS" | ${wlKbptr}/bin/wl-kbptr -o modes=floating -o cancellation_status_code=1 || break
-      done
-    '';
-
-    wlKbptrTile = pkgs.writeShellScript "wl-kbptr-tile" ''
-      while ${wlKbptr}/bin/wl-kbptr -o modes=tile -o cancellation_status_code=1; do true; done
-    '';
-
     vimEdit = pkgs.writeShellScript "vim-edit" ''
       ${pkgs.wtype}/bin/wtype -M ctrl -k a
       sleep 0.15
