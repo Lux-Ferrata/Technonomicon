@@ -436,9 +436,6 @@
           '';
 
           keymaps = ''
-            vim.keymap.set("i", "<Esc>", "<Esc>:w<CR>", { desc = "Normal + save" })
-            vim.keymap.set("i", "<C-c>", "<Esc>:w<CR>", { desc = "Normal + save" })
-
             vim.keymap.set("n", "<leader>o", function()
               vim.fn.jobstart({ "open-in-obsidian", vim.fn.expand("%:p") })
             end, { desc = "Open in Obsidian" })
