@@ -4,7 +4,6 @@
     networking.networkmanager.enable = true;
     networking.networkmanager.wifi.backend = "iwd";
 
-    # Cloudflare family filter (malware + adult) resolvers.
     networking.nameservers = [ "1.1.1.3" "1.0.0.3" ];
     networking.extraHosts = ''
         127.0.0.1 reddit.com
