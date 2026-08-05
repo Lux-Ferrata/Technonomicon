@@ -322,17 +322,9 @@
             before_sleep_cmd = "loginctl lock-session";
             after_sleep_cmd  = "hyprctl eval \"hl.dispatch(hl.dsp.dpms('on'))\"";
           };
-          listener = [
-            {
-              timeout    = 300;
-              on-timeout = "loginctl lock-session";
-            }
-            {
-              timeout    = 330;
-              on-timeout = "hyprctl eval \"hl.dispatch(hl.dsp.dpms('off'))\"";
-              on-resume  = "hyprctl eval \"hl.dispatch(hl.dsp.dpms('on'))\" && brightnessctl -r";
-            }
-          ];
+          # No idle listeners: the screen never blanks or auto-locks on idle.
+          # Locking/DPMS on real suspend is still handled by general.* above.
+          listener = [ ];
         };
       };
 
