@@ -507,13 +507,9 @@
               float_switch_override_focus = 0,
               sensitivity               = 0,
               touchpad = {
-                natural_scroll          = false,
-                disable_while_typing    = true,
-                tap_to_click            = false,
-                tap_and_drag            = false,
-                drag_lock               = false,
-                clickfinger_behavior    = false,
-                middle_button_emulation = false,
+                natural_scroll      = false,
+                disable_while_typing = true,
+                drag_lock           = false,
               },
             },
             general = {
