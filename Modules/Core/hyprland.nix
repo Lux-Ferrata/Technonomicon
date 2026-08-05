@@ -507,9 +507,15 @@
               float_switch_override_focus = 0,
               sensitivity               = 0,
               touchpad = {
-                natural_scroll      = false,
-                disable_while_typing = true,
-                drag_lock           = false,
+                natural_scroll         = false,
+                disable_while_typing    = true,
+                -- Disable all "fancy" gesture features that cause the
+                -- cursor/scrollbar to "stick" after releasing the button.
+                tap-to-click           = false,
+                tap-and-drag           = false,
+                drag_lock              = false,
+                clickfinger_behavior    = false,
+                middle_button_emulation = false,
               },
             },
             general = {
