@@ -441,7 +441,10 @@
             end, { desc = "Open in Obsidian" })
 
             vim.keymap.set("v", "<leader>p", function()
-              local sel = vim.fn.expand("<cfile>")
+              -- Yank the visual selection (not the token under the cursor) and
+              -- preview that path.
+              vim.cmd('noautocmd normal! "vy')
+              local sel = vim.trim(vim.fn.getreg("v"))
               vim.fn.jobstart({ "preview-image", sel })
             end, { desc = "Preview image" })
 
