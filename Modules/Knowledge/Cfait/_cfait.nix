@@ -34,6 +34,10 @@ pkgs.rustPlatform.buildRustPackage {
   # Test suite exercises CalDAV sync, which needs network/a live server.
   doCheck = false;
 
+  # rustc overflows its default stack compiling the deeply-nested generics in
+  # the cfait lib crate; give it a larger one (as rustc itself suggests).
+  env.RUST_MIN_STACK = "33554432";
+
   # cmake + nasm build aws-lc-sys (rustls' default crypto backend) from source.
   nativeBuildInputs = with pkgs; [ pkg-config makeWrapper cmake nasm ];
 
