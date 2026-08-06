@@ -2,6 +2,7 @@
   flake.nixosModules.Tn-mind = { pkgs, config, ... }:
     let
       task2habitica = pkgs.callPackage (import ./Habitica/_task2habitica.nix) { };
+      cfait = pkgs.callPackage (import ./Cfait/_cfait.nix) { };
 
       habiticaEnvExport = ''
         export HABITICA_USER_ID="$(cat ${config.sops.secrets.habitica-user-id.path})"
