@@ -31,6 +31,9 @@ pkgs.rustPlatform.buildRustPackage {
   # xdg-portal backend, so no GTK is needed at build time.
   buildFeatures = [ "tui" "gui" ];
 
+  # Test suite exercises CalDAV sync, which needs network/a live server.
+  doCheck = false;
+
   # cmake + nasm build aws-lc-sys (rustls' default crypto backend) from source.
   nativeBuildInputs = with pkgs; [ pkg-config makeWrapper cmake nasm ];
 
