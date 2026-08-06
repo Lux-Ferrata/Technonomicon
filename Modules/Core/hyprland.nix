@@ -560,6 +560,10 @@
 
           hl.bind(mainMod .. " + ALT + G",    hl.dsp.exec_cmd("${pkgs.brave}/bin/brave --app=https://gemini.google.com/app --start-maximized"))
           hl.bind(mainMod .. " + ALT + C",    hl.dsp.exec_cmd("qalculate-gtk"))
+          hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("ghostty --title=cfait -e cfait"))
+          hl.bind(mainMod .. " + ALT + N",    hl.dsp.exec_cmd("obsidian"))
+          hl.bind(mainMod .. " + ALT + T",    hl.dsp.exec_cmd("cfait-gui"))
+          hl.bind(mainMod .. " + ALT + A",    hl.dsp.exec_cmd("anki"))
           hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
 
           hl.bind(mainMod .. " + left",  hl.dsp.layout("cycleprev"))
