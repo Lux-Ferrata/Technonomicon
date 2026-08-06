@@ -15,6 +15,7 @@
         taskwarrior-tui
         timewarrior
         task2habitica
+        cfait
 
         pomodoro-gtk
       ];
