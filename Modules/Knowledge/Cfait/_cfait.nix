@@ -6,7 +6,7 @@ let
     owner = "trougnouf";
     repo = "cfait";
     rev = "v${version}";
-    hash = "sha256-13m703i0rg5idxn5fp2qb6s8f83aa3nzgglwz58pk5vz3sdp2skd=";
+    hash = "sha256-bWpxmx5/l3lR+Zy+9+1QaiCHtFlYXFdsb7G8DOIAp44=";
   };
 in
 pkgs.rustPlatform.buildRustPackage {
