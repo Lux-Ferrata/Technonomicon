@@ -15,7 +15,7 @@ pkgs.rustPlatform.buildRustPackage {
 
   # Default features = ["tui"]; the gui/mobile bins need their own features,
   # so a plain build yields only the `cfait` TUI binary.
-  cargoHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+  cargoHash = "sha256-QTOnTsxt4/2CKEaDwCalkcR0/8IfslhZtpSAK82Lw04=";
 
   meta = with pkgs.lib; {
     description = "Powerful, fast and elegant task/TODO manager (TUI) with CalDAV sync";
