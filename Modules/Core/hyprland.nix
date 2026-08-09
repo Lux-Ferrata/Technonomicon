@@ -553,6 +553,7 @@
           hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.window.resize({ x = 0, y =  100, relative = true }))
 
           hl.bind(mainMod .. " + ALT + G",    hl.dsp.exec_cmd("${pkgs.brave}/bin/brave --app=https://gemini.google.com/app --start-maximized"))
+          hl.bind(mainMod .. " + C",          hl.dsp.exec_cmd("ghostty --class=qalc-nvim --title=qalc-nvim -e nvim +Qalc"))
           hl.bind(mainMod .. " + ALT + C",    hl.dsp.exec_cmd("qalculate-gtk"))
           hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("ghostty --title=cfait -e cfait"))
           hl.bind(mainMod .. " + ALT + N",    hl.dsp.exec_cmd("obsidian"))
