@@ -75,6 +75,7 @@
       markdown-oxide
       # General Tooling
       qalculate-gtk
+      libqalculate # provides the `qalc` CLI used by qalc.nvim
       claude-code
       sqlite
       gdb
