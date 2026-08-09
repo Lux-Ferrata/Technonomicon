@@ -376,6 +376,19 @@
               },
             }
           '';
+
+          qalc = ''
+            return {
+              "Apeiros-46B/qalc.nvim",
+              cmd  = { "Qalc", "QalcAttach", "QalcYank" },
+              keys = {
+                { "<leader>q", "<cmd>Qalc<cr>", desc = "Qalc calculator" },
+              },
+              config = function()
+                require("qalc").setup({})
+              end,
+            }
+          '';
         };
 
         config = {
