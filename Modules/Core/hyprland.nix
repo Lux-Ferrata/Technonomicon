@@ -542,13 +542,7 @@
           hl.bind(mainMod .. " + SHIFT + 0",  hl.dsp.exec_cmd("ghostty --title=technonomicon -e nvim $HOME/Projects/Technonomicon/README.md"))
           hl.bind(mainMod .. " + Return",      hl.dsp.exec_cmd("${vimEdit}"))
           hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd("ghostty --title=taskwarrior-tui -e taskwarrior-tui"))
-          -- Ctrl+Insert = copy, Shift+Insert = paste: work universally across terminals and GUI apps
-          -- send_key_state used instead of sendshortcut to avoid stuck-modifier bug in Hyprland 0.55
-          hl.bind(mainMod .. " + C", hl.dsp.send_key_state({mods = "ctrl",  state = "down", key = "Insert", window = "activewindow"}))
-          hl.bind(mainMod .. " + C", hl.dsp.send_key_state({mods = "ctrl",  state = "up",   key = "Insert", window = "activewindow"}), {release = true})
           hl.bind(mainMod .. " + H",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-keybindings"))
-          hl.bind(mainMod .. " + V", hl.dsp.send_key_state({mods = "shift", state = "down", key = "Insert", window = "activewindow"}))
-          hl.bind(mainMod .. " + V", hl.dsp.send_key_state({mods = "shift", state = "up",   key = "Insert", window = "activewindow"}), {release = true})
           hl.bind(mainMod .. " + X",          hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + semicolon",  hl.dsp.window.float())
           hl.bind(mainMod .. " + Tab",        hl.dsp.layout("cycleprev"))
