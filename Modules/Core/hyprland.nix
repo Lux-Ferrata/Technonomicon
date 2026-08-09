@@ -398,6 +398,14 @@
           })
 
           hl.window_rule({
+            name   = "qalc-nvim-scratchpad",
+            match  = { class = "qalc-nvim" },
+            float  = true,
+            size   = "800 500",
+            center = true,
+          })
+
+          hl.window_rule({
             name   = "technonomicon-float",
             match  = { title = "technonomicon" },
             float  = true,
