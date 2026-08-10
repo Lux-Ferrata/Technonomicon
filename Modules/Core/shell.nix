@@ -209,8 +209,8 @@
       sops
       presenterm
       frogmouth
-      opentimestamps-client # `ots` — timestamp/upgrade provenance proofs
-      inotify-tools # `inotifywait` — filesystem watch for provenance daemon
+      opentimestamps-client
+      inotify-tools
     ] ++ pkgs.lib.optionals (pkgs.stdenv.hostPlatform.system == "x86_64-linux") [
       github-desktop
     ];
