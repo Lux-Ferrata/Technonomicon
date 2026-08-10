@@ -88,11 +88,13 @@
       poppler
       # LaTeX / Typst
       texliveFull
+      texlab # LaTeX LSP (lang.tex extra configures it; installDependencies defaults off)
       typst
       tinymist
-      # Spell Checking
+      # Spell / Grammar Checking
       hunspell
       hunspellDicts.en_US
+      harper # provides harper-ls: offline grammar + spell LSP
       # Haskell
       ghc cabal-install haskell-language-server haskellPackages.hoogle
       # Nix
