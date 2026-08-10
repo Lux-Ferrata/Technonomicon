@@ -277,10 +277,12 @@
               "neovim/nvim-lspconfig",
               opts = {
                 servers = {
-                  hls      = {},
-                  clangd   = {},
-                  zls      = {},
-                  marksman = {},
+                  hls       = {},
+                  clangd    = {},
+                  zls       = {},
+                  marksman  = {},
+                  texlab    = {},
+                  harper_ls = {},
                 },
               },
             }
