@@ -32,6 +32,7 @@
       self.nixosModules.Tn-games
       self.nixosModules.Tn-learning
       self.nixosModules.Tn-mind
+      self.nixosModules.Tn-provenance
       self.nixosModules.Tn-art
       self.nixosModules.Tn-utf
       self.nixosModules.Tn-virtualization
