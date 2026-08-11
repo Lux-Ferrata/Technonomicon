@@ -24,11 +24,15 @@
         HOST="$(uname -n)"; HOST="''${HOST%%.*}"
         MIN_INTERVAL="''${GRIMOIRE_MIN_INTERVAL:-600}"
 
-        is_flagged() {  # true iff YAML frontmatter has `provenance: true`
+        is_flagged() {  # true iff YAML frontmatter has a truthy `provenance` flag
+          # v2.1: tolerate Obsidian property quirks — a quoted value ("true" from a
+          # Text property) and case variants (True) — but NOT the `providence`
+          # misspelling. IGNORECASE handles case; ["']? allows optional quoting.
           awk '
+            BEGIN { IGNORECASE = 1 }
             NR==1 && $0!="---" { exit 1 }
             NR>1 && /^---[[:space:]]*$/ { exit (found?0:1) }
-            /^provenance:[[:space:]]*true[[:space:]]*$/ { found=1 }
+            /^provenance:[[:space:]]*["'"'"']?true["'"'"']?[[:space:]]*$/ { found=1 }
             END { exit (found?0:1) }
           ' "$1"
         }
