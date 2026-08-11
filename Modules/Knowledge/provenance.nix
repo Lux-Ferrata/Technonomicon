@@ -157,7 +157,7 @@
         "GRIMOIRE_SIGN_ID=${signId}"
       ];
     in {
-      home-manager.users.xin = {
+      home-manager.users.xin = { lib, ... }: {
         home.packages = [ capture reconcile verify package ];
 
         # dedicated, unencrypted signing key — never added to any authorized_keys.
