@@ -63,9 +63,20 @@
           init.defaultBranch = "main";
           pull.rebase = false;
           push.default = "current";
+
+          # sign every commit/tag with the shared ssh key from sops
+          gpg.format = "ssh";
+          gpg.ssh.allowedSignersFile = "/home/xin/.config/git/allowed_signers";
+          user.signingKey = config.sops.secrets."git-signing-key".path;
+          commit.gpgsign = true;
+          tag.gpgsign = true;
         };
         ignores = [ "*~" ".*~" "#*#" "\\#*\\#" ".*.swp" ];
       };
+
+      # public half, for local `git log --show-signature` verification
+      home.file.".config/git/allowed_signers".text =
+        "${config.tn.email_address} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII0ybqlZj+yHx72EgRn+IuxsIi06cC4yQ1+wNbfyq4EV\n";
 
       programs.gh = {
         enable = true;
