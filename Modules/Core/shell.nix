@@ -1,6 +1,12 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-shell = { pkgs, config, ... }: {
 
+    # shared git commit-signing key (ssh format), same identity on every machine
+    sops.secrets."git-signing-key" = {
+      owner = "xin";
+      mode  = "0400";
+    };
+
     programs.xonsh = {
       enable = true;
       extraPackages = ps: [
