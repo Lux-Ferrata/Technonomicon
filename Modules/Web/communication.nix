@@ -12,7 +12,7 @@
       packages = [
         { appId = "com.discordapp.Discord"; origin = "flathub"; }
       ];
-      overrides."com.discordapp.Discord".Environment.TZ = "America/New_York";
+      overrides."com.discordapp.Discord".Environment.TZ = "America/Phoenix";
     };
 
     environment.systemPackages = with pkgs; [
