@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Display Latex Suite snippets from the Grimoire vault in wofi.
+#
+# Reads math-snippets.js live on every invocation, so the list is always
+# current -- adding a snippet to that file is all it takes to show up here.
+# The file is JS rather than JSON (replacements may be functions), so it is
+# eval'd with node instead of parsed; commented-out entries are correctly
+# skipped as a result.
+
+LOCKFILE="/tmp/tn-show-snippets.lock"
+exec 9>"$LOCKFILE"
+flock -n 9 || exit 0
+
+SNIPPETS="$HOME/Grimoire/math-snippets.js"
+[ ! -f "$SNIPPETS" ] && exit 1
+
+node -e '
+const fs = require("fs");
+let arr;
+try { arr = eval(fs.readFileSync(process.argv[1], "utf8")); }
+catch (e) { console.log("failed to parse math-snippets.js: " + e.message); process.exit(0); }
+
+const show = s => String(s)
+  .replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/\r/g, "");
+const pad = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s.padEnd(n));
+
+for (const s of arr) {
+  const trigger = show(s.trigger);
+  const opts    = String(s.options || "");
+  const body    = typeof s.replacement === "function"
+    ? "(computed at expansion)"
+    : show(s.replacement);
+  const tail    = s.description ? body + "   — " + s.description : body;
+  console.log(pad(trigger, 20) + pad(opts, 5) + tail);
+}
+' "$SNIPPETS" \
+  | wofi --dmenu --prompt "Snippets (Tab to expand)" --insensitive --no-actions \
+         --width 900 --height 600

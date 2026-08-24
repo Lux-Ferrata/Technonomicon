@@ -9,7 +9,7 @@ unmapAll
 
 # Open link hints with Ctrl+F (instead of the default 'f')
 # Lets you click any link on the page using the keyboard
-map <c-f> LinkHints.activateMode
+map <c-f> LinkHints.activate
 
 # Open the Vomnibar (address/search bar) in a new tab with Ctrl+T
 map <c-t> Vomnibar.activateInNewTab
@@ -20,9 +20,11 @@ map <c-n> Vomnibar.activate
 # Copy current URL to clipboard with Ctrl+Y
 map <c-y> copyCurrentUrl
 
-# Enter caret/visual mode with Ctrl+V
-# Once inside: v toggles selection, y yanks, arrow keys and Ctrl+arrows move — all built-in, not remappable
-map <c-v> enterVisualMode
+# Enter visual mode with Ctrl+M -- this is exactly Vimium's default `v`
+# behavior (the stock map is `v enterVisualMode`; `<f8>` is a default too).
+# NOT Ctrl+G -- Brave takes that as Find Next and it never reaches Vimium.
+# Once inside: v toggles selection, y yanks, hjkl/arrows move — all built-in.
+map <c-m> enterVisualMode
 
 # ---------------------------------------------------------------------------
 # uBlock Origin — My Filters

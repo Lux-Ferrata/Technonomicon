@@ -41,7 +41,8 @@ the *keep-updated `.bib` export*.
 - [ ] Enable Impermance and TmpFS
 - [ ] Full Disk Encryption
 - [ ] Create Refrence Boot Image
-- [ ] Install and Configure Wl-Kbptr
+- [ ] Install and Configure Wl-Kbptr. The derivation already exists — `wlKbptr` in `Modules/Core/hyprland.nix` overrides `pkgs.wl-kbptr` with `-Dopencv=enabled` — but it is never added to `environment.systemPackages` and has no keybinding, so nothing is installed. It did not work correctly the last time it was attempted, so the config needs a fresh look, not just wiring up.
+- [ ] Configure [khal](https://github.com/pimutils/khal) CalDAV calendar. The package is already in `Tn-email` (with `vdirsyncer` and `calcurse`), but that module is not imported by Kvasir and there is no `~/.config/khal` or `~/.config/vdirsyncer` yet, so nothing is running. Needed for the Grimoire wish of getting todos with deadlines onto the calendar automatically.
 
 ### Not sure if it is worth actually making these changes
 - [ ] Switch Phone and Tablet to Graphene and Lineage OS ?
@@ -52,7 +53,6 @@ the *keep-updated `.bib` export*.
 
 ## Homelab
 - [ ] Hydrus picture and gif serever. (Find out about ml image recognition, seach, and tagging)
-- [ ] Obsidian -> Quarto Publishing Git Worker See PKM Note
 - [ ] Language tool server for obsidian grammar and spell checking
 - [ ] Superproductivity Time Tracking
 

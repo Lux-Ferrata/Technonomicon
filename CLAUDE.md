@@ -72,7 +72,7 @@ All shared modules are prefixed `Tn-` (Technonomicon):
 
 **Knowledge/**
 - `Tn-learning` — hledger (+ ui/web), fava, beancount, visidata, datasette, anki, zotero, foliate, wtfutil
-- `Tn-mind` — Obsidian, taskwarrior, timewarrior, pomodoro-gtk
+- `Tn-mind` — Obsidian, pomodoro-gtk
 - `Tn-pdf` — sioyek (PDF viewer with inverse search to Neovim)
 - `Tn-science` — julia, R, octave, maxima, gnuplot, gap, sage, lean4, quarto
 
@@ -104,7 +104,6 @@ sops _secrets.yaml
 Files prefixed with `_` are config files sourced directly into modules (not installed separately):
 - `_kanata.kbd` — keyboard remapping (Colemak-DH + home-row mods + nav/num layers)
 - `_config.xsh` — xonsh shell config
-- `_gitconfig` — global git config
 - `_fcitx5-config`, `_gromit-mpx.cfg/.ini` — input method / screen annotation configs
 
 ### Kanata keyboard layout

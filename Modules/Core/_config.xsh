@@ -83,7 +83,6 @@ def _grr(args):
 aliases['grr'] = _grr
 aliases['cx'] = 'claude'
 aliases['cr'] = 'claude --resume'
-aliases['tt'] = 'taskwarrior-tui'
 aliases['ps'] = 'cd ~/Projects/Personal-Blog/content/posts'
 aliases['pj'] = 'cd ~/Projects'
 aliases['dl'] = 'cd ~/Downloads'

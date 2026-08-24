@@ -23,6 +23,7 @@
         tsumego      = pkgs.fetchurl { name = "tsumego.svg"; sha256 = "0hcldvigsh69fp1yvgjsmchxk9fj38rzfczczw60pf0h0373c1xa"; url = "https://api.iconify.design/game-icons:stone-pile.svg?width=128&height=128"; };
         kifubara     = pkgs.fetchurl { name = "kifubara.svg"; sha256 = "0xh0lqfyvyn1bfa4k5515dq0p1z57zii66154xfa5f3lnqp58g9m"; url = "https://api.iconify.design/game-icons:abstract-119.svg?width=128&height=128"; };
         googleDrive  = icon "google-drive.svg"  "https://api.iconify.design/logos:google-drive.svg?width=128&height=128"             "0106wgz3hh84r7xi3fqfqz29f32n5rjnxm3fsslkfwwx61nnxlmj";
+        googleDocs   = icon "google-docs.svg"   "https://api.iconify.design/simple-icons:googledocs.svg?width=128&height=128"      "1jr8vcbz578z02zgc9cq6ss51x4dh8ckv8sg7kf4cdcxwvx7pnan";
         blog         = icon "blog.svg"          "https://api.iconify.design/mdi:post-outline.svg?width=128&height=128"               "0vfzawg165h3gdi5dkpzpwq551nj8y4l0ywsmj9mnbh1m719jwpi";
       };
     in {
@@ -35,6 +36,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://www.khanacademy.org/profile/me/courses --start-maximized";
         icon = "${icons.khanAcademy}";
         terminal = false;
+        keywords = [ "khan" "academy" "courses" "learning" "study" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -44,6 +46,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://www.theodinproject.com/dashboard --start-maximized";
         icon = "${icons.odinProject}";
         terminal = false;
+        keywords = [ "odin" "top" "webdev" "programming" "learning" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -53,6 +56,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://www.youtube.com/feed/subscriptions --start-maximized";
         icon = "${icons.youtube}";
         terminal = false;
+        keywords = [ "youtube" "yt" "video" "videos" "subscriptions" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -62,6 +66,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://gemini.google.com/app --start-maximized";
         icon = "${icons.gemini}";
         terminal = false;
+        keywords = [ "gemini" "google" "ai" "chat" "llm" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -71,6 +76,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://joshuagrams.github.io/steno-jig/form.html --start-maximized";
         icon = "${icons.stenoJig}";
         terminal = false;
+        keywords = [ "steno" "stenography" "typing" "drills" "plover" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -80,6 +86,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://didoesdigital.com/typey-type/lessons/ --start-maximized";
         icon = "${icons.typeyType}";
         terminal = false;
+        keywords = [ "typey" "steno" "stenography" "typing" "lessons" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -89,6 +96,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://gmail.com --start-maximized";
         icon = "${icons.gmail}";
         terminal = false;
+        keywords = [ "gmail" "mail" "email" "google" "inbox" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -98,6 +106,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://calendar.google.com --start-maximized";
         icon = "${icons.calendar}";
         terminal = false;
+        keywords = [ "gcal" "calendar" "google" "schedule" "agenda" "events" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -107,6 +116,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://track.toggl.com/timer --start-maximized";
         icon = "${icons.toggl}";
         terminal = false;
+        keywords = [ "toggl" "time" "tracking" "timer" "timesheet" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -116,6 +126,7 @@
         exec = "${pkgs.brave}/bin/brave --app=http://localhost:8385/ --start-maximized";
         icon = "${icons.syncthing}";
         terminal = false;
+        keywords = [ "syncthing" "sync" "files" "backup" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -125,6 +136,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://exercism.org/dashboard --start-maximized";
         icon = "${icons.exercism}";
         terminal = false;
+        keywords = [ "exercism" "exercises" "practice" "programming" "coding" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -134,6 +146,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://vault.bitwarden.com --start-maximized";
         icon = "${icons.bitwarden}";
         terminal = false;
+        keywords = [ "bitwarden" "vault" "password" "passwords" "credentials" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -143,6 +156,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized";
         icon = "${icons.habitica}";
         terminal = false;
+        keywords = [ "habitica" "habits" "todo" "tasks" "rpg" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -152,6 +166,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://www.amazon.com/gp/css/order-history --start-maximized";
         icon = "${icons.amazon}";
         terminal = false;
+        keywords = [ "amazon" "orders" "shopping" "shop" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -161,6 +176,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://weather.com/us/arizona/city/tucson/tenday --start-maximized";
         icon = "${icons.weather}";
         terminal = false;
+        keywords = [ "weather" "forecast" "temperature" "tucson" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -170,6 +186,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://mypima.pima.edu/ --start-maximized";
         icon = "${icons.pima}";
         terminal = false;
+        keywords = [ "pima" "mypima" "college" "school" "courses" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -179,6 +196,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://online-go.com/play --start-maximized";
         icon = "${icons.ogs}";
         terminal = false;
+        keywords = [ "ogs" "go" "baduk" "weiqi" "online-go" "games" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -188,6 +206,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://www.101weiqi.com/training/ --start-maximized";
         icon = "${icons.tsumego}";
         terminal = false;
+        keywords = [ "tsumego" "go" "baduk" "weiqi" "training" "problems" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -197,6 +216,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://www.101weiqi.com/guan/ --start-maximized";
         icon = "${icons.tsumego}";
         terminal = false;
+        keywords = [ "tsumego" "go" "baduk" "weiqi" "test" "problems" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -206,6 +226,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://kifubara.app/me/games --start-maximized";
         icon = "${icons.kifubara}";
         terminal = false;
+        keywords = [ "kifubara" "kifu" "go" "baduk" "weiqi" "games" "records" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -215,6 +236,17 @@
         exec = "${pkgs.brave}/bin/brave --app=https://drive.google.com/drive/my-drive --start-maximized";
         icon = "${icons.googleDrive}";
         terminal = false;
+        keywords = [ "gdrive" "drive" "google" "files" "storage" ];
+        categories = [ "Application" "Network" ];
+      })
+
+      (pkgs.makeDesktopItem {
+        name = "G-Documents";
+        desktopName = "Google Documents";
+        exec = "${pkgs.brave}/bin/brave --app=https://docs.google.com/ --start-maximized";
+        icon = "${icons.googleDocs}";
+        terminal = false;
+        keywords = [ "gdoc" "gdocs" "google" "docs" "documents" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -224,6 +256,7 @@
         exec = "${pkgs.brave}/bin/brave --app=https://lux-ferrata.org --start-maximized";
         icon = "${icons.blog}";
         terminal = false;
+        keywords = [ "blog" "lux-ferrata" "website" "posts" ];
         categories = [ "Application" "Network" ];
       })
     ];

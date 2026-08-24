@@ -9,6 +9,12 @@
 
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
+    # /tmp is not cleaned by default on NixOS, so anything parked there outlives
+    # reboots indefinitely (the per-workspace layout state under
+    # /tmp/tn-ws-layouts had been surviving since July). Clean it at boot rather
+    # than using tmpfs, which would spend RAM and can starve large nix builds.
+    boot.tmp.cleanOnBoot = true;
+
     programs.nix-index.enable = true;
     programs.nix-index-database.comma.enable = true;
 

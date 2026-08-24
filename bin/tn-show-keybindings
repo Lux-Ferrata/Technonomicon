@@ -25,5 +25,7 @@ grep 'hl\.bind(' "$CONFIG" \
       -e 's/,.*hl\.dsp\.workspace.*/  →  workspace/' \
       -e 's/,.*hl\.dsp\..*/  →  action/' \
       -e 's/^ *//' \
+      -e 's|/nix/store/[^/ ]*/bin/||g' \
+      -e 's|/nix/store/[a-z0-9]\{32\}-||g' \
   | wofi --dmenu --prompt "Keybindings" --insensitive --no-actions \
          --width 700 --height 500

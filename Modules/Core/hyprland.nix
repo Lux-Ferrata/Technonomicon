@@ -35,6 +35,13 @@
     tnShowKeybindings = pkgs.writeShellScript "tn-show-keybindings"
       (builtins.readFile ../../bin/tn-show-keybindings);
 
+    # Needs node on PATH: math-snippets.js is JS (replacements may be
+    # functions), so it is eval'd rather than parsed.
+    tnShowSnippets = pkgs.writeShellScript "tn-show-snippets" ''
+      export PATH="${pkgs.nodejs}/bin:${pkgs.wofi}/bin:$PATH"
+      ${builtins.readFile ../../bin/tn-show-snippets}
+    '';
+
     cleanWin = ''
       def clean_title:
         gsub("^[a-z][a-z-]* \\| "; "") |
@@ -164,6 +171,11 @@
 
       home.file.".local/share/tn/bin/tn-show-keybindings" = {
         source     = tnShowKeybindings;
+        executable = true;
+      };
+
+      home.file.".local/share/tn/bin/tn-show-snippets" = {
+        source     = tnShowSnippets;
         executable = true;
       };
 
@@ -382,14 +394,6 @@
           })
 
           hl.window_rule({
-            name   = "grimoire-inbox-float",
-            match  = { title = "grimoire-inbox" },
-            float  = true,
-            size   = "900 600",
-            center = true,
-          })
-
-          hl.window_rule({
             name   = "qalculate-scratchpad",
             match  = { class = "qalculate-gtk" },
             float  = true,
@@ -416,14 +420,6 @@
           hl.window_rule({
             name   = "vim-edit-float",
             match  = { title = "vim-edit" },
-            float  = true,
-            size   = "900 600",
-            center = true,
-          })
-
-          hl.window_rule({
-            name   = "taskwarrior-tui-float",
-            match  = { title = "taskwarrior-tui" },
             float  = true,
             size   = "900 600",
             center = true,
@@ -480,7 +476,7 @@
             hl.exec_cmd("clipse -listen")
             hl.exec_cmd("hyprsunset")
             hl.exec_cmd("systemctl --user start hyprpolkitagent")
-            hl.exec_cmd("[workspace 8 silent] obsidian")
+            hl.exec_cmd("[workspace special:magic silent] obsidian")
             -- hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
             hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
             hl.exec_cmd("[workspace 9 silent] ${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized")
@@ -542,18 +538,18 @@
           hl.bind(mainMod .. " + SHIFT + D",  hl.dsp.exec_cmd("${pkillMenu}"))
           hl.bind(mainMod .. " + Q",          hl.dsp.exec_cmd("hyprlock"))
           hl.bind(mainMod .. " + SHIFT + Q",  hl.dsp.exec_cmd("${pkgs.systemd}/bin/systemd-run --user --no-block --collect /etc/scripts/clean-power-off.sh"))
-          hl.bind(mainMod .. " + SHIFT + E",  hl.dsp.exit())
           hl.bind(mainMod .. " + F",          hl.dsp.exec_cmd("ghostty -e broot $HOME"))
           hl.bind(mainMod .. " + SHIFT + F",  hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
           hl.bind(mainMod .. " + ALT + F",    hl.dsp.exec_cmd("nemo"))
           hl.bind(mainMod .. " + 0",          hl.dsp.exec_cmd("ghostty --title=grimoire-inbox -e nvim $HOME/Grimoire/Inbox.md"))
           hl.bind(mainMod .. " + SHIFT + 0",  hl.dsp.exec_cmd("ghostty --title=technonomicon -e nvim $HOME/Projects/Technonomicon/README.md"))
           hl.bind(mainMod .. " + Return",      hl.dsp.exec_cmd("${vimEdit}"))
-          hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd("ghostty --title=taskwarrior-tui -e taskwarrior-tui"))
+          hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&commandid=periodic-notes%3Aopen-daily-note&openmode=window'"))
           hl.bind(mainMod .. " + H",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-keybindings"))
+          hl.bind(mainMod .. " + SHIFT + H",  hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-snippets"))
           hl.bind(mainMod .. " + X",          hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + semicolon",  hl.dsp.window.float())
-          hl.bind(mainMod .. " + Tab",        hl.dsp.layout("cycleprev"))
+          hl.bind(mainMod .. " + Tab",        hl.dsp.focus({ last = true }))
           hl.bind(mainMod .. " + comma",      hl.dsp.focus({ workspace = "r+1" }))
           hl.bind(mainMod .. " + minus",      hl.dsp.window.resize({ x = -100, y =    0, relative = true }))
           hl.bind(mainMod .. " + equal",      hl.dsp.window.resize({ x =  100, y =    0, relative = true }))
@@ -563,19 +559,14 @@
           hl.bind(mainMod .. " + ALT + G",    hl.dsp.exec_cmd("${pkgs.brave}/bin/brave --app=https://gemini.google.com/app --start-maximized"))
           hl.bind(mainMod .. " + C",          hl.dsp.exec_cmd("ghostty --class=qalc-nvim --title=qalc-nvim -e nvim +Qalc"))
           hl.bind(mainMod .. " + ALT + C",    hl.dsp.exec_cmd("qalculate-gtk"))
-          hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("ghostty --title=cfait -e cfait"))
-          hl.bind(mainMod .. " + ALT + N",    hl.dsp.exec_cmd("obsidian"))
-          hl.bind(mainMod .. " + ALT + T",    hl.dsp.exec_cmd("cfait-gui"))
+          hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&filepath=Home.md&openmode=window'"))
+          hl.bind(mainMod .. " + ALT + N",    hl.dsp.workspace.toggle_special("magic"))
           hl.bind(mainMod .. " + ALT + A",    hl.dsp.exec_cmd("anki"))
           hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
 
           hl.bind(mainMod .. " + left",  hl.dsp.layout("cycleprev"))
           hl.bind(mainMod .. " + right", hl.dsp.layout("cyclenext"))
 
-          hl.bind(mainMod .. " + SHIFT + H",     hl.dsp.window.move({ direction = "left"  }))
-          hl.bind(mainMod .. " + SHIFT + J",     hl.dsp.window.move({ direction = "down"  }))
-          hl.bind(mainMod .. " + SHIFT + K",     hl.dsp.window.move({ direction = "up"    }))
-          hl.bind(mainMod .. " + SHIFT + L",     hl.dsp.window.move({ direction = "right" }))
           hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.swap({ direction = "left"  }))
           hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.swap({ direction = "right" }))
           hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.swap({ direction = "up"    }))

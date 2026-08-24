@@ -41,11 +41,15 @@
       self.nixosModules.Tn-web-apps
       self.nixosModules.Tn-network
       self.nixosModules.Tn-communication
+      self.nixosModules.Tn-email
       self.nixosModules.Tn-sound
       self.nixosModules.Tn-shell
       self.nixosModules.Tn-pdf
       self.nixosModules.Tn-games
       self.nixosModules.Tn-learning
+      # NOTE: sage is not in the binary cache -- building this module compiles
+      # sage 10.9 from source AND runs its full doctest suite. Expect hours.
+      self.nixosModules.Tn-science
       self.nixosModules.Tn-mind
       self.nixosModules.Tn-provenance
       self.nixosModules.Tn-art
