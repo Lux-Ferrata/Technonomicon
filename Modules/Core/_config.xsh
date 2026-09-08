@@ -247,10 +247,20 @@ aliases.update({
     # Downloads & Compression
     'bzip': 'bzip3',
     'book-dl': 'aria2c -x 16 -s 16',
-
-    # Editors
-    'eo': 'nvim',
 })
+
+# Editors
+# `eo` is resolved at call time rather than being a static alias, so a project
+# dev shell can supersede it just by putting its own `eo` on $PATH (see
+# ~/Projects/CIS-129/flake.nix, which points it at VSCodium). Falls back to
+# nvim everywhere else.
+def _eo(args):
+    for d in $PATH:
+        candidate = os.path.join(d, 'eo')
+        if os.access(candidate, os.X_OK):
+            return subprocess.call([candidate] + list(args))
+    return subprocess.call(['nvim'] + list(args))
+aliases['eo'] = _eo
 
 def _eon(args):
     if not args:

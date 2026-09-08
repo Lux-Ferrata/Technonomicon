@@ -476,9 +476,8 @@
             hl.exec_cmd("clipse -listen")
             hl.exec_cmd("hyprsunset")
             hl.exec_cmd("systemctl --user start hyprpolkitagent")
-            hl.exec_cmd("[workspace special:magic silent] obsidian")
+            hl.exec_cmd("[workspace 8 silent] obsidian")
             -- hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
-            hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
             hl.exec_cmd("[workspace 9 silent] ${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized")
           end)
 
@@ -560,7 +559,7 @@
           hl.bind(mainMod .. " + C",          hl.dsp.exec_cmd("ghostty --class=qalc-nvim --title=qalc-nvim -e nvim +Qalc"))
           hl.bind(mainMod .. " + ALT + C",    hl.dsp.exec_cmd("qalculate-gtk"))
           hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&filepath=Home.md&openmode=window'"))
-          hl.bind(mainMod .. " + ALT + N",    hl.dsp.workspace.toggle_special("magic"))
+          hl.bind(mainMod .. " + ALT + N",    hl.dsp.exec_cmd("obsidian"))
           hl.bind(mainMod .. " + ALT + A",    hl.dsp.exec_cmd("anki"))
           hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
 

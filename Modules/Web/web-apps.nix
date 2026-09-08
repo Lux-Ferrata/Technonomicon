@@ -19,6 +19,7 @@
         amazon       = pkgs.fetchurl { name = "amazon.svg";  sha256 = "1xc3qdzp1gzhg8py1j9mzbj0ik9g66l35rfrby7d5pb5wi881kb9"; url = "https://api.iconify.design/simple-icons:amazon.svg?width=128&height=128"; };
         weather      = pkgs.fetchurl { name = "weather.svg"; sha256 = "1kj75df6j02phrbb6ziqihvc5rhxfc5p1z0gakjzqm72g8qvwn4d"; url = "https://api.iconify.design/simple-icons:theweatherchannel.svg?width=128&height=128"; };
         pima         = pkgs.fetchurl { name = "pima.svg";    sha256 = "0d0kw117lp3mna02zl61pzqa9khj9p6sgdk1pmd6h8hy7yaviksz"; url = "https://api.iconify.design/mdi:school.svg?width=128&height=128"; };
+        d2l          = pkgs.fetchurl { name = "d2l.svg";     sha256 = "0sz6pkijy4gfky564d8c62829zj3vpc8060ydgvcwa9ff237b48c"; url = "https://api.iconify.design/mdi:book-education.svg?width=128&height=128"; };
         ogs          = pkgs.fetchurl { name = "ogs.svg";     sha256 = "1v6fgy5d18fkaz5sv9h71kq91xmw3s1mpcyw2g2lrbd8v041cz6d"; url = "https://api.iconify.design/simple-icons:go.svg?width=128&height=128"; };
         tsumego      = pkgs.fetchurl { name = "tsumego.svg"; sha256 = "0hcldvigsh69fp1yvgjsmchxk9fj38rzfczczw60pf0h0373c1xa"; url = "https://api.iconify.design/game-icons:stone-pile.svg?width=128&height=128"; };
         kifubara     = pkgs.fetchurl { name = "kifubara.svg"; sha256 = "0xh0lqfyvyn1bfa4k5515dq0p1z57zii66154xfa5f3lnqp58g9m"; url = "https://api.iconify.design/game-icons:abstract-119.svg?width=128&height=128"; };
@@ -187,6 +188,16 @@
         icon = "${icons.pima}";
         terminal = false;
         keywords = [ "pima" "mypima" "college" "school" "courses" ];
+        categories = [ "Application" "Network" ];
+      })
+
+      (pkgs.makeDesktopItem {
+        name = "d2l";
+        desktopName = "D2L";
+        exec = "${pkgs.brave}/bin/brave --app=https://d2l.pima.edu/ --start-maximized";
+        icon = "${icons.d2l}";
+        terminal = false;
+        keywords = [ "d2l" "brightspace" "pima" "college" "school" "courses" "lms" ];
         categories = [ "Application" "Network" ];
       })
 

@@ -1,55 +1,5 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-shell = { pkgs, config, ... }:
-    let
-      hyprlandPkg = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-      # Shared pre-shutdown/pre-reboot session cleanup, used by both the
-      # power-off and reboot scripts.
-      sessionCleanup = ''
-        # These scripts run under `systemd-run --user`, which does not inherit
-        # HYPRLAND_INSTANCE_SIGNATURE (Hyprland only exports WAYLAND_DISPLAY and
-        # friends to the user manager). Derive it from the runtime dir instead,
-        # or hyprctl exits with "is hyprland running?".
-        export HYPRLAND_INSTANCE_SIGNATURE="$(ls -t "''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr" 2>/dev/null | head -n1)"
-
-        if [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ]; then
-          CLIENTS=$(${hyprlandPkg}/bin/hyprctl clients -j 2>/dev/null || echo '[]')
-          obsidian_addrs() {
-            echo "$CLIENTS" | ${pkgs.jq}/bin/jq -r --arg ws "$1" --arg op "$2" '
-              .[] | select((.class // "") | ascii_downcase | contains("obsidian"))
-                  | select(if $op == "eq" then .workspace.name == $ws
-                                          else .workspace.name != $ws end)
-                  | .address'
-          }
-          close_addr() {
-            ${hyprlandPkg}/bin/hyprctl eval \
-              "hl.dispatch(hl.dsp.window.close({window='address:$1'}))" >/dev/null 2>&1 || true
-          }
-
-          # Obsidian restores its whole window layout on next launch, popouts
-          # included. Close the disposable popouts first so that saved session
-          # is clean, then the root window on special:magic -- closing the root
-          # tears down the Electron app and every popout with it, so it must go
-          # last or the popouts never get a chance to deregister themselves.
-          for a in $(obsidian_addrs "special:magic" "ne"); do close_addr "$a"; done
-          sleep 1
-          for a in $(obsidian_addrs "special:magic" "eq"); do close_addr "$a"; done
-
-          # Give Obsidian a bounded moment to flush its session to disk.
-          for _ in $(seq 1 20); do
-            REMAINING=$(${hyprlandPkg}/bin/hyprctl clients -j 2>/dev/null \
-              | ${pkgs.jq}/bin/jq -r '[.[] | select((.class // "") | ascii_downcase | contains("obsidian"))] | length' 2>/dev/null || echo 0)
-            [ "$REMAINING" = "0" ] && break
-            sleep 0.25
-          done
-        fi
-
-        # Per-workspace layout overrides live in /tmp, which is NOT cleaned on
-        # boot on this host -- entries here have survived since July. Clearing
-        # them makes every workspace come back in monocle, since the
-        # workspace.active handler defaults to monocle when the file is absent.
-        rm -f /tmp/tn-ws-layouts/* 2>/dev/null || true
-      '';
-    in {
+  flake.nixosModules.Tn-shell = { pkgs, config, ... }: {
 
     # shared git commit-signing key (ssh format), same identity on every machine
     sops.secrets."git-signing-key" = {
@@ -204,7 +154,6 @@
       text = ''
         #!${pkgs.bash}/bin/bash
         ${pkgs.libnotify}/bin/notify-send "Shutting down..." "Cleaning up and powering off" &
-${sessionCleanup}
         timeout 10 find /home/xin/Downloads -mindepth 1 -delete 2>/dev/null || true
         timeout 60 ${pkgs.trash-cli}/bin/trash-empty 10 2>/dev/null || true
         ${pkgs.systemd}/bin/systemctl poweroff
@@ -215,7 +164,6 @@ ${sessionCleanup}
       mode = "0755";
       text = ''
         #!${pkgs.bash}/bin/bash
-${sessionCleanup}
         timeout 10 find /home/xin/Downloads -mindepth 1 -delete 2>/dev/null || true
         timeout 60 ${pkgs.trash-cli}/bin/trash-empty 10 2>/dev/null || true
         ${pkgs.systemd}/bin/systemctl reboot

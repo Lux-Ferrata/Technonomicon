@@ -62,6 +62,9 @@
       "AutofillAddressEnabled" = false;
       "AutofillCreditCardEnabled" = false;
 
+      # 0 = incognito available, 1 = disabled, 2 = forced.
+      "IncognitoModeAvailability" = 1;
+
       "BraveRewardsDisabled" = true;
       "BraveWalletDisabled" = true;
       "BraveVPNMode" = 0; # 0 = Disabled
