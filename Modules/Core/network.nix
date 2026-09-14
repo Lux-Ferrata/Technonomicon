@@ -102,8 +102,6 @@
         };
       };
 
-      printing.enable = true;
-
       syncthing = {
         enable = true;
         openDefaultPorts = true;
