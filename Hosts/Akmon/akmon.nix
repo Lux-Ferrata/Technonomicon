@@ -30,6 +30,7 @@
       self.nixosModules.Tn-sound
       self.nixosModules.Tn-shell
       self.nixosModules.Tn-pdf
+      self.nixosModules.Tn-scan
       self.nixosModules.Tn-games
       self.nixosModules.Tn-learning
       # NOTE: sage is not in the binary cache -- building this module compiles

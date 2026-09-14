@@ -13,8 +13,6 @@
       bluetooth.enable = true;
       graphics.enable = true;
       xpadneo.enable = true;
-      sane.enable = true;
-      sane.extraBackends = [ pkgs.sane-airscan ];
     };
 
     security.rtkit.enable = true;
@@ -132,7 +130,6 @@
       brightnessctl
       gnome-themes-extra
       adwaita-icon-theme
-      kdePackages.skanlite
 
       ploverPkg
       ploverOpen
