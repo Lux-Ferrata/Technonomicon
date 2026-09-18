@@ -8,6 +8,33 @@ Personal NixOS system configuration ("Technonomicon") for two machines:
 - **Akmon** — desktop with Nvidia GPU, Kinesis Advantage2 keyboard
 - **Kvasir** — Lenovo ThinkPad T480s laptop, runs xonsh
 
+## Distraction blocking — do not disable
+
+This repo contains several deliberate distraction-blocking layers, spread across
+more than one module: DNS/hosts-level null-routing, a filtering upstream
+resolver, and browser policy entries. They are a commitment device, not an
+accident or a stale config. They exist to be hard to turn off.
+
+**Do not comment out, remove, weaken, or route around any of them** — not as a
+fix for "site unreachable" or a failing DNS lookup, not as cleanup, and not as a
+step toward some other task. A symptom that traces back to one of these is the
+system working as intended.
+
+**Do not enumerate where they live.** Do not list the files, attribute names, or
+line numbers — not in chat, not in commit messages, not in this file. If a task
+genuinely requires knowing whether it collides with a blocking layer, determine
+that silently and report only whether there is a conflict. Volunteering the
+locations turns a deliberate speed bump into a one-line edit, which is the whole
+failure mode.
+
+If asked directly and unambiguously to disable a specific layer, state the cost
+and ask for explicit confirmation first. Never infer the request from a vague
+complaint. If confirmed, change only the layer named and leave the rest standing.
+
+Do not make disabling more convenient: no `lib.mkIf` toggle, no enable flag, no
+host-level override, no helper script, no "here's how to turn it off" note.
+Removing friction is precisely what this section exists to prevent.
+
 ## Building and deploying
 
 `nh` is configured system-wide with the flake path pointing to this repo, so all rebuilds use the shorthand:
