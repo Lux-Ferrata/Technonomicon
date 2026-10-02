@@ -26,10 +26,34 @@
         googleDrive  = icon "google-drive.svg"  "https://api.iconify.design/logos:google-drive.svg?width=128&height=128"             "0106wgz3hh84r7xi3fqfqz29f32n5rjnxm3fsslkfwwx61nnxlmj";
         googleDocs   = icon "google-docs.svg"   "https://api.iconify.design/simple-icons:googledocs.svg?width=128&height=128"      "1jr8vcbz578z02zgc9cq6ss51x4dh8ckv8sg7kf4cdcxwvx7pnan";
         blog         = icon "blog.svg"          "https://api.iconify.design/mdi:post-outline.svg?width=128&height=128"               "0vfzawg165h3gdi5dkpzpwq551nj8y4l0ywsmj9mnbh1m719jwpi";
+        desmos       = icon "desmos.svg"        "https://api.iconify.design/mdi:function-variant.svg?width=128&height=128"           "0njbnvs1p61vzr6k7v2vpdlf8yj76wy0yb0cf6zk664kbgdhbr6n";
+        youtubeMusic = icon "youtube-music.svg" "https://api.iconify.design/simple-icons:youtubemusic.svg?width=128&height=128"    "0cyf745q476fxyly70cwy79rqvl3py0adxyarrwh16gb2gma9s2p";
       };
     in {
 
     environment.systemPackages = [
+
+      (pkgs.makeDesktopItem {
+        name = "youtube-music";
+        # Named just "Music" and with no "youtube" keyword, so searching
+        # "youtube" in the launcher returns only the YouTube entry.
+        desktopName = "Music";
+        exec = "${pkgs.brave}/bin/brave --app=https://music.youtube.com --start-maximized";
+        icon = "${icons.youtubeMusic}";
+        terminal = false;
+        keywords = [ "music" "ytm" "audio" "player" "songs" ];
+        categories = [ "Application" "AudioVideo" "Audio" ];
+      })
+
+      (pkgs.makeDesktopItem {
+        name = "desmos";
+        desktopName = "Desmos";
+        exec = "${pkgs.brave}/bin/brave --app=https://www.desmos.com/calculator --start-maximized";
+        icon = "${icons.desmos}";
+        terminal = false;
+        keywords = [ "desmos" "graph" "graphing" "calculator" "math" "plot" ];
+        categories = [ "Application" "Education" "Science" ];
+      })
 
       (pkgs.makeDesktopItem {
         name = "khan-academy";

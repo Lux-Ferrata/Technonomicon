@@ -184,6 +184,46 @@
           echo "scan: wrote $output"
         '';
       };
+
+      # The ADF is the only thing that differs from a flatbed run, so this is a
+      # front end over `scan --adf` rather than a second copy of the pipeline:
+      # one place to fix the PNG -> img2pdf -> ocrmypdf chain. The scanner
+      # advertises only Flatbed and ADF (no duplex), so batches are simplex.
+      multi-scan = pkgs.writeShellApplication {
+        name = "multi-scan";
+        runtimeInputs = [ scan ];
+        text = ''
+          for arg in "$@"; do
+            case "$arg" in
+              -h|--help)
+                cat <<'EOF'
+          Usage: multi-scan [options] [name]
+
+          Feeds every sheet in the top tray (ADF) and collects them into one
+          dated, OCR'd PDF in ~/Downloads (override with $SCAN_DIR).
+          An optional [name] is appended to the filename.
+
+          Equivalent to `scan --adf`; every scan option is accepted here too:
+
+            -r, --resolution DPI   100, 200, 300 or 600  (default: 300)
+            -m, --mode MODE        color or gray         (default: gray)
+            -c, --color            shorthand for --mode color
+            -C, --clean            run unpaper over the pages before OCR
+            -N, --no-ocr           skip OCR, leave a plain image PDF
+            -k, --keep-images      keep the raw PNGs next to the PDF
+            -d, --device DEV       SANE device (default: first airscan device)
+            -o, --output PATH      write to this exact path
+            -l, --list             list detected scanners and exit
+            -h, --help             show this help
+          EOF
+                exit 0 ;;
+            esac
+          done
+
+          exec scan --adf "$@"
+        '';
+      };
+
     in {
       hardware.sane = {
         enable = true;
@@ -211,6 +251,7 @@
         unpaper       # page cleanup for ocrmypdf --clean
         qpdf          # split/merge/rotate scanned PDFs
         scan
+        multi-scan    # `scan --adf` under its own name
       ];
     };
 }

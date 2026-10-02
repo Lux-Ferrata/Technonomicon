@@ -175,6 +175,13 @@
         "org/nemo/preferences" = {
           show-hidden-files = false;
         };
+        # GTK/portal file pickers (Brave etc.) — Ctrl+H toggles, rebuild resets
+        "org/gtk/settings/file-chooser" = {
+          show-hidden = false;
+        };
+        "org/gtk/gtk4/settings/file-chooser" = {
+          show-hidden = false;
+        };
         "org/virt-manager/virt-manager/connections" = {
           autoconnect = [ "qemu:///system" ];
           uris = [ "qemu:///system" ];
@@ -222,8 +229,6 @@
         ".config/gromit-mpx.ini".source = ./_gromit-mpx.ini;
       };
     };
-
-    services.logind.settings.Login.HandleSuspend = "ignore";
 
   };
 }

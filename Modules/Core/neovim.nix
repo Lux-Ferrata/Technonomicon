@@ -2,6 +2,30 @@
 
   flake.nixosModules.Tn-neovim = { pkgs, ... }:
   let
+    openVsx   = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.open-vsx;
+    vscodeMkt = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.vscode-marketplace;
+
+    # nixpkgs' `ac-library` installs only bin/expander -- it ships none of the
+    # atcoder/*.hpp headers, so it cannot actually be #included. This packages
+    # the headers themselves; `expander` from nixpkgs still inlines them into a
+    # single file for submission.
+    acLibrary = pkgs.stdenvNoCC.mkDerivation {
+      pname   = "ac-library-headers";
+      version = "1.6";
+      src = pkgs.fetchFromGitHub {
+        owner  = "atcoder";
+        repo   = "ac-library";
+        rev    = "v1.6";
+        hash   = "sha256-zV2G9Ur2v8elGVKuO9w7ampaB13wDod9qzo7+QXq6G4=";
+      };
+      dontBuild = true;
+      installPhase = ''
+        mkdir -p $out/include
+        cp -r atcoder $out/include/
+      '';
+      meta.description = "Official AtCoder Library, headers only";
+    };
+
     mcpy = pkgs.python3Packages.buildPythonPackage rec {
       pname = "mcpy";
       version = "2.0.0";
@@ -47,12 +71,18 @@
     '';
   in {
 
+    # NixOS does not link /include into the system profile, so ACL and testlib
+    # headers are in the store but invisible to a bare `g++ foo.cpp`. This puts
+    # them on the default C++ search path, matching AtCoder's own judge where
+    # `#include <atcoder/all>` just works.
+    environment.variables.CPLUS_INCLUDE_PATH =
+      "${acLibrary}/include:${pkgs.testlib}/include/testlib";
+
     environment.systemPackages = with pkgs; [
       previewImage
       openInGhostty
       openInObsidian
       imv
-      zellij
       lazygit
       ghostty
       # JS / TypeScript
@@ -74,7 +104,7 @@
       marksman
       # General Tooling
       qalculate-gtk
-      libqalculate # provides the `qalc` CLI used by qalc.nvim
+      libqalculate # provides the `qalc` CLI
       claude-code
       sqlite
       gdb
@@ -108,8 +138,26 @@
       shellcheck shfmt
       # Scheme & Racket
       guile racket
-      # C
-      clang-tools
+      # C / C++
+      clang-tools   # clangd, clang-format, clang-tidy
+      gcc           # cc / c++ — nothing else in this config provides a compiler
+      cmake
+      ninja         # cmake's default generator for anything modern
+      bear          # generates compile_commands.json so clangd resolves headers
+      valgrind
+      # Competitive programming (AtCoder / Codeforces)
+      acLibrary                      # atcoder/*.hpp headers
+      ac-library                     # `expander` — inlines ACL for submission
+      online-judge-tools             # `oj`: fetch samples, run tests, submit
+      online-judge-template-generator # `oj-template`: boilerplate from a problem URL
+      testlib                        # write generators/checkers for stress tests
+      hyperfine                      # timing runs when hunting a TLE
+      # Rust
+      rustc cargo rustfmt clippy rust-analyzer
+      # Needed by both: most C builds and any crate with a -sys dependency
+      # shell out to pkg-config. Library dev deps themselves (openssl, etc.)
+      # belong in a per-project flake, not here.
+      pkg-config
       # Zig
       zig zls
       # Assembly & Forth
@@ -131,68 +179,253 @@
     home-manager.users.xin.programs.vscodium = {
       enable = true;
       profiles.default = {
-        extensions = with pkgs.vscode-extensions; [
+        extensions = (with openVsx; [
+          # Not packaged in nixpkgs. Deliberately left without a `quarto.path`
+          # so the blog flake's direnv-provided CLI is the one it picks up.
+          quarto.quarto
+        ]) ++ [
+          # Competitive Programming Helper: pulls testcases from a problem page
+          # and runs them against the build. GPL-3.0, but published only to the
+          # MS marketplace, so it comes from that index rather than Open VSX.
+          vscodeMkt.divyanshuagrawal.competitive-programming-helper
+          # Harpoon-style pinned files (MIT). Marketplace-only, like cph.
+          vscodeMkt.tobias-z.vscode-harpoon
+        ] ++ (with pkgs.vscode-extensions; [
           arcticicestudio.nord-visual-studio-code
-        ];
+          vscodevim.vim
+          # Every extension below is MIT/BSD0 and Open-VSX-clean. Pylance is
+          # deliberately absent: it is unfree and refuses to run on VSCodium.
+          mkhl.direnv
+          jnoortheen.nix-ide
+          ms-pyright.pyright
+          ms-python.python
+          ms-python.black-formatter
+          charliermarsh.ruff
+          mkhl.shfmt
+          ms-toolsai.jupyter
+          haskell.haskell
+          llvm-vs-code-extensions.vscode-clangd
+          ziglang.vscode-zig
+          rust-lang.rust-analyzer
+          # CodeLLDB is the debug adapter for C/C++/Rust. ms-vscode.cpptools
+          # is unfree and licensed to official VS Code builds only.
+          vadimcn.vscode-lldb
+          ms-vscode.cmake-tools
+          james-yu.latex-workshop
+        ]);
+
+        keybindings = [
+          # Normal mode only, so ctrl+space keeps triggering completion while
+          # actually typing. User keybindings are matched after the defaults,
+          # so this wins in normal mode and the default wins in insert mode.
+          {
+            key     = "ctrl+space";
+            command = "workbench.action.showCommands";
+            when    = "editorTextFocus && vim.mode == 'Normal'";
+          }
+          # F4 toggles the bottom terminal from anywhere, and back to the editor
+          { key = "f4"; command = "workbench.action.terminal.toggleTerminal"; }
+        ]
+        # Alt+1..5 jumps to harpoon slot N from any mode, terminal included
+        ++ map (n: {
+          key     = "alt+${toString n}";
+          command = "vscode-harpoon.gotoEditor${toString n}";
+        }) [ 1 2 3 4 5 ];
+
         userSettings = {
           "workbench.colorTheme"           = "Nord";
           "editor.fontFamily"              = "'JetBrains Mono', monospace";
           "editor.fontSize"                = 14;
           "editor.lineNumbers"             = "relative";
           "editor.minimap.enabled"         = false;
-          "workbench.activityBar.location" = "hidden";
+
+          # Chrome removal: no tab bar, no panel-ish furniture.
+          "workbench.editor.showTabs"            = "none";
+          "workbench.activityBar.location"       = "hidden";
+          "workbench.layoutControl.enabled"      = false;
+          "window.commandCenter"                 = false;
+          # With the menu bar, layout control and command center all gone the
+          # custom title bar is an empty strip. Hyprland draws no server-side
+          # titlebar, so "native" reclaims the row entirely.
+          "window.titleBarStyle"                 = "native";
+          # Chrome that has no vim equivalent and is on by default.
+          "editor.stickyScroll.enabled"          = false;
+          "editor.lightbulb.enabled"             = "off";
+          "editor.scrollBeyondLastLine"          = false;
+          "workbench.editor.editorActionsLocation" = "hidden";
+          "workbench.startupEditor"              = "none";
+          "breadcrumbs.enabled"                  = false;
+          "window.menuBarVisibility"             = "hidden";
+          # Status bar deliberately kept: it is where VSCodeVim renders the
+          # current mode. Set "workbench.statusBar.visible" = false to drop it.
+
+          # Match the nvim side of the house.
+          "files.trimTrailingWhitespace" = true;
+          "files.autoSave"               = "onFocusChange";
+
+          # nix-ide defaults to the `nil` server, which is not installed here.
+          # Point it at the nixd/nixfmt pair this repo already ships.
+          "nix.enableLanguageServer" = true;
+          "nix.serverPath"           = "nixd";
+          "nix.formatterPath"        = "nixfmt";
+
+          # Both of these extensions download their own server binary unless
+          # pointed at one; use the nixpkgs builds already on PATH.
+          "clangd.path"               = "clangd";
+          # With no compile_commands.json, clangd falls back to a standard old
+          # enough that <ranges> and views fail to parse. bits/stdc++.h and
+          # ext/pb_ds already resolve without help -- the nixpkgs clang-tools
+          # build bakes in gcc's libstdc++ include paths.
+          "clangd.fallbackFlags" = [
+            "-std=gnu++23"
+            "-I${acLibrary}/include"
+          ];
+          "rust-analyzer.server.path" = "rust-analyzer";
+          # rust-analyzer needs the std sources to complete into std.
+          "rust-analyzer.server.extraEnv" = {
+            RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
+          };
+
+          # LaTeX Workshop. texliveFull already supplies every binary it wants
+          # (latexmk, all engines, biber, chktex, latexindent), so only the
+          # non-default choices are set here.
+          "latex-workshop.latex.autoBuild.run"     = "onSave";
+          "latex-workshop.latex.autoClean.run"     = "onSucceeded";
+          "latex-workshop.latex.outDir"            = "%DIR%/build";
+          "latex-workshop.linting.chktex.enabled"  = true;
+          "latex-workshop.view.pdf.viewer"         = "tab";
+
+          # Quarto has no packaged extension; .qmd is markdown plus fenced
+          # cells, so this gets highlighting without one.
+          "files.associations" = { "*.qmd" = "markdown"; };
+
+          # Formatters are all already on PATH via systemPackages above.
+          "editor.formatOnSave"      = true;
+          "editor.wordWrap"          = "on";
+          "editor.renderLineHighlight" = "all";
+          "terminal.integrated.fontFamily" = "'JetBrains Mono', monospace";
+          # let F4 and the harpoon jumps through instead of sending them to fish
+          "terminal.integrated.commandsToSkipShell" = [
+            "workbench.action.terminal.toggleTerminal"
+          ] ++ map (n: "vscode-harpoon.gotoEditor${toString n}") [ 1 2 3 4 5 ];
+          "telemetry.telemetryLevel" = "off";
+
+          # ms-python.python would otherwise try to start Pylance; the
+          # standalone pyright extension provides the language server.
+          "python.languageServer" = "None";
+
+          # vim. Defaults that differ from real vim / the nvim config:
+          # useSystemClipboard matches `set clipboard=unnamed`, hlsearch and
+          # highlightedyank match LazyVim, cursorSurroundingLines is LazyVim's
+          # scrolloff = 4. smartRelativeLine is left off on purpose: the nvim
+          # config sets relativenumber unconditionally.
+          "vim.leader"     = "<space>";
+          "vim.easymotion" = true;
+          "vim.useSystemClipboard"        = true;
+          "vim.hlsearch"                  = true;
+          "vim.highlightedyank.enable"    = true;
+          "editor.cursorSurroundingLines" = 4;
+          # LazyVim binds `s` to flash.nvim. easymotion's 2-char jump is the
+          # closest analogue: press s, type two characters, pick a label.
+          "vim.normalModeKeyBindingsNonRecursive" = [
+            { before = [ "s" ]; after = [ "<leader>" "<leader>" "2" "s" ]; }
+            # Harpoon, on LazyVim's harpoon-extra keys: H pins the file,
+            # h picks from the pins, 1-5 jump straight to a slot, m edits
+            # the pin list (reorder/delete lines, save).
+            { before = [ "<leader>" "H" ]; commands = [ "vscode-harpoon.addEditor" ]; }
+            { before = [ "<leader>" "h" ]; commands = [ "vscode-harpoon.editorQuickPick" ]; }
+            { before = [ "<leader>" "m" ]; commands = [ "vscode-harpoon.editEditors" ]; }
+          ] ++ map (n: {
+            before   = [ "<leader>" (toString n) ];
+            commands = [ "vscode-harpoon.gotoEditor${toString n}" ];
+          }) [ 1 2 3 4 5 ];
+          "vim.visualModeKeyBindingsNonRecursive" = [
+            { before = [ "s" ]; after = [ "<leader>" "<leader>" "2" "s" ]; }
+          ];
         };
       };
     };
 
+    # `eo` is a plain $PATH binary, so putting it here makes VSCodium the
+    # default target while still letting a project dev shell win by
+    # prepending its own.
+    home-manager.users.xin.home.packages = [
+      (pkgs.writeShellScriptBin "eo" ''
+        if [ "$#" -eq 0 ]; then
+          exec ${pkgs.vscodium}/bin/codium .
+        fi
+        exec ${pkgs.vscodium}/bin/codium "$@"
+      '')
+    ];
+
     home-manager.users.xin.home.file = {
       ".config/yazi/yazi.toml".text = ''
+        [mgr]
+        show_hidden    = false
+        sort_by        = "natural"
+        sort_dir_first = true
+        linemode       = "mtime"
+        scrolloff      = 5
+
+        # Enter on text/code opens VSCodium (detached); `O` offers nvim too
         [opener]
         edit = [
+          { run = 'codium "$@"', orphan = true, desc = "VSCodium" },
           { run = 'nvim "$@"', block = true, desc = "Neovim" },
         ]
       '';
 
       ".config/yazi/keymap.toml".text = ''
-        [[manager.prepend_keymap]]
+        [[mgr.prepend_keymap]]
         on   = [ "d" ]
         run  = "shell 'trash-put \"$@\"' --confirm"
         desc = "Move to trash"
 
-        [[manager.prepend_keymap]]
+        [[mgr.prepend_keymap]]
         on   = [ "D" ]
         run  = "remove --permanently"
         desc = "Permanently delete"
-      '';
 
-      ".config/zellij/config.kdl".text = ''
-        pane_frames false
-        simplified_ui true
-        default_layout "bare"
-        show_startup_tips false
-        show_release_notes false
-        copy_on_select true
-        scrollback_editor "nvim"
+        [[mgr.prepend_keymap]]
+        on   = [ "e" ]
+        run  = "shell 'nvim \"$@\"' --block"
+        desc = "Edit in Neovim"
 
-        keybinds {
-          normal {
-            bind "Ctrl e" { EditScrollback; SwitchToMode "Normal"; }
-          }
-          scroll {
-            bind "Up"       { ScrollUp; }
-            bind "Down"     { ScrollDown; }
-            bind "PageUp"   { PageScrollUp; }
-            bind "PageDown" { PageScrollDown; }
-            bind "Home"     { ScrollToTop; }
-            bind "End"      { ScrollToBottom; }
-          }
-        }
-      '';
+        [[mgr.prepend_keymap]]
+        on   = [ "C" ]
+        run  = "shell 'codium .' --orphan"
+        desc = "Open directory in VSCodium"
 
-      ".config/zellij/layouts/bare.kdl".text = ''
-        layout {
-          pane
-        }
+        # t/T match the shell's zoxide `t`; new tab moves to Ctrl-t
+        [[mgr.prepend_keymap]]
+        on   = [ "t" ]
+        run  = "plugin zoxide"
+        desc = "Jump via zoxide"
+
+        [[mgr.prepend_keymap]]
+        on   = [ "T" ]
+        run  = "plugin fzf"
+        desc = "Jump via fzf"
+
+        [[mgr.prepend_keymap]]
+        on   = [ "<C-t>" ]
+        run  = "tab_create --current"
+        desc = "New tab"
+
+        [[mgr.prepend_keymap]]
+        on   = [ "g", "p" ]
+        run  = "cd ~/Projects"
+        desc = "Go to Projects"
+
+        [[mgr.prepend_keymap]]
+        on   = [ "g", "t" ]
+        run  = "cd ~/Projects/Technonomicon"
+        desc = "Go to Technonomicon"
+
+        [[mgr.prepend_keymap]]
+        on   = [ "g", "r" ]
+        run  = "cd ~/Grimoire"
+        desc = "Go to Grimoire"
       '';
     };
 
@@ -377,19 +610,6 @@
               keys = {
                 { "<leader>cb", "<cmd>Telescope bibtex<cr>", desc = "BibTeX references" },
               },
-            }
-          '';
-
-          qalc = ''
-            return {
-              "Apeiros-46B/qalc.nvim",
-              cmd  = { "Qalc", "QalcAttach", "QalcYank" },
-              keys = {
-                { "<leader>q", "<cmd>Qalc<cr>", desc = "Qalc calculator" },
-              },
-              config = function()
-                require("qalc").setup({})
-              end,
             }
           '';
         };

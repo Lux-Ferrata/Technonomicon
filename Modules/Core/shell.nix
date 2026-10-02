@@ -7,23 +7,12 @@
       mode  = "0400";
     };
 
+    # fish is the interactive/login shell; xonsh stays installed for scripting
+    programs.fish.enable = true;
+
     programs.xonsh = {
       enable = true;
       extraPackages = ps: [
-        (ps.buildPythonPackage {
-          pname = "xontrib-fzf-widgets";
-          version = "0-unstable-2020-10-16";
-          src = pkgs.fetchFromGitHub {
-            owner = "laloch";
-            repo = "xontrib-fzf-widgets";
-            rev = "8af47d1d684a14eb776485ef6f5c30c8e6807f60";
-            hash = "sha256-lz0oiQSLCIQbnoQUi+NJwX82SbUvXJ+3dEsSbOb20q4=";
-          };
-          pyproject = true;
-          build-system = [ ps.setuptools ];
-          doCheck = false;
-        })
-
         (ps.buildPythonPackage rec {
           pname = "xonsh-direnv";
           version = "1.6.5";
@@ -46,8 +35,6 @@
     };
 
     home-manager.users.xin = {
-      home.file.".config/xonsh/rc.xsh".source = ./_config.xsh;
-
       programs.git = {
         enable = true;
         settings = {
@@ -83,16 +70,193 @@
         gitCredentialHelper.enable = true;
       };
 
-      programs.broot = {
+      programs.fish = {
         enable = true;
-        settings.verbs = [
-          {
-            key = "enter";
-            execution = "nvim {file}";
-            leave_broot = true;
-            apply_to = "file";
-          }
+
+        interactiveShellInit = ''
+          # keep `nix shell` / `nix develop` in fish instead of dropping to bash
+          nix-your-shell fish | source
+
+          # fzf.fish: Ctrl-T files, Ctrl-Alt-L git log, Ctrl-Alt-S git status.
+          # History belongs to atuin; Ctrl-V stays paste.
+          fzf_configure_bindings --directory=\ct --history= --variables=
+        '';
+
+        shellAbbrs = {
+          gst  = "git status -sb";
+          gco  = "git checkout";
+          gl   = "git log --oneline -n 10";
+          cpv  = "rsync -h --progress";
+          cx   = "claude";
+          cr   = "claude --resume";
+          tn   = "cd ~/Projects/Technonomicon";
+          gr   = "cd ~/Grimoire";
+          pj   = "cd ~/Projects";
+          pb   = "cd ~/Projects/Personal-Blog/content/posts";
+          dl   = "cd ~/Downloads";
+          bzip = "bzip3";
+          book-dl   = "aria2c -x 16 -s 16";
+          power-off = "bash /etc/scripts/clean-power-off.sh";
+          restart   = "bash /etc/scripts/clean-reboot.sh";
+          logout    = "sudo kill -9 -1";
+        };
+
+        shellAliases = {
+          cat  = "bat";
+          # uutils cp/mv have a built-in progress bar (-g), GNU ones don't;
+          # interactive only, scripts still get GNU coreutils
+          cp   = "uutils-cp -r -g";
+          mv   = "uutils-mv -g";
+          dd   = "caligula burn";
+          find = "fd -g -i";
+          grep = "rg -i";
+
+          rm   = "trash-put -v";
+          rm-s = "shred -f";
+          rm-r = "trash-restore";
+
+          ll  = "eza --icons --oneline --group-directories-first --color auto";
+          lx  = "eza --icons --oneline --group-directories-first --color auto --all";
+          ls  = "eza --icons --oneline --group-directories-first --color auto --long";
+          lsx = "eza --icons --oneline --group-directories-first --color auto --long --all";
+          lld = "eza --icons --oneline --group-directories-first --color auto --tree";
+          lxd = "eza --icons --oneline --group-directories-first --color auto --tree --all --ignore-glob='??????????????????????????????????????'";
+          ld  = "eza --icons --oneline --only-dirs --color auto";
+        };
+
+        functions = {
+          # prompt starts at the bottom of the window, with the home listing above it
+          fish_greeting = ''
+            string repeat -n 100 \n
+            eza --icons --oneline --group-directories-first --color=always
+          '';
+
+          __tn_auto_ls = {
+            onVariable = "PWD";
+            body = "status is-interactive; and eza --icons --oneline --group-directories-first --color=always";
+          };
+
+          tnc = "cd ~/Projects/Technonomicon; and claude $argv";
+          tnr = "cd ~/Projects/Technonomicon; and claude --resume $argv";
+          grc = "cd ~/Grimoire; and claude $argv";
+          grr = "cd ~/Grimoire; and claude --resume $argv";
+
+          ca = ''
+            clear
+            string repeat -n 100 \n
+          '';
+
+          # yazi, then cd to wherever it was quit from
+          y = ''
+            set tmp (mktemp -t "yazi-cwd.XXXXXX")
+            yazi $argv --cwd-file="$tmp"
+            if read -z cwd < "$tmp"; and test -n "$cwd"; and test "$cwd" != "$PWD"
+              builtin cd -- "$cwd"
+            end
+            command rm -f -- "$tmp"
+          '';
+
+          copypath = ''
+            pwd | string collect | wl-copy
+            echo "📋 Copied current path: $PWD"
+          '';
+
+          copyfile = ''
+            if test (count $argv) -eq 0
+              echo "Usage: copyfile <filename>"; return 1
+            end
+            wl-copy < $argv[1]; and echo "📋 Copied contents of $argv[1]"
+          '';
+
+          rg-menu  = "rg -i -- \"$argv[1]\" | fzf";
+          rgx-menu = "rg -- \"$argv[1]\" | fzf";
+          fd-menu  = "fd -i -- \"$argv[1]\" | fzf";
+          fdx-menu = "fd --regex -- \"$argv[1]\" | fzf";
+
+          monitor_command = ''
+            if test (count $argv) -eq 0
+              echo "Usage: monitor_command <command> [args...]"; return 1
+            end
+            command $argv &
+            set -l pid $last_pid
+            progress -mp $pid
+            wait $pid
+          '';
+
+          pdf-split = ''
+            if test (count $argv) -eq 0
+              echo "Usage: pdf-split <filename.pdf>"; return 1
+            end
+            nix shell nixpkgs#ocamlPackages.cpdf -c cpdf -split-bookmarks 0 $argv[1] -utf8 -o '@B.pdf'
+          '';
+
+          # open a file in nvim in a fresh, detached ghostty window
+          eon = ''
+            if test (count $argv) -eq 0
+              echo "Usage: eon <file>"; return 1
+            end
+            set -l file (path resolve $argv[1])
+            ghostty --working-directory=(path dirname $file) -e nvim $file &>/dev/null &
+            disown
+          '';
+        };
+
+        plugins = [
+          { name = "fzf-fish"; src = pkgs.fishPlugins.fzf-fish.src; }
+          # desktop notification when a long command finishes unfocused
+          { name = "done";     src = pkgs.fishPlugins.done.src; }
+          { name = "autopair"; src = pkgs.fishPlugins.autopair.src; }
         ];
+      };
+
+      # syntax-highlighted git diffs (git diff/log -p/show, lazygit)
+      programs.delta = {
+        enable = true;
+        enableGitIntegration = true;
+        options = {
+          navigate     = true;   # n/N jump between files
+          line-numbers = true;
+        };
+      };
+
+      # `tldr <cmd>`: a handful of examples instead of the whole man page
+      programs.tealdeer = {
+        enable = true;
+        settings.updates.auto_update = true;
+      };
+
+      # coloured man pages, via bat
+      home.sessionVariables = {
+        MANPAGER   = "sh -c 'col -bx | bat -l man -p'";
+        MANROFFOPT = "-c";
+      };
+
+      # Ctrl-R: fuzzy, SQLite-backed history shared live across every terminal.
+      # Up stays fish's own prefix search.
+      programs.atuin = {
+        enable = true;
+        enableFishIntegration = true;
+        flags = [ "--disable-up-arrow" ];
+        settings = {
+          search_mode   = "fuzzy";
+          filter_mode   = "global";
+          style         = "compact";
+          inline_height = 20;
+          enter_accept  = false;
+          update_check  = false;
+        };
+      };
+
+      # `t foo` jumps, `ti` picks — z is an awkward reach on Colemak-DH
+      programs.zoxide = {
+        enable = true;
+        enableFishIntegration = true;
+        options = [ "--cmd" "t" ];
+      };
+
+      programs.carapace = {
+        enable = true;
+        enableFishIntegration = true;
       };
 
     };
@@ -100,9 +264,14 @@
     programs.starship = {
       enable = true;
       settings = {
-        format = "$directory$nix_shell$git_branch$git_commit$git_state$git_status\n$character";
+        format = "$directory$nix_shell$git_branch$git_commit$git_state$git_status$cmd_duration\n$character";
         time.disabled = true;
-        cmd_duration.disabled = true;
+
+        cmd_duration = {
+          min_time = 3000;
+          style = "#768390";
+          format = "[took $duration]($style) ";
+        };
 
         character = {
           success_symbol = "[❯](#539bf5)";
@@ -172,6 +341,7 @@
 
     environment.systemPackages = with pkgs; [
       nix-your-shell
+      uutils-coreutils   # prefixed (uutils-cp, …) so GNU coreutils stays the default
       gitFull
       git-lfs
       jujutsu

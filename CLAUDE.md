@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Personal NixOS system configuration ("Technonomicon") for two machines:
 - **Akmon** — desktop with Nvidia GPU, Kinesis Advantage2 keyboard
-- **Kvasir** — Lenovo ThinkPad T480s laptop, runs xonsh
+- **Kvasir** — Lenovo ThinkPad T480s laptop, runs fish
 
 ## Distraction blocking — do not disable
 
@@ -87,9 +87,9 @@ All shared modules are prefixed `Tn-` (Technonomicon):
 
 **Core/**
 - `Tn-desktop` — wayland/wm, greetd, kanata, pipewire, fonts, dconf, GTK theme
-- `Tn-hyprland` — Hyprland WM, Quickshell bar, hypridle, hyprlock, keybindings, Ghostty terminal config
-- `Tn-neovim` — LazyVim + Neovim, dev tooling (LSPs, compilers, formatters), VSCodium, Zellij, Yazi
-- `Tn-shell` — xonsh, direnv, starship, git, core CLI tools
+- `Tn-hyprland` — Hyprland WM, Quickshell bar, hypridle, hyprlock, keybindings, Ghostty terminal config (no multiplexer)
+- `Tn-neovim` — LazyVim + Neovim, dev tooling (LSPs, compilers, formatters), VSCodium, Yazi
+- `Tn-shell` — fish (interactive/login), xonsh (scripting only), atuin, carapace, zoxide (`t`/`ti`), direnv, starship, git, core CLI tools
 - `Tn-network` — networking
 - `Tn-nix` — nix daemon settings, nh, nix-index/comma
 - `Tn-sound` — PipeWire / audio
@@ -130,7 +130,6 @@ sops _secrets.yaml
 
 Files prefixed with `_` are config files sourced directly into modules (not installed separately):
 - `_kanata.kbd` — keyboard remapping (Colemak-DH + home-row mods + nav/num layers)
-- `_config.xsh` — xonsh shell config
 - `_fcitx5-config`, `_gromit-mpx.cfg/.ini` — input method / screen annotation configs
 
 ### Kanata keyboard layout

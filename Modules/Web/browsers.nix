@@ -94,6 +94,7 @@
         "abnjjjimjlbgandfdmgggedmkamigpcp;https://clients2.google.com/service/update2/crx" # Monkey Brain
         "emhhlhigmokehndjjmgnailciakdmoba;https://clients2.google.com/service/update2/crx" # 101weiqiLocalizer
         "mnjggcdmjocbbbhaepdhchncahnbgone;https://clients2.google.com/service/update2/crx" # SponsorBlock
+        "cjnmckjndlpiamhfimnnjmnckgghkjbl;https://clients2.google.com/service/update2/crx" # Competitive Companion
       ];
 
       "URLBlocklist" = [

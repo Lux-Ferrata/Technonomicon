@@ -15,6 +15,8 @@
           IRkernel
         ];
       })
+      # Interactive graphing (offline Desmos stand-in; SUPER+ALT+C)
+      geogebra6
       # Symbolic / computer algebra
       maxima
       gap

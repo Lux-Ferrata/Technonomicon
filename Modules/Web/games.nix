@@ -9,6 +9,16 @@
       hyperspeedcube
       exercism
       weiqi-hub
+
+      # nixpkgs' hyperspeedcube ships no .desktop file.
+      (makeDesktopItem {
+        name        = "hyperspeedcube";
+        desktopName = "Cube";
+        exec        = "${hyperspeedcube}/bin/hyperspeedcube";
+        terminal    = false;
+        keywords    = [ "cube" "rubik" "puzzle" "hyperspeedcube" "4d" ];
+        categories  = [ "Game" "LogicGame" ];
+      })
     ];
   };
 }

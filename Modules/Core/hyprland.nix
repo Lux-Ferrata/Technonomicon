@@ -78,16 +78,6 @@
       ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
 
-    layoutToggle = pkgs.writeShellScript "tn-layout-toggle" ''
-      LAYOUT_DIR=/tmp/tn-ws-layouts
-      mkdir -p "$LAYOUT_DIR"
-      WS=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq -r '.id')
-      CURRENT=$(cat "$LAYOUT_DIR/$WS" 2>/dev/null || echo monocle)
-      if [ "$CURRENT" = scrolling ]; then NEW=monocle; else NEW=scrolling; fi
-      echo "$NEW" > "$LAYOUT_DIR/$WS"
-      ${hyprlandPkg}/bin/hyprctl eval "hl.config({general = {layout = '$NEW'}})"
-    '';
-
     winPull = pkgs.writeShellScript "tn-win-pull" ''
       WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
       ACTIVE=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address')
@@ -191,6 +181,7 @@
           allow_images = true;
           image_size   = 64;
           insensitive  = true;
+          matching     = "fuzzy";
           no_actions   = true;
         };
         style = ''
@@ -231,6 +222,47 @@
         '';
       };
 
+      # App launcher (Super+Space). Ranks by match quality, then launch count,
+      # so among equally good partial matches the most-used app wins. wofi
+      # stays for the dmenu-style pickers above.
+      programs.fuzzel = {
+        enable = true;
+        settings = {
+          main = {
+            font            = "JetBrainsMono Nerd Font:size=18";
+            terminal        = "ghostty -e";
+            icon-theme      = "Adwaita";
+            # no filename: "youtube-music.desktop" would match "youtube"
+            fields          = "name,generic,keywords";
+            width           = 50;
+            lines           = 12;
+            horizontal-pad  = 24;
+            vertical-pad    = 16;
+            inner-pad       = 12;
+            prompt          = "\"❯ \"";
+            layer           = "overlay";
+          };
+          colors = {
+            background      = "${palette.base00}ff";
+            text            = "${palette.base05}ff";
+            prompt          = "${palette.base0D}ff";
+            input           = "${palette.base05}ff";
+            placeholder     = "${palette.base03}ff";
+            match           = "${palette.base0D}ff";
+            selection       = "${palette.base02}ff";
+            selection-text  = "${palette.base0D}ff";
+            selection-match = "${palette.base0E}ff";
+            counter         = "${palette.base03}ff";
+            border          = "${palette.base03}ff";
+          };
+          border = {
+            width            = 1;
+            radius           = 4;
+            selection-radius = 4;
+          };
+        };
+      };
+
       programs.ghostty = {
         enable = true;
         settings = {
@@ -238,8 +270,10 @@
           font-size             = 12;
           "window-decoration"   = "none";
           theme                 = "tn";
-          keybind               = "ctrl+k=reset";
-          command               = "zellij";
+          keybind               = [
+            "ctrl+k=reset"
+            "ctrl+shift+e=write_scrollback_file:open"
+          ];
           "confirm-close-surface" = false;
         };
       };
@@ -332,7 +366,15 @@
           general = {
             lock_cmd         = "pidof hyprlock || hyprlock";
             before_sleep_cmd = "loginctl lock-session";
-            after_sleep_cmd  = "hyprctl eval \"hl.dispatch(hl.dsp.dpms('on'))\"";
+            # hl.dsp.dpms() IGNORES its argument in Hyprland 0.56 -- it is
+            # toggle-only -- and monitor.dpms_status is read-only, so there is
+            # no "turn the panel on" primitive to call here. The old
+            # dpms('on') therefore TOGGLED the panel OFF on every resume, and
+            # with both dpms wake options below defaulting to false that left
+            # a black screen recoverable only by a hard reboot.
+            # So: toggle only when a monitor is actually off, making this a
+            # no-op on a panel that resumed fine. Verified both ways on Kvasir.
+            after_sleep_cmd  = "hyprctl eval \"local off=false for _,m in ipairs(hl.get_monitors()) do if not m.dpms_status then off=true end end if off then hl.dispatch(hl.dsp.dpms(0)) end\"";
           };
           # No idle listeners: the screen never blanks or auto-locks on idle.
           # Locking/DPMS on real suspend is still handled by general.* above.
@@ -402,14 +444,6 @@
           })
 
           hl.window_rule({
-            name   = "qalc-nvim-scratchpad",
-            match  = { class = "qalc-nvim" },
-            float  = true,
-            size   = "800 500",
-            center = true,
-          })
-
-          hl.window_rule({
             name   = "technonomicon-float",
             match  = { title = "technonomicon" },
             float  = true,
@@ -457,16 +491,6 @@
             fullscreen = true,
           })
 
-          hl.on("workspace.active", function(ws)
-            local f = io.open("/tmp/tn-ws-layouts/" .. tostring(ws.id), "r")
-            local layout = "monocle"
-            if f then
-              layout = f:read("*l") or "monocle"
-              f:close()
-            end
-            hl.config({general = {layout = layout}})
-          end)
-
           hl.on("hyprland.start", function()
             hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE GDK_BACKEND")
             hl.exec_cmd("quickshell")
@@ -501,7 +525,25 @@
                 active_border   = "rgba(${palette.base0D}ee)",
                 inactive_border = "rgba(${palette.base03}aa)",
               },
-              layout = "monocle",
+              layout = "scrolling",
+            },
+            scrolling = {
+              -- Columns are full-width by default; SUPER+left/right
+              -- scrolls through them one screen at a time, so the workflow
+              -- still reads as "one window at a time" like monocle did, but
+              -- with the whole workspace laid out on a tape behind it.
+              column_width = 1.0,
+              -- SUPER+SHIFT+W cycles this list with `colresize +conf`, so a
+              -- two-entry list is exactly a full-width <-> half-width toggle.
+              explicit_column_widths = "0.5, 1.0",
+              fullscreen_on_one_column = true,
+              -- Focusing a window (incl. from the SUPER+B pickers) scrolls
+              -- the tape to bring it on screen.
+              follow_focus = true,
+              focus_fit_method = 1,
+              -- Wrap at the ends, matching the old monocle cyclenext/cycleprev.
+              wrap_focus = true,
+              wrap_swapcol = true,
             },
             decoration = {
               rounding = 4,
@@ -524,21 +566,29 @@
               disable_hyprland_logo    = true,
               disable_splash_rendering = true,
               background_color         = "rgb(${palette.base00})",
+              -- Escape hatch: if the panel ever ends up DPMS-off unexpectedly
+              -- (bad resume, stray dpms toggle), let input wake it back up
+              -- rather than leaving a black screen that needs a hard reboot.
+              key_press_enables_dpms   = true,
+              mouse_move_enables_dpms  = true,
+              -- If hyprlock dies while holding the ext-session-lock, let a new
+              -- lock client attach instead of stranding the session locked
+              -- forever with nothing able to accept a password.
+              allow_session_lock_restore = true,
             },
             ecosystem = {
               no_update_news = true,
             },
           })
 
-          hl.bind(mainMod .. " + Space",      hl.dsp.exec_cmd("wofi --show drun --sort-order=alphabetical"))
+          hl.bind(mainMod .. " + Space",      hl.dsp.exec_cmd("fuzzel"))
           hl.bind(mainMod .. " + T",          hl.dsp.exec_cmd(terminal))
           hl.bind(mainMod .. " + S",          hl.dsp.exec_cmd("brave"))
           hl.bind(mainMod .. " + D",          hl.dsp.window.close())
           hl.bind(mainMod .. " + SHIFT + D",  hl.dsp.exec_cmd("${pkillMenu}"))
           hl.bind(mainMod .. " + Q",          hl.dsp.exec_cmd("hyprlock"))
           hl.bind(mainMod .. " + SHIFT + Q",  hl.dsp.exec_cmd("${pkgs.systemd}/bin/systemd-run --user --no-block --collect /etc/scripts/clean-power-off.sh"))
-          hl.bind(mainMod .. " + F",          hl.dsp.exec_cmd("ghostty -e broot $HOME"))
-          hl.bind(mainMod .. " + SHIFT + F",  hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
+          hl.bind(mainMod .. " + F",          hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
           hl.bind(mainMod .. " + ALT + F",    hl.dsp.exec_cmd("nemo"))
           hl.bind(mainMod .. " + 0",          hl.dsp.exec_cmd("ghostty --title=grimoire-inbox -e nvim $HOME/Grimoire/Inbox.md"))
           hl.bind(mainMod .. " + SHIFT + 0",  hl.dsp.exec_cmd("ghostty --title=technonomicon -e nvim $HOME/Projects/Technonomicon/README.md"))
@@ -556,20 +606,52 @@
           hl.bind(mainMod .. " + SHIFT + equal", hl.dsp.window.resize({ x = 0, y =  100, relative = true }))
 
           hl.bind(mainMod .. " + ALT + G",    hl.dsp.exec_cmd("${pkgs.brave}/bin/brave --app=https://gemini.google.com/app --start-maximized"))
-          hl.bind(mainMod .. " + C",          hl.dsp.exec_cmd("ghostty --class=qalc-nvim --title=qalc-nvim -e nvim +Qalc"))
-          hl.bind(mainMod .. " + ALT + C",    hl.dsp.exec_cmd("qalculate-gtk"))
+          hl.bind(mainMod .. " + C",          hl.dsp.exec_cmd("qalculate-gtk"))
+          hl.bind(mainMod .. " + ALT + C",    hl.dsp.exec_cmd("geogebra"))
           hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&filepath=Home.md&openmode=window'"))
           hl.bind(mainMod .. " + ALT + N",    hl.dsp.exec_cmd("obsidian"))
           hl.bind(mainMod .. " + ALT + A",    hl.dsp.exec_cmd("anki"))
           hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
 
-          hl.bind(mainMod .. " + left",  hl.dsp.layout("cycleprev"))
-          hl.bind(mainMod .. " + right", hl.dsp.layout("cyclenext"))
+          -- Focus: left/right walks the scroll order, up/down walks the
+          -- windows stacked inside the focused column.
+          hl.bind(mainMod .. " + left",  hl.dsp.layout("focus l"))
+          hl.bind(mainMod .. " + right", hl.dsp.layout("focus r"))
+          hl.bind(mainMod .. " + up",    hl.dsp.layout("focus u"))
+          hl.bind(mainMod .. " + down",  hl.dsp.layout("focus d"))
 
-          hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.window.swap({ direction = "left"  }))
-          hl.bind(mainMod .. " + SHIFT + right", hl.dsp.window.swap({ direction = "right" }))
-          hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.swap({ direction = "up"    }))
-          hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.swap({ direction = "down"  }))
+          -- Move: left/right reorders the window in the scroll order,
+          -- up/down reorders it inside its column.
+          hl.bind(mainMod .. " + SHIFT + left",  hl.dsp.layout("swapcol l"))
+          hl.bind(mainMod .. " + SHIFT + right", hl.dsp.layout("swapcol r"))
+          hl.bind(mainMod .. " + SHIFT + up",    hl.dsp.window.move({ direction = "up"   }))
+          hl.bind(mainMod .. " + SHIFT + down",  hl.dsp.window.move({ direction = "down" }))
+
+          -- Side by side vs. one at a time. Columns are separate windows on
+          -- the tape, so "split vertically" is just making every column half
+          -- width; it is not a consume operation.
+          --
+          -- `colresize all` must be paired with `fit_into_view`: its branch in
+          -- ScrollingAlgorithm returns before the scope guard that re-fits the
+          -- column, so it resizes without touching the camera offset and
+          -- leaves the focused window scrolled off-screen. hl.bind takes a
+          -- function as well as a dispatcher, so the two go in one bind.
+          local function colWidthAll(width)
+            return function()
+              hl.dispatch(hl.dsp.layout("colresize all " .. width))
+              hl.dispatch(hl.dsp.layout("fit_into_view"))
+            end
+          end
+
+          hl.bind(mainMod .. " + ALT + right", colWidthAll("0.5"))
+          hl.bind(mainMod .. " + ALT + left",  colWidthAll("1.0"))
+
+          -- Stack the focused window into a neighbouring column / pull it back
+          -- out into one of its own. Windows inside a column stack top to
+          -- bottom, so this lives on the vertical arrows. prev/next still mean
+          -- the column to the left/right: up works leftward, down rightward.
+          hl.bind(mainMod .. " + ALT + up",   hl.dsp.layout("consume_or_expel prev"))
+          hl.bind(mainMod .. " + ALT + down", hl.dsp.layout("consume_or_expel next"))
 
           for i = 1, 9 do
             hl.bind(mainMod .. " + " .. i,         hl.dsp.focus({ workspace = i }))
@@ -589,7 +671,9 @@
           hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPicker}"))
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))
 
-          hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("${layoutToggle}"))
+          hl.bind(mainMod .. " + SHIFT + W", hl.dsp.layout("colresize +conf"))
+          hl.bind(mainMod .. " + ALT + W",   hl.dsp.layout("fit visible"))
+          hl.bind(mainMod .. " + CTRL + W",  hl.dsp.layout("center"))
 
           hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),             { mouse = true })
           hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(),           { mouse = true })

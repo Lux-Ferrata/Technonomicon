@@ -32,6 +32,11 @@
     hyprland.inputs.nixpkgs.follows = "nixpkgs";
 
     nix-colors.url = "github:misterio77/nix-colors";
+
+    # Open VSX / marketplace extensions that nixpkgs does not package
+    # (quarto.quarto in particular). Pinned like any other input.
+    nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
+    nix-vscode-extensions.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs@{ self, flake-parts, import-tree, ... }:

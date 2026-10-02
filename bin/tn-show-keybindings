@@ -21,6 +21,7 @@ grep 'hl\.bind(' "$CONFIG" \
       -e 's/,.*hl\.dsp\.window\.resize.*/  →  resize window/' \
       -e 's/,.*hl\.dsp\.focus.*/  →  focus/' \
       -e 's/,.*hl\.dsp\.exit().*/  →  exit hyprland/' \
+      -e 's/,.*hl\.dsp\.layout(\([^)]*\)).*/  →  layout: \1/' \
       -e 's/,.*hl\.dsp\.layout.*/  →  layout/' \
       -e 's/,.*hl\.dsp\.workspace.*/  →  workspace/' \
       -e 's/,.*hl\.dsp\..*/  →  action/' \
