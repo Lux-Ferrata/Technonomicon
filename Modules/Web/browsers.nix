@@ -17,6 +17,9 @@
               "--disable-features=BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
               "--hide-crash-restore-bubble"
               "--password-store=basic"
+              # fcitx5 (Pinyin) over Wayland's text-input-v3
+              "--enable-wayland-ime"
+              "--wayland-text-input-version=3"
             ];
           }).overrideAttrs (oldAttrs: {
             postFixup = (oldAttrs.postFixup or "") + ''

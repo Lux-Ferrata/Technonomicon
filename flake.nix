@@ -4,6 +4,10 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     nixpkgs-stable.url = "github:nixos/nixpkgs/nixos-26.05";
+    # Zotero 10.0.2 only. Unstable's 10.0.2 fails to build (2026-10-01) and
+    # stable is on 9.x, which can't open a library 10 has already upgraded.
+    # Drop this input once unstable builds zotero again.
+    nixpkgs-zotero.url = "github:nixos/nixpkgs/b1b875982b17dabde9b4a37f3e229e74913e6db3";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
     import-tree.url = "github:vic/import-tree";

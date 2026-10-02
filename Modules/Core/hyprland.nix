@@ -98,6 +98,32 @@
       for i in $(seq 1 25); do ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.window.move({direction='left'}))"; done
     '';
 
+    # region|full: a slurp selection or the focused monitor, sent to the
+    # clipboard or saved to ~/Downloads (Shift = save, Alt = full screen).
+    screenshot = pkgs.writeShellScript "tn-screenshot" ''
+      set -eu
+      mode="$1" dest="$2"   # region|full  clip|save|both
+      file="$HOME/Downloads/screenshot-$(date +%Y-%m-%d_%H-%M-%S).png"
+      tmp=$(mktemp --suffix=.png)
+      trap 'rm -f "$tmp"' EXIT
+
+      if [ "$mode" = region ]; then
+        geom=$(${pkgs.slurp}/bin/slurp) || exit 0
+        ${pkgs.grim}/bin/grim -g "$geom" "$tmp"
+      else
+        mon=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq -r '.monitor')
+        ${pkgs.grim}/bin/grim -o "$mon" "$tmp"
+      fi
+
+      case "$dest" in clip|both) ${pkgs.wl-clipboard}/bin/wl-copy --type image/png < "$tmp" ;; esac
+      case "$dest" in
+        save|both)
+          mkdir -p "$HOME/Downloads"
+          cp "$tmp" "$file"
+          ${pkgs.libnotify}/bin/notify-send "Screenshot saved" "$(basename "$file")" ;;
+      esac
+    '';
+
     pkillMenu = pkgs.writeShellScript "tn-pkill-menu" ''
       CHOICE=$(${pkgs.procps}/bin/ps -u "$USER" -o comm= | sort -u | \
         ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "pkill")
@@ -114,6 +140,7 @@
     environment.systemPackages = with pkgs; [
       wlKbptr
       wofi
+      xdg-terminal-exec   # lets xdg-open/gio launch Terminal=true apps (nvim.desktop) in ghostty
       quickshell
       hypridle
       bibata-cursors
@@ -163,6 +190,37 @@
         source     = tnShowKeybindings;
         executable = true;
       };
+
+      # the terminal xdg-terminal-exec opens Terminal=true desktop entries in
+      xdg.configFile."xdg-terminals.list".text = "com.mitchellh.ghostty.desktop\n";
+
+      # Keyboard pointer. Super+G: hint mode (OpenCV finds clickable things,
+      # type a label to click it). Super+Shift+G: tile grid, then bisect to
+      # refine; g/h/b = left/right/middle click (by key position).
+      xdg.configFile."wl-kbptr/config".text = ''
+        [general]
+        modes=tile,bisect
+
+        [mode_tile]
+        label_color=#${palette.base05}ff
+        label_select_color=#${palette.base0D}ff
+        unselectable_bg_color=#${palette.base00}66
+        selectable_bg_color=#${palette.base0D}22
+        selectable_border_color=#${palette.base0D}88
+        label_font_family=JetBrainsMono Nerd Font
+
+        [mode_floating]
+        label_color=#${palette.base00}ff
+        label_select_color=#${palette.base0D}ff
+        unselectable_bg_color=#${palette.base00}44
+        selectable_bg_color=#${palette.base0A}dd
+        selectable_border_color=#${palette.base0A}ff
+        label_font_family=JetBrainsMono Nerd Font
+
+        [mode_bisect]
+        label_font_family=JetBrainsMono Nerd Font
+        pointer_color=#${palette.base08}dd
+      '';
 
       home.file.".local/share/tn/bin/tn-show-snippets" = {
         source     = tnShowSnippets;
@@ -408,7 +466,6 @@
           hl.env("HYPRCURSOR_SIZE",    "24")
           hl.env("SDL_VIDEODRIVER",    "wayland")
           hl.env("MOZ_ENABLE_WAYLAND", "1")
-          hl.env("QT_STYLE_OVERRIDE",  "kvantum")
           hl.env("EDITOR",             "nvim")
           hl.env("GTK_THEME",          "Adwaita:dark")
           hl.env("GDK_SCALE",          "${toString nixosCfg.tn.scale}")
@@ -433,6 +490,17 @@
             float  = true,
             size   = "860 600",
             center = true,
+          })
+
+          -- Bitwarden's extension pop-out (Brave class
+          -- brave-<ext-id>__popup_index.html-Default). Tiled, it is stretched
+          -- to a full-width column and renders half-drawn until a redraw.
+          hl.window_rule({
+            name     = "bitwarden-popout",
+            match    = { class = ".*nngceckbapebfimnlniiiahkandclblb.*" },
+            float    = true,
+            max_size = "480 650",
+            center   = true,
           })
 
           hl.window_rule({
@@ -461,13 +529,13 @@
 
           hl.window_rule({
             name  = "pavucontrol-float",
-            match = { class = "pavucontrol" },
+            match = { class = "org.pulseaudio.pavucontrol" },
             float = true,
           })
 
           hl.window_rule({
-            name  = "blueberry-float",
-            match = { class = "blueberry.py" },
+            name  = "blueman-float",
+            match = { class = ".*blueman-manager.*" },
             float = true,
           })
 
@@ -499,7 +567,8 @@
             hl.exec_cmd("wl-clip-persist --clipboard regular")
             hl.exec_cmd("clipse -listen")
             hl.exec_cmd("hyprsunset")
-            hl.exec_cmd("systemctl --user start hyprpolkitagent")
+            hl.exec_cmd("${pkgs.hyprpolkitagent}/libexec/hyprpolkitagent")
+            hl.exec_cmd("fcitx5 -d --replace")
             hl.exec_cmd("[workspace 8 silent] obsidian")
             -- hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
             hl.exec_cmd("[workspace 9 silent] ${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized")
@@ -665,8 +734,18 @@
           hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 10%+"))
           hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"))
 
-          hl.bind("Print",           hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
-          hl.bind(mainMod .. " + Y", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
+          hl.bind("Print",                   hl.dsp.exec_cmd("${screenshot} region clip"))
+          hl.bind(mainMod .. " + Y",         hl.dsp.exec_cmd("${screenshot} region clip"))
+          hl.bind(mainMod .. " + SHIFT + Y", hl.dsp.exec_cmd("${screenshot} region save"))
+          hl.bind(mainMod .. " + ALT + Y",         hl.dsp.exec_cmd("${screenshot} full clip"))
+          hl.bind(mainMod .. " + SHIFT + ALT + Y", hl.dsp.exec_cmd("${screenshot} full save"))
+
+          -- English <-> Pinyin. Bound here rather than as an fcitx hotkey,
+          -- which only fires while a text field has focus.
+          hl.bind(mainMod .. " + Escape",    hl.dsp.exec_cmd("fcitx5-remote -t"))
+
+          hl.bind(mainMod .. " + G",         hl.dsp.exec_cmd("wl-kbptr -o modes=floating,click -o mode_floating.source=detect"))
+          hl.bind(mainMod .. " + SHIFT + G", hl.dsp.exec_cmd("wl-kbptr -o modes=tile,bisect"))
           hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd("${winPickerWs}"))
           hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPicker}"))
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))

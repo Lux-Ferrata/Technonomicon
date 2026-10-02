@@ -28,14 +28,35 @@
           waylandFrontend = true;
           addons = with pkgs; [
             fcitx5-gtk
-            qt6Packages.fcitx5-chinese-addons
-            fcitx5-hangul
-            fcitx5-mozc-ut
+            qt6Packages.fcitx5-chinese-addons   # pinyin
             qt6Packages.fcitx5-configtool
             fcitx5-nord
           ];
         };
       };
+    };
+
+    # English + Pinyin only. Super+Esc (Hyprland, `fcitx5-remote -t`) flips
+    # between them. force: fcitx5 had written its own keyboard-only profile.
+    home-manager.users.xin.xdg.configFile."fcitx5/profile" = {
+      force = true;
+      text = ''
+        [Groups/0]
+        Name=Default
+        Default Layout=us
+        DefaultIM=pinyin
+
+        [Groups/0/Items/0]
+        Name=keyboard-us
+        Layout=
+
+        [Groups/0/Items/1]
+        Name=pinyin
+        Layout=
+
+        [GroupOrder]
+        0=Default
+      '';
     };
   };
 }

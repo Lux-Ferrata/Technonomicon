@@ -1,6 +1,11 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-learning = { pkgs, config, ... }:
   let
+    # see the nixpkgs-zotero input in flake.nix
+    zotero = (import inputs.nixpkgs-zotero {
+      inherit (pkgs.stdenv.hostPlatform) system;
+    }).zotero;
+
     srl = pkgs.python3Packages.buildPythonPackage rec {
       pname = "srl";
       version = "20.0.0";
@@ -28,7 +33,7 @@
       # datasette  # broken: asgi-csrf dep marked broken in nixpkgs (2026-07); re-enable when fixed
       anki-bin
       srl
-      zotero
+      zotero   # pinned, see above
       onlyoffice-desktopeditors
       foliate
       zathura

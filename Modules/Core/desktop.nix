@@ -96,6 +96,27 @@
       "x-scheme-handler/about"   = "brave-browser.desktop";
       "x-scheme-handler/unknown" = "brave-browser.desktop";
       "x-scheme-handler/mailto"  = "brave-browser.desktop";
+
+      # Without these, whatever app last claimed the type won: folders opened
+      # in VSCodium, images in Brave, and zips in zathura's comic-book viewer.
+      "inode/directory"              = "nemo.desktop";
+      "image/png"                    = "imv.desktop";
+      "image/jpeg"                   = "imv.desktop";
+      "image/gif"                    = "imv.desktop";
+      "image/webp"                   = "imv.desktop";
+      "image/bmp"                    = "imv.desktop";
+      "image/tiff"                   = "imv.desktop";
+      "application/zip"              = "org.gnome.FileRoller.desktop";
+      "application/x-tar"            = "org.gnome.FileRoller.desktop";
+      "application/x-compressed-tar" = "org.gnome.FileRoller.desktop";
+      "application/x-7z-compressed"  = "org.gnome.FileRoller.desktop";
+      "application/vnd.rar"          = "org.gnome.FileRoller.desktop";
+    };
+
+    # Qt apps (sioyek, Anki, Krita, OBS…) in the same Adwaita-dark as GTK.
+    qt = {
+      enable = true;
+      style  = "adwaita-dark";
     };
 
     services.udev.extraRules = ''
@@ -126,6 +147,7 @@
       blueman
       gromit-mpx
       pavucontrol
+      file-roller
       wl-clipboard
       brightnessctl
       gnome-themes-extra

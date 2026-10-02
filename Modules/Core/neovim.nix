@@ -1,6 +1,6 @@
 { inputs, ... }: {
 
-  flake.nixosModules.Tn-neovim = { pkgs, ... }:
+  flake.nixosModules.Tn-neovim = { pkgs, pkgs-stable, ... }:
   let
     openVsx   = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.open-vsx;
     vscodeMkt = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.vscode-marketplace;
@@ -67,7 +67,7 @@
       ${pkgs.xdg-utils}/bin/xdg-open "obsidian://open?path=$ENCODED_PATH"
       # This Hyprland build is Lua-only: `hyprctl dispatch` is rejected, so
       # dispatches must go through `hyprctl eval "hl.dispatch(...)"`.
-      hyprctl eval "hl.dispatch(hl.dsp.focus({window='class:^([oO]bsidian)$'}))"
+      hyprctl eval "hl.dispatch(hl.dsp.focus({window='class:^md.obsidian.Obsidian$'}))"
     '';
   in {
 
@@ -98,8 +98,9 @@
       python3Packages.debugpy
       # Accounting
       beancount
-      # AI Coding
-      aider-chat
+      # AI Coding. From stable: on unstable (2026-10-01) litellm grew an
+      # exception aider refuses at import, so it fails its tests and crashes.
+      pkgs-stable.aider-chat
       # Markdown LSP
       marksman
       # General Tooling
@@ -160,10 +161,14 @@
       pkg-config
       # Zig
       zig zls
-      # Assembly & Forth
-      nasm gforth
+      # Assembly & Forth. gforth from stable: on unstable (2026-10-01) its
+      # bundled swig-3.0.9 fails to configure, pcre1 having been dropped.
+      # Move it back to `pkgs` once unstable builds it again.
+      nasm pkgs-stable.gforth
       # Verilog & VHDL
-      verilator verible ghdl vhdl-ls
+      # verilator from stable: unstable's 5.052 fails its SystemC example
+      # link (2026-10-01).
+      pkgs-stable.verilator verible ghdl vhdl-ls
       # Jupyter Notebooks
       zeromq
       python3Packages.jupyter
