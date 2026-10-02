@@ -229,6 +229,9 @@
       home.sessionVariables = {
         MANPAGER   = "sh -c 'col -bx | bat -l man -p'";
         MANROFFOPT = "-c";
+        # carapace completes most commands; make its matching ignore case
+        # like fish's own (`cat doc<Tab>` finds Documents)
+        CARAPACE_MATCH = "1";
       };
 
       # Ctrl-R: fuzzy, SQLite-backed history shared live across every terminal.
