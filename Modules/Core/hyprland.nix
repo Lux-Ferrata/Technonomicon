@@ -794,6 +794,10 @@
         '';
 
         ".config/quickshell/shell.qml".text = ''
+          // Without a theme Qt only searches hicolor, so tray icons that live
+          // in Adwaita (fcitx5's English "input-keyboard") drew as the
+          // magenta missing-image checkerboard.
+          //@ pragma IconTheme Adwaita
           import Quickshell
 
           ShellRoot {
