@@ -1127,6 +1127,9 @@
               NotificationServer {
                   id: server
                   keepOnReload: true
+                  // Only tracked notifications land in trackedNotifications;
+                  // without this every incoming one is dropped unseen.
+                  onNotification: notification => notification.tracked = true
               }
 
               PanelWindow {
