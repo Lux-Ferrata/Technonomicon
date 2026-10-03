@@ -630,6 +630,17 @@
           '';
 
           autocmds = ''
+            -- `_` separates words, so w/e/b/dw stop at underscores (matches
+            -- the VSCodium vim.iskeyword setting). Done per-FileType rather
+            -- than in options, because ftplugins can reset iskeyword wholesale.
+            vim.opt.iskeyword:remove("_")
+            vim.api.nvim_create_autocmd("FileType", {
+              pattern = "*",
+              callback = function()
+                vim.opt_local.iskeyword:remove("_")
+              end,
+            })
+
             vim.api.nvim_create_autocmd("BufWritePre", {
               pattern = "*",
               callback = function()
