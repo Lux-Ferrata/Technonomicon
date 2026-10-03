@@ -189,11 +189,8 @@
           # so the blog flake's direnv-provided CLI is the one it picks up.
           quarto.quarto
         ]) ++ [
-          # Competitive Programming Helper: pulls testcases from a problem page
-          # and runs them against the build. GPL-3.0, but published only to the
-          # MS marketplace, so it comes from that index rather than Open VSX.
-          vscodeMkt.divyanshuagrawal.competitive-programming-helper
-          # Harpoon-style pinned files (MIT). Marketplace-only, like cph.
+          # Harpoon-style pinned files (MIT). Published only to the MS
+          # marketplace, so it comes from that index rather than Open VSX.
           vscodeMkt.tobias-z.vscode-harpoon
         ] ++ (with pkgs.vscode-extensions; [
           arcticicestudio.nord-visual-studio-code
