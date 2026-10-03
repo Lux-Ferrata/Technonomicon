@@ -697,6 +697,7 @@
           hl.bind(mainMod .. " + SHIFT + H",  hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-snippets"))
           hl.bind(mainMod .. " + X",          hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + SHIFT + X",  hl.dsp.exec_cmd("${quickPaste}"))
+          hl.bind(mainMod .. " + SHIFT + ALT + X", hl.dsp.exec_cmd("ghostty --title=quick-paste -e nvim $HOME/.config/tn/quick-paste"))
           hl.bind(mainMod .. " + semicolon",  hl.dsp.window.float())
           hl.bind(mainMod .. " + Tab",        hl.dsp.focus({ last = true }))
           hl.bind(mainMod .. " + comma",      hl.dsp.focus({ workspace = "r+1" }))
