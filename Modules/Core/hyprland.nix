@@ -131,6 +131,33 @@
       pkill -i -x "$CHOICE"
     '';
 
+    # Pick a saved value by label, type it into the focused window, and leave
+    # it on the clipboard as well. The list lives outside the repo on purpose,
+    # since it holds personal details (student number etc.).
+    quickPaste = pkgs.writeShellScript "tn-quick-paste" ''
+      FILE="$HOME/.config/tn/quick-paste"
+      if [ ! -f "$FILE" ]; then
+        mkdir -p "$(dirname "$FILE")"
+        printf '%s\n' \
+          '# label = value   (one per line; split at the first " = ")' \
+          'student number = 00000000' > "$FILE"
+        ${pkgs.libnotify}/bin/notify-send "Quick paste" "Created $FILE, add your entries there"
+        exit 0
+      fi
+
+      LABEL=$(grep -v '^\s*\(#\|$\)' "$FILE" | sed 's/ = .*//' | \
+        ${pkgs.wofi}/bin/wofi --dmenu --insensitive -p "paste")
+      [ -z "$LABEL" ] && exit 0
+
+      VALUE=$(grep -v '^\s*#' "$FILE" | grep -m1 -F -- "$LABEL = " | sed 's/^[^=]* = //')
+      [ -z "$VALUE" ] && exit 0
+
+      printf '%s' "$VALUE" | ${pkgs.wl-clipboard}/bin/wl-copy
+      # let focus return to the previous window before typing
+      sleep 0.15
+      ${pkgs.wtype}/bin/wtype -- "$VALUE"
+    '';
+
   in {
 
     programs.hyprland.enable = true;
