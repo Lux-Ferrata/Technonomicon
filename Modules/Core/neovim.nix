@@ -214,6 +214,8 @@
           vadimcn.vscode-lldb
           ms-vscode.cmake-tools
           james-yu.latex-workshop
+          # Spell checker (GPL-3.0). Limited to comments in code, see cSpell.*
+          streetsidesoftware.code-spell-checker
         ]);
 
         keybindings = [
@@ -236,6 +238,28 @@
 
         userSettings = {
           "workbench.colorTheme"           = "Nord";
+          # Nord's selected row in dropdowns (quick fix, completion, command
+          # palette, context menus) is a barely-lighter grey. Make it solid
+          # frost (nord8) with dark text (nord0) so the active item is obvious.
+          "workbench.colorCustomizations" = let
+            sel = { bg = "#88C0D0"; fg = "#2E3440"; };
+          in {
+            "editorActionList.focusBackground"      = sel.bg;
+            "editorActionList.focusForeground"      = sel.fg;
+            "editorSuggestWidget.selectedBackground" = sel.bg;
+            "editorSuggestWidget.selectedForeground" = sel.fg;
+            "editorSuggestWidget.selectedIconForeground" = sel.fg;
+            "editorSuggestWidget.focusHighlightForeground" = sel.fg;
+            "quickInputList.focusBackground"        = sel.bg;
+            "quickInputList.focusForeground"        = sel.fg;
+            "quickInputList.focusIconForeground"    = sel.fg;
+            "list.activeSelectionBackground"        = sel.bg;
+            "list.activeSelectionForeground"        = sel.fg;
+            "list.activeSelectionIconForeground"    = sel.fg;
+            "list.focusHighlightForeground"         = sel.fg;
+            "menu.selectionBackground"              = sel.bg;
+            "menu.selectionForeground"              = sel.fg;
+          };
           "editor.fontFamily"              = "'JetBrains Mono', monospace";
           "editor.fontSize"                = 14;
           "editor.lineNumbers"             = "relative";
@@ -253,7 +277,6 @@
           # Chrome that has no vim equivalent and is on by default.
           "editor.stickyScroll.enabled"          = false;
           "editor.lightbulb.enabled"             = "off";
-          "editor.scrollBeyondLastLine"          = false;
           "workbench.editor.editorActionsLocation" = "hidden";
           "workbench.startupEditor"              = "none";
           "breadcrumbs.enabled"                  = false;
@@ -318,15 +341,42 @@
 
           # vim. Defaults that differ from real vim / the nvim config:
           # useSystemClipboard matches `set clipboard=unnamed`, hlsearch and
-          # highlightedyank match LazyVim, cursorSurroundingLines is LazyVim's
-          # scrolloff = 4. smartRelativeLine is left off on purpose: the nvim
-          # config sets relativenumber unconditionally.
+          # highlightedyank match LazyVim. smartRelativeLine is left off on
+          # purpose: the nvim config sets relativenumber unconditionally.
           "vim.leader"     = "<space>";
           "vim.easymotion" = true;
           "vim.useSystemClipboard"        = true;
           "vim.hlsearch"                  = true;
           "vim.highlightedyank.enable"    = true;
-          "editor.cursorSurroundingLines" = 4;
+          # Keep the active line centred: more surrounding lines than half a
+          # screen pins the cursor to the middle (like scrolloff=999), and
+          # scrolling past the last line lets that hold at the end of a file.
+          # Applies to mouse clicks too, not just keyboard moves.
+          "editor.cursorSurroundingLines"      = 999;
+          "editor.cursorSurroundingLinesStyle" = "all";
+          "editor.scrollBeyondLastLine"        = true;
+          "editor.renderWhitespace"            = "all";
+
+          # cSpell checks code, strings and identifiers by default. In code it
+          # is narrowed to comments only; prose files (markdown, latex, typst,
+          # plaintext, ...) have no languageSettings entry and are checked whole.
+          "cSpell.patterns" = [
+            { name = "hash-comment";   pattern = "/#.*/g"; }
+            { name = "slash-comment";  pattern = ''/\/\/.*/g''; }
+            { name = "c-block-comment";  pattern = ''/\/\*[\s\S]*?\*\//g''; }
+            { name = "dash-comment";   pattern = "/--.*/g"; }
+            { name = "hs-block-comment"; pattern = ''/\{-[\s\S]*?-\}/g''; }
+          ];
+          "cSpell.languageSettings" = [
+            { languageId = [ "python" "shellscript" "fish" "yaml" "toml" "r" "julia" "dockerfile" "makefile" "cmake" ];
+              includeRegExpList = [ "hash-comment" ]; }
+            { languageId = [ "nix" ];
+              includeRegExpList = [ "hash-comment" "c-block-comment" ]; }
+            { languageId = [ "c" "cpp" "rust" "zig" "javascript" "typescript" "javascriptreact" "typescriptreact" "java" "go" "jsonc" ];
+              includeRegExpList = [ "slash-comment" "c-block-comment" ]; }
+            { languageId = [ "haskell" "lua" "sql" ];
+              includeRegExpList = [ "dash-comment" "hs-block-comment" ]; }
+          ];
           # VSCodeVim's iskeyword lists word *separators* (the inverse of
           # vim's). This is its default plus `_`, so w/e/b/dw stop at
           # underscores, same as the nvim config.
@@ -455,19 +505,6 @@
         };
 
         plugins = {
-
-          # iW/aW = a whole identifier: letters, digits, `_` and `-`, but not
-          # `.` or `(`. Pairs with `_` being a word separator (see autocmds):
-          # ciw changes one snake_case part, ciW changes the whole name.
-          mini-ai-identifier = ''
-            return {
-              "nvim-mini/mini.ai",
-              opts = function(_, opts)
-                opts.custom_textobjects = opts.custom_textobjects or {}
-                opts.custom_textobjects.W = { "()()%f[%w_%-][%w_%-]+()%s*()" }
-              end,
-            }
-          '';
 
           undotree = ''
             return {
