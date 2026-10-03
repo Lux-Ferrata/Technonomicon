@@ -133,6 +133,8 @@
           mkdir -p "$HOME/Downloads"
           cp "$tmp" "$file"
           ${pkgs.libnotify}/bin/notify-send "Screenshot saved" "$(basename "$file")" ;;
+        clip)
+          ${pkgs.libnotify}/bin/notify-send "Screenshot copied" "On the clipboard" ;;
       esac
     '';
 
