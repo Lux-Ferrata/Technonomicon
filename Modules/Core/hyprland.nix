@@ -78,6 +78,18 @@
       ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
 
+    # Focus the previously focused window: `ws` limits it to the active
+    # workspace, `global` takes it from anywhere (switching workspace).
+    focusPrev = pkgs.writeShellScript "tn-focus-prev" ''
+      WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
+      ADDR=$(${hyprlandPkg}/bin/hyprctl clients -j | \
+        ${pkgs.jq}/bin/jq -r --arg scope "$1" --argjson ws "$WS_ID" '
+          map(select(.focusHistoryID != 0 and ($scope == "global" or .workspace.id == $ws))) |
+          sort_by(.focusHistoryID) | .[0].address // empty')
+      [ -z "$ADDR" ] && exit 0
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
+    '';
+
     winPull = pkgs.writeShellScript "tn-win-pull" ''
       WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
       ACTIVE=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.address')
