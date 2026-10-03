@@ -329,7 +329,7 @@
           "editor.cursorSurroundingLines" = 4;
           # VSCodeVim's iskeyword lists word *separators* (the inverse of
           # vim's). This is its default plus `_`, so w/e/b/dw stop at
-          # underscores. Deliberately diverges from the nvim config.
+          # underscores, same as the nvim config.
           "vim.iskeyword" = ''/\()"':,.;<>~!@#$%^&*|+=[]{}`?-_'';
           # LazyVim binds `s` to flash.nvim. easymotion's 2-char jump is the
           # closest analogue: press s, type two characters, pick a label.
