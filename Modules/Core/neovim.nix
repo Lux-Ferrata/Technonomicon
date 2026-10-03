@@ -456,6 +456,19 @@
 
         plugins = {
 
+          # iW/aW = a whole identifier: letters, digits, `_` and `-`, but not
+          # `.` or `(`. Pairs with `_` being a word separator (see autocmds):
+          # ciw changes one snake_case part, ciW changes the whole name.
+          mini-ai-identifier = ''
+            return {
+              "nvim-mini/mini.ai",
+              opts = function(_, opts)
+                opts.custom_textobjects = opts.custom_textobjects or {}
+                opts.custom_textobjects.W = { "()()%f[%w_%-][%w_%-]+()%s*()" }
+              end,
+            }
+          '';
+
           undotree = ''
             return {
               "mbbill/undotree",
