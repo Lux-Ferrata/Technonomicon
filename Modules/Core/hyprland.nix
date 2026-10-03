@@ -149,7 +149,10 @@
         ${pkgs.wofi}/bin/wofi --dmenu --insensitive -p "paste")
       [ -z "$LABEL" ] && exit 0
 
-      VALUE=$(grep -v '^\s*#' "$FILE" | grep -m1 -F -- "$LABEL = " | sed 's/^[^=]* = //')
+      VALUE=$(LABEL="$LABEL" ${pkgs.gawk}/bin/awk '
+        !/^[[:space:]]*#/ && (i = index($0, " = ")) && substr($0, 1, i - 1) == ENVIRON["LABEL"] {
+          print substr($0, i + 3); exit
+        }' "$FILE")
       [ -z "$VALUE" ] && exit 0
 
       printf '%s' "$VALUE" | ${pkgs.wl-clipboard}/bin/wl-copy
