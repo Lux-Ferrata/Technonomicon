@@ -331,10 +331,13 @@
           # vim's). This is its default plus `_`, so w/e/b/dw stop at
           # underscores, same as the nvim config.
           "vim.iskeyword" = ''/\()"':,.;<>~!@#$%^&*|+=[]{}`?-_'';
-          # LazyVim binds `s` to flash.nvim. easymotion's 2-char jump is the
-          # closest analogue: press s, type two characters, pick a label.
+          # Same for non-vim word ops: double-click, ctrl+arrow, ctrl+backspace
+          "editor.wordSeparators" = ''/\()"':,.;<>~!@#$%^&*|+=[]{}`?-_'';
+          # LazyVim binds `s` to flash.nvim. easymotion's n-char search is the
+          # closest analogue: press s, type as many characters as you like,
+          # Enter, pick a label.
           "vim.normalModeKeyBindingsNonRecursive" = [
-            { before = [ "s" ]; after = [ "<leader>" "<leader>" "2" "s" ]; }
+            { before = [ "s" ]; after = [ "<leader>" "<leader>" "/" ]; }
             # Harpoon, on LazyVim's harpoon-extra keys: H pins the file,
             # h picks from the pins, 1-5 jump straight to a slot, m edits
             # the pin list (reorder/delete lines, save).
@@ -346,7 +349,7 @@
             commands = [ "vscode-harpoon.gotoEditor${toString n}" ];
           }) [ 1 2 3 4 5 ];
           "vim.visualModeKeyBindingsNonRecursive" = [
-            { before = [ "s" ]; after = [ "<leader>" "<leader>" "2" "s" ]; }
+            { before = [ "s" ]; after = [ "<leader>" "<leader>" "/" ]; }
           ];
         };
       };
