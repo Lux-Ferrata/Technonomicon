@@ -93,6 +93,8 @@
 
         networking.hostName = "Kvasir";
 
+        environment.systemPackages = [ pkgs.vikunja-desktop ];
+
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 
         home-manager = {
