@@ -20,7 +20,8 @@
       ${pkgs.wl-clipboard}/bin/wl-paste > "$TMPFILE"
 
       ghostty --title=vim-edit -e bash -c \
-        'nvim "$TMPFILE"; ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPFILE"; rm -f "$TMPFILE"'
+        'nvim "$TMPFILE"; ${pkgs.wl-clipboard}/bin/wl-copy < "$TMPFILE"; rm -f "$TMPFILE"
+         ${pkgs.libnotify}/bin/notify-send "Edited text copied" "Paste it back with Ctrl+V"'
     '';
 
     wayscrollshot =
@@ -29,7 +30,24 @@
       }));
 
     scrollshot = pkgs.writeShellScript "scrollshot" ''
-      ${wayscrollshot}/bin/wayscrollshot --clipboard --max-preview-height 36
+      ${wayscrollshot}/bin/wayscrollshot --clipboard --max-preview-height 36 && \
+        ${pkgs.libnotify}/bin/notify-send "Scrolling screenshot copied" "On the clipboard"
+    '';
+
+    # hyprpicker prints the picked colour (and -a copies it); nothing on cancel
+    colorPick = pkgs.writeShellScript "tn-color-pick" ''
+      COLOR=$(${pkgs.hyprpicker}/bin/hyprpicker -a)
+      [ -n "$COLOR" ] && ${pkgs.libnotify}/bin/notify-send "Colour copied" "$COLOR"
+    '';
+
+    # The bar has no mic indicator, so say which way the toggle went
+    micMute = pkgs.writeShellScript "tn-mic-mute" ''
+      wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+      if wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED; then
+        ${pkgs.libnotify}/bin/notify-send -t 2000 "Microphone muted"
+      else
+        ${pkgs.libnotify}/bin/notify-send -t 2000 "Microphone on"
+      fi
     '';
 
     tnShowKeybindings = pkgs.writeShellScript "tn-show-keybindings"
@@ -617,6 +635,7 @@
             hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
             -- hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
             hl.exec_cmd("[workspace 9 silent] ${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized")
+            ${lib.optionalString nixosCfg.services.vikunja.enable ''hl.exec_cmd("[workspace 9 silent] vikunja-desktop")''}
           end)
 
           hl.config({
@@ -728,7 +747,7 @@
           hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&filepath=Home.md&openmode=window'"))
           hl.bind(mainMod .. " + ALT + N",    hl.dsp.exec_cmd("obsidian"))
           hl.bind(mainMod .. " + ALT + A",    hl.dsp.exec_cmd("anki"))
-          hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("hyprpicker -a"))
+          hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("${colorPick}"))
 
           -- Focus: left/right walks the scroll order, up/down walks the
           -- windows stacked inside the focused column.
@@ -778,7 +797,7 @@
           hl.bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+"))
           hl.bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"))
           hl.bind("XF86AudioMute",         hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"))
-          hl.bind("XF86AudioMicMute",      hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"))
+          hl.bind("XF86AudioMicMute",      hl.dsp.exec_cmd("${micMute}"))
           hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl set 10%+"))
           hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl set 10%-"))
 
@@ -1136,7 +1155,7 @@
                   anchors { top: true; right: true }
                   margins { top: 44; right: 8 }
 
-                  visible: server.trackedNotifications.length > 0
+                  visible: server.trackedNotifications.values.length > 0
                   implicitWidth: 360
                   implicitHeight: Math.max(notifCol.implicitHeight + 16, 1)
                   color: "transparent"
