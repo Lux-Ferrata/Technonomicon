@@ -193,6 +193,21 @@
       ${pkgs.wtype}/bin/wtype -- "$VALUE"
     '';
 
+    # Same flow as quick paste, over every fully-qualified emoji ("😀 grinning
+    # face"), so the picker searches by name. The list is built once from the
+    # Unicode data instead of being fetched at runtime.
+    emojiList = pkgs.runCommand "tn-emoji-list" { } ''
+      sed -n 's/^[^#]*; fully-qualified *# \([^ ]*\) E[0-9.]* \(.*\)$/\1 \2/p' \
+        ${pkgs.unicode-emoji}/share/unicode/emoji/emoji-test.txt > $out
+    '';
+    emojiPick = pkgs.writeShellScript "tn-emoji-pick" ''
+      EMOJI=$(${pkgs.wofi}/bin/wofi --dmenu --insensitive -p "emoji" < ${emojiList} | cut -d' ' -f1)
+      [ -z "$EMOJI" ] && exit 0
+      printf '%s' "$EMOJI" | ${pkgs.wl-clipboard}/bin/wl-copy
+      sleep 0.15
+      ${pkgs.wtype}/bin/wtype -- "$EMOJI"
+    '';
+
   in {
 
     programs.hyprland.enable = true;
