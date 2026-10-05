@@ -95,6 +95,17 @@
 
         environment.systemPackages = [ pkgs.vikunja-desktop ];
 
+        # Local-only Vikunja server for the desktop app (Custom server URL →
+        # http://localhost:3456). SQLite + attachments live in
+        # /var/lib/private/vikunja (DynamicUser).
+        services.vikunja = {
+          enable           = true;
+          address          = "127.0.0.1";
+          port             = 3456;
+          frontendScheme   = "http";
+          frontendHostname = "localhost:3456";
+        };
+
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 
         home-manager = {
