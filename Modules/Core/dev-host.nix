@@ -18,6 +18,11 @@
     systemd.user.sockets.shpool.wantedBy = [ "sockets.target" ];
     users.users.xin.linger     = true;
 
+    # Shells here are always remote, but ones started by shpool or the VS Code
+    # server don't inherit SSH_CONNECTION, so starship's ssh-only hostname
+    # would vanish. Show it unconditionally (same yellow as over ssh).
+    programs.starship.settings.hostname.ssh_only = lib.mkForce false;
+
     # ── VS Code server (Remote-SSH from Kvasir) ──────────────────────────
     # The server and marketplace extensions ship generic-linux binaries
     programs.nix-ld.enable = true;
