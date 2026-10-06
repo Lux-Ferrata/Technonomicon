@@ -10,16 +10,16 @@
     # Declarative now: folders/devices not in _sync.nix get dropped from
     # Syncthing (their files stay put). Everything goes through Akmon.
     services.syncthing.settings = {
-      devices.Akmon = {
-        id        = sync.devices.Akmon;
-        addresses = [ "tcp://akmon:22000" ];
+      devices = {
+        Akmon = { id = sync.devices.Akmon; addresses = [ "tcp://akmon:22000" ]; };
+        Phone = { id = sync.devices.Phone; };
       };
       folders = lib.mapAttrs (id: f: {
         inherit id;
         inherit (f) label;
         path            = f.kvasir;
         devices         = [ "Akmon" ];
-        type            = "sendreceive";
+        type            = if f.mode == "backup" then "sendonly" else "sendreceive";
         # switching machines right after saving shouldn't lose the edit
         fsWatcherDelayS = 1;
         ignorePatterns  = f.ignorePatterns or null;

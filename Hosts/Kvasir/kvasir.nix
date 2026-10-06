@@ -111,7 +111,29 @@
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 
         # tailnet client: reaches and deploys to Akmon (ssh xin@akmon)
-        services.tailscale.enable = true;
+        services.tailscale = {
+          enable        = true;
+          # lets xin's own session receive Taildrop files (and run `tailscale file`)
+          extraSetFlags = [ "--operator=xin" ];
+        };
+
+        # Taildrop: phone's share sheet -> "Tailscale" -> Kvasir lands files in
+        # ~/Downloads; `send <files>` goes the other way
+        home-manager.users.xin = {
+          systemd.user.services.taildrop-receive = {
+            Unit.Description = "Move incoming Taildrop files into ~/Downloads";
+            Service = {
+              ExecStart  = "${pkgs.tailscale}/bin/tailscale file get --loop --conflict=rename %h/Downloads";
+              Restart    = "always";
+              RestartSec = 10;
+            };
+            Install.WantedBy = [ "default.target" ];
+          };
+          programs.fish.functions.send = ''
+            test (count $argv) -gt 0; or begin; echo "usage: send <files...>"; return 1; end
+            tailscale file cp $argv pixel-10-pro-xl:
+          '';
+        };
 
         home-manager = {
           useGlobalPkgs = true;

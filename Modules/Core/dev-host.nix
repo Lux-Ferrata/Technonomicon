@@ -6,6 +6,9 @@
   let
     sync = import ./_sync.nix;
     home = "/srv/xin";          # fast/srv/xin: xin's synced data, survives the root wipe
+    # folders still taking their first copy from Kvasir: receive-only, so a
+    # half-filled tree here can never be sent back. Empty this once done.
+    seeding = [ "projects" ];
   in {
 
     # shells that outlive the ssh connection (Kvasir's `ak` reattaches);
@@ -60,7 +63,7 @@
       configDir        = "${home}/.syncthing";
       cert             = config.sops.secrets.syncthing-akmon-cert.path;
       key              = config.sops.secrets.syncthing-akmon-key.path;
-      # only Kvasir talks to it, and only over the tailnet
+      # only reached over the tailnet
       openDefaultPorts = lib.mkForce false;
       settings = {
         options = {
@@ -69,17 +72,17 @@
           relaysEnabled         = false;
           urAccepted            = -1;
         };
-        devices.Kvasir = {
-          id        = sync.devices.Kvasir;
-          addresses = [ "tcp://kvasir:22000" ];
+        devices = {
+          Kvasir = { id = sync.devices.Kvasir; addresses = [ "tcp://kvasir:22000" ]; };
+          Phone  = { id = sync.devices.Phone; };
         };
         folders = lib.mapAttrs (id: f: {
           inherit id;
           inherit (f) label;
           path            = "${home}/${f.akmon}";
           devices         = [ "Kvasir" ];
-          # first sync: take Kvasir's tree as-is, never send anything back
-          type            = "receiveonly";
+          type            = if f.mode == "backup" || lib.elem id seeding
+                            then "receiveonly" else "sendreceive";
           fsWatcherDelayS = 1;
           ignorePatterns  = f.ignorePatterns or null;
         }) sync.folders;

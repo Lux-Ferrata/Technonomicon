@@ -5,18 +5,17 @@
 # not listed here are removed from Syncthing (their files are left alone).
 #
 # Not here on purpose: Grimoire and Zotero get dedicated sync services;
-# Technonomicon syncs through git + Forgejo.
+# Technonomicon syncs through git + Forgejo; phone <-> laptop is Taildrop.
 {
   devices = {
     # Akmon's ID comes from its sops cert/key, so it survives reinstalls
     Akmon  = "ESFOH2J-SSO5QHZ-PPAZRYF-FKOMGQB-5HLWCBH-PCELXT5-FEGZQJ3-JMGH7Q5";
     Kvasir = "HCZVU5Z-ISVSPCK-4FP7HUF-K5AJSKO-H5VZFHL-WXHTZXJ-PFAMMDG-7TPOKAF";
-    # on the tailnet; reaches Akmon at tcp://akmon:22000
+    # paired but shares no folders yet; on the tailnet, dials tcp://akmon:22000
     Phone  = "PSINF7M-32THNKX-OK7AG7M-FZLYAJU-MKV4RID-FJSH5EQ-AC6JNQ2-76PGJAR";
   };
 
-  # id -> label, path on Kvasir, directory under /srv/xin on Akmon, which
-  # devices besides Kvasir/Akmon get it, and the mode:
+  # id -> label, path on Kvasir, directory under /srv/xin on Akmon, mode:
   #   twoway  edited on either side
   #   backup  Kvasir sends, Akmon only receives (and snapshots)
   # The older folders keep the IDs they were created with.
@@ -44,15 +43,6 @@
         "__pycache__"
         ".venv"
       ];
-    };
-
-    # drop a file in on the phone or the laptop, it shows up on the other
-    transfer = {
-      label  = "Transfer";
-      kvasir = "/home/xin/Transfer";
-      akmon  = "Transfer";
-      mode   = "twoway";
-      extraDevices = [ "Phone" ];
     };
 
     "tsjp9-6mmnk" = {
