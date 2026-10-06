@@ -93,8 +93,8 @@
     };
 
     services = {
+      # sshd stays off (the NixOS default) unless a host enables it, e.g. Tn-server
       openssh = {
-        enable = false;
         settings = {
           PermitRootLogin = "no";
           PasswordAuthentication = false;
