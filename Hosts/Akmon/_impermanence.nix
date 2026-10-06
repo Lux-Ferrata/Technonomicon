@@ -77,6 +77,8 @@
       "/etc/NetworkManager/system-connections"
       "/var/lib/docker"
       "/var/db/sudo"              # "lectured" flag, else the sudo lecture every boot
+      # DynamicUser services' StateDirectory (forgejo runner registration, ...)
+      { directory = "/var/lib/private"; mode = "0700"; }
     ];
     files = [ "/etc/machine-id" ];
 

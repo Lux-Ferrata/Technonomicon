@@ -9,7 +9,9 @@
     host = config.networking.hostName;
   in {
 
-    sops.secrets.smtp-password = {};     # root-only; everything below mails as root
+    # root + members of mail-senders (e.g. the CI runner) can send
+    users.groups.mail-senders = {};
+    sops.secrets.smtp-password = { group = "mail-senders"; mode = "0440"; };
 
     programs.msmtp = {
       enable       = true;
@@ -42,6 +44,14 @@
       path = [ config.systemd.package ];
       script = ''
         unit="$1"
+        # a unit in a restart loop fails every few seconds: one mail per
+        # unit per 30 minutes is plenty
+        stamp="/run/notify-failure/$unit"
+        mkdir -p /run/notify-failure
+        if [ -n "$(find "$stamp" -mmin -30 2>/dev/null)" ]; then
+          echo "already mailed about $unit in the last 30 min"; exit 0
+        fi
+        touch "$stamp"
         {
           echo "To: ${to}"
           echo "From: ${host} <${from}>"
