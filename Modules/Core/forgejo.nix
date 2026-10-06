@@ -49,7 +49,8 @@
     # idempotent: only creates the admin if it doesn't exist yet
     systemd.services.forgejo.preStart = lib.mkAfter ''
       forgejo="${lib.getExe cfg.package}"
-      if ! "$forgejo" admin user list --admin | awk 'NR>1 {print $2}' | grep -qx '${admin}'; then
+      # columns: ID Username Email ...; only coreutils/grep/sed are on PATH here
+      if ! "$forgejo" admin user list --admin | grep -Eq '^[0-9]+[[:space:]]+${admin}[[:space:]]'; then
         "$forgejo" admin user create --admin \
           --username '${admin}' --email 'xin@ironshark.org' \
           --password "$(tr -d '\n' < ${config.sops.secrets.forgejo-admin-password.path})" \
