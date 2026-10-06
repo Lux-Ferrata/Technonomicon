@@ -9,7 +9,7 @@
     home = "/srv/xin";          # fast/srv/xin: xin's synced data, survives the root wipe
     # folders still taking their first copy from Kvasir: receive-only, so a
     # half-filled tree here can never be sent back. Empty this once done.
-    seeding = [ ];
+    seeding = [ "grimoire" ];
   in {
     # ── Chat / edit-selection / aider, loaded on demand ──────────────────
     # The first request after an idle spell wakes it (~10-20 s to load),
@@ -136,7 +136,7 @@
           inherit id;
           inherit (f) label;
           path            = "${home}/${f.akmon}";
-          devices         = [ "Kvasir" ];
+          devices         = [ "Kvasir" ] ++ (f.extraDevices or [ ]);
           type            = if f.mode == "backup" || lib.elem id seeding
                             then "receiveonly" else "sendreceive";
           fsWatcherDelayS = 1;

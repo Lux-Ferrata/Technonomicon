@@ -36,6 +36,7 @@
       self.nixosModules.Tn-dev-host
       self.nixosModules.Tn-devtools
       self.nixosModules.Tn-overnight
+      self.nixosModules.Tn-grimoire
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";

@@ -36,6 +36,12 @@
       done
       echo "akmon-ready: Akmon hasn't caught up on ~/Projects yet; going ahead anyway" >&2
     '';
+    # Grimoire's git history lives on Akmon (Tn-grimoire), which also takes
+    # the named commits; the message travels on stdin, not through fish
+    grimoireCommit = pkgs.writeShellScriptBin "grimoire-commit" ''
+      [ $# -gt 0 ] || { echo "usage: grimoire-commit MESSAGE" >&2; exit 1; }
+      printf '%s' "$*" | ssh akmon grimoire-snapshot -m -
+    '';
     # deploy <akmon|kvasir|all> [nh args]: Akmon is evaluated here, built and
     # switched there; Kvasir switches locally (heavy builds still go to Akmon).
     # `all` asks for the password once (both hosts share xin-password). nh
@@ -193,7 +199,7 @@
     };
 
     home-manager.users.xin = {
-      home.packages = [ akmonReady deploy ];
+      home.packages = [ akmonReady deploy grimoireCommit ];
       xdg.configFile."fish/completions/deploy.fish".text = ''
         complete -c deploy -f -n __fish_use_subcommand -a akmon  -d "build + switch on Akmon"
         complete -c deploy -f -n __fish_use_subcommand -a kvasir -d "switch this laptop"

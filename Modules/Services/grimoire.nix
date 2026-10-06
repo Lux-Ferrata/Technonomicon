@@ -15,9 +15,12 @@
       runtimeInputs = with pkgs; [ git openssh coreutils findutils gnugrep curl jq ];
       text = ''
         # grimoire-snapshot            commit if the vault has settled
-        # grimoire-snapshot -m MSG     commit now, with MSG
+        # grimoire-snapshot -m MSG     commit now, with MSG (- reads it from stdin,
+        #                              so Kvasir's grimoire-commit needs no quoting)
         msg=""
-        if [ "''${1:-}" = -m ]; then msg=''${2:?usage: grimoire-snapshot [-m MSG]}; fi
+        if [ "''${1:-}" = -m ]; then msg=''${2:?usage: grimoire-snapshot [-m MSG|-]}; fi
+        [ "$msg" = - ] && msg=$(cat)
+        [ "''${1:-}" = -m ] && [ -z "$msg" ] && { echo "grimoire-snapshot: empty message" >&2; exit 1; }
 
         cd ${vault}
         [ -d .git ] || { echo "grimoire-snapshot: ${vault} has no .git yet" >&2; exit 0; }

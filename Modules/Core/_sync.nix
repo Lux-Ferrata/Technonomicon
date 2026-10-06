@@ -4,8 +4,8 @@
 # its copies on fast/srv/xin are snapshotted by sanoid. Folders and devices
 # not listed here are removed from Syncthing (their files are left alone).
 #
-# Not here on purpose: Grimoire and Zotero get dedicated sync services;
-# Technonomicon syncs through git + Forgejo; phone <-> laptop is Taildrop.
+# Not here on purpose: Zotero (WebDAV, Tn-webdav); Technonomicon syncs
+# through git + Forgejo; phone <-> laptop file drops are Taildrop.
 {
   devices = {
     # Akmon's ID comes from its sops cert/key, so it survives reinstalls
@@ -18,6 +18,7 @@
   # id -> label, path on Kvasir, directory under /srv/xin on Akmon, mode:
   #   twoway  edited on either side
   #   backup  Kvasir sends, Akmon only receives (and snapshots)
+  # extraDevices: devices besides Kvasir that share it with Akmon (the hub)
   # The older folders keep the IDs they were created with.
   folders = {
     projects = {
@@ -50,6 +51,27 @@
       kvasir = "/home/xin/Media";
       akmon  = "Media";
       mode   = "backup";
+    };
+
+    # The Obsidian vault. Its git history is owned by Akmon alone
+    # (Tn-grimoire snapshots it every 5 min), so .git never syncs: two
+    # peers mutating one repo corrupts it.
+    grimoire = {
+      label  = "Grimoire";
+      kvasir = "/home/xin/Grimoire";
+      akmon  = "Grimoire";
+      mode   = "twoway";
+      extraDevices = [ "Phone" ];
+      ignorePatterns = [
+        "/.git"
+        "*.sync-conflict-*"
+        # per-machine Obsidian UI state
+        ".obsidian/workspace.json"
+        ".obsidian/workspaces.json"
+        ".obsidian/workspace-mobile.json"
+        ".obsidian/cache"
+        ".claude/settings.local.json"
+      ];
     };
 
     "fhd2w-omewe" = {
