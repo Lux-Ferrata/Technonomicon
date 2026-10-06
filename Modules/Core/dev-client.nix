@@ -166,7 +166,12 @@
     };
 
     home-manager.users.xin = {
-      home.packages = [ akmonReady ];
+      home.packages = [ akmonReady deploy ];
+      xdg.configFile."fish/completions/deploy.fish".text = ''
+        complete -c deploy -f -n __fish_use_subcommand -a akmon  -d "build + switch on Akmon"
+        complete -c deploy -f -n __fish_use_subcommand -a kvasir -d "switch this laptop"
+        complete -c deploy -f -n __fish_use_subcommand -a all    -d "Akmon, then Kvasir; one password"
+      '';
 
       # Offline readiness: while Akmon is reachable (its binary cache and
       # builders do the work), realise every project's dev environment here
