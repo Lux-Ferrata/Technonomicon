@@ -295,15 +295,23 @@ for h in "${HOSTS[@]}"; do
   fi
 done
 
+# Akmon's week in numbers (Tn-server-usage logs a sample every 5 min)
+TN_USAGE=/run/current-system/sw/bin/tn-usage
+if [ -x "$TN_USAGE" ]; then
+  "$TN_USAGE" --week > "$WORK/usage.txt" 2>&1 || echo "(tn-usage --week failed)" >> "$WORK/usage.txt"
+else
+  echo "(no usage log on this host)" > "$WORK/usage.txt"
+fi
+
 # ---------------------------------------------------------------------------
 log "email"
 claude_do "Write this week's summary email body (plain text, no markdown headings, ~150-400 words) for the owner of this NixOS config repo. Save it to $WORK/summary.txt.
 
-Material: $WORK/notes (facts from the run, include every problem), $WORK/curated.txt (new commits on main; may be missing if nothing changed), $WORK/plan.json, $WORK/flake-update.txt, $WORK/closures.txt (package version changes per host; may be empty), $WORK/fixes.txt (may be missing), $WORK/warnings.txt and $WORK/warning-fixes.txt (evaluation warnings left and fixed; may be missing).
+Material: $WORK/notes (facts from the run, include every problem), $WORK/curated.txt (new commits on main; may be missing if nothing changed), $WORK/plan.json, $WORK/flake-update.txt, $WORK/closures.txt (package version changes per host; may be empty), $WORK/fixes.txt (may be missing), $WORK/warnings.txt and $WORK/warning-fixes.txt (evaluation warnings left and fixed; may be missing), $WORK/usage.txt (Akmon's CPU/RAM/GPU/pool usage over the week).
 
-Structure: one-line verdict; what changed this week grouped like the curated commits; package upgrades worth knowing about (skip noise); anything pinned or fixed and why; evaluation warnings fixed and any left over; problems needing attention. End with exactly:
-To update Kvasir:  cd ~/Projects/Technonomicon && git pull && deploy-kvasir
-Akmon:             deploy-akmon (until auto-upgrade is enabled)
+Structure: one-line verdict; what changed this week grouped like the curated commits; package upgrades worth knowing about (skip noise); anything pinned or fixed and why; evaluation warnings fixed and any left over; a two-or-three-sentence paragraph on Akmon's usage this week (what it mostly did, anything unusual: sustained high load, pool growth, reboots, gaps, failed units; the full table is appended after your text, so don't repeat it); problems needing attention. End with exactly:
+To update Kvasir:  cd ~/Projects/Technonomicon && git pull && deploy kvasir
+Akmon:             updates itself from main at 06:00
 $([ "$MODE" = live ] || echo "Start with a line saying this was a DRY RUN and nothing was pushed.")" \
   "Read,Write,Bash(git log:*),Bash(git show:*)" || true
 
@@ -311,6 +319,7 @@ if [ ! -s "$WORK/summary.txt" ]; then
   { echo "(Claude could not write the summary; raw notes follow)"; cat "$WORK/notes"
     echo; cat "$WORK/curated.txt" 2>/dev/null; } > "$WORK/summary.txt"
 fi
+{ echo; echo "----"; cat "$WORK/usage.txt"; } >> "$WORK/summary.txt"
 subject="[Technonomicon] weekly $TODAY: $(wc -l < "$WORK/curated.txt" 2>/dev/null || echo 0) commits"
 [ $upgraded -eq 1 ] && subject="$subject + flake update"
 [ "$MODE" = live ] || subject="$subject (DRY RUN)"

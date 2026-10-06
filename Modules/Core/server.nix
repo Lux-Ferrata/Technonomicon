@@ -1,5 +1,9 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-server = { config, ... }: {
+  flake.nixosModules.Tn-server = { config, lib, pkgs, ... }: {
+
+    # Kvasir's terminal is Ghostty; without its terminfo here, full-screen
+    # tools (btop, nvim) over ssh fall back or refuse to start
+    environment.systemPackages = [ pkgs.ghostty.terminfo ];
 
     # single-use bootstrap key; only read while the node isn't logged in yet
     sops.secrets.tailscale-authkey = {};
@@ -36,5 +40,10 @@
 
     # rollback entries without filling the ESP
     boot.loader.systemd-boot.configurationLimit = 10;
+
+    # generations (and the store paths only they use) go after 30 days, not
+    # Tn-nix's 6: the server upgrades itself daily, so a month of rollback
+    # targets stays on disk; the boot menu still shows only the newest 10
+    programs.nh.clean.extraArgs = lib.mkForce "--keep-since 30d --keep 3";
   };
 }

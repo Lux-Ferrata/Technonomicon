@@ -38,15 +38,42 @@
     '';
     # deploy <akmon|kvasir|all> [nh args]: Akmon is evaluated here, built and
     # switched there; Kvasir switches locally (heavy builds still go to Akmon).
-    # `all` asks for the password once (both hosts share xin-password) and
-    # hands it to nh through its askpass hook, so nh's diffs and checks stay.
+    # `all` asks for the password once (both hosts share xin-password). nh
+    # only takes a remote sudo password from its own prompt, so for Akmon
+    # `all` does nh's steps itself: evaluate, build on Akmon, switch over ssh
+    # with the password on sudo's stdin (as nh does). Kvasir gets it through
+    # nh's local askpass hook. In `all`, nh args only go to Kvasir.
     askpass = pkgs.writeShellScript "deploy-askpass" ''printf '%s\n' "$TN_DEPLOY_PW"'';
     deploy = pkgs.writeShellApplication {
       name = "deploy";
-      runtimeInputs = [ pkgs.nh pkgs.sudo ];
+      # store paths in ssh commands are meant to expand here, on Kvasir
+      excludeShellChecks = [ "SC2029" ];
+      # the system nh (NH_FLAKE points it at this repo) and sudo wrapper
       text = ''
+        flake=''${NH_OS_FLAKE:-''${NH_FLAKE:-$HOME/Projects/Technonomicon}}
+        flake=''${flake%/}
+        step() { printf '\e[1;36m› %s\e[0m\n' "$*"; }
+
         akmon()  { nh os switch --hostname Akmon --target-host xin@akmon --build-host xin@akmon "$@"; }
         kvasir() { nh os switch --hostname Kvasir "$@"; }
+
+        akmon_with_pw() {
+          local drv out
+          step "Akmon: evaluating"
+          drv=$(nix eval --raw "$flake#nixosConfigurations.Akmon.config.system.build.toplevel.drvPath")
+          step "Akmon: building on akmon"
+          nix copy --derivation --to ssh-ng://xin@akmon "$drv"
+          out=$(ssh xin@akmon "nix build --no-link --print-out-paths -L '$drv^out'")
+          if [ "$(ssh xin@akmon readlink -f /run/current-system)" = "$out" ]; then
+            step "Akmon: already running this generation"; return 0
+          fi
+          ssh xin@akmon "nix store diff-closures /run/current-system $out"
+          step "Akmon: switching"
+          # systemd-run: the switch finishes even if it restarts sshd or
+          # tailscale and the connection drops
+          printf '%s\n' "$TN_DEPLOY_PW" | ssh -T xin@akmon \
+            "sudo -S -p ''' sh -c 'nix-env -p /nix/var/nix/profiles/system --set $out && systemd-run -E LOCALE_ARCHIVE --collect --no-ask-password --pipe --quiet --service-type=exec --unit=deploy-switch-to-configuration $out/bin/switch-to-configuration switch'"
+        }
 
         target=$(printf '%s' "''${1:-}" | tr '[:upper:]' '[:lower:]')
         [ $# -gt 0 ] && shift
@@ -61,7 +88,7 @@
             export TN_DEPLOY_PW=$pw NH_SUDO_ASKPASS=${askpass} SUDO_ASKPASS=${askpass}
             unset pw
             # the server first: Kvasir's builds go through it
-            if akmon "$@"; then a="✓"; else a="✗"; fi
+            if akmon_with_pw; then a="✓"; else a="✗"; fi
             if [ "$a" = "✓" ]; then
               if kvasir "$@"; then k="✓"; else k="✗"; fi
             else
@@ -261,6 +288,10 @@
             | curl -sf -X POST -H "Authorization: token $tok" -H "Content-Type: application/json" -d @- "$api/issues" \
             | jq -r '"queued #\(.number): \(.html_url)"'
         '';
+        # Akmon's load (Tn-server-usage): btop live, `aku -s` one-screen
+        # snapshot with pools + llama servers, `aku --week` the 7-day digest
+        aku = "ssh -t akmon aku $argv";
+
         # start a run now instead of waiting for 00:10
         overnight-now = "ssh akmon systemctl --user start --no-block overnight; and echo 'started; follow with: ssh akmon journalctl --user -fu overnight'";
 

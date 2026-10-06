@@ -56,15 +56,17 @@ bar() { # pct [width]
     n=int(p*w/100+0.5); if (n>w) n=w; if (n<0) n=0
     s=c; for (i=0;i<n;i++) s=s "█"; s=s d; for (;i<w;i++) s=s "░"; printf "%s%s", s, z }'
 }
+# awk helper: /nix/store/…/bin/.foo-wrapped -> foo
+PNAME='function pname(c) { if (c ~ /^\//) sub(/^.*\//, "", c); sub(/^\./, "", c); sub(/-wrapped$/, "", c); return c } '
 label() { printf '%s%-5s%s ' "$C_F$C_B" "$1" "$C_0"; }
 dot() { if [ "$(systemctl is-active "$1" 2>/dev/null)" = active ]; then printf '%s●%s %s' "$C_G" "$C_0" "$2"; else printf '%s○ %s%s' "$C_D" "$3" "$C_0"; fi; }
 
 # ── one screen ─────────────────────────────────────────────────────────────
 render() {
-  local tops s1 s2 cpu mem arc gpu_ pools
+  local tops s1 s2 cpu arc pools
   tops=$(mktemp)
   # per-process CPU needs two frames; sample /proc/stat over the same second
-  top -b -n2 -d1 -w 512 -o %CPU > "$tops" 2>/dev/null &
+  top -b -c -n2 -d1 -w 512 -o %CPU > "$tops" 2>/dev/null &
   s1=$(cpu_snap); sleep 1; s2=$(cpu_snap); wait
   cpu=$(cpu_pct "$s1" "$s2"); cpu=${cpu:-0}
 
@@ -77,9 +79,10 @@ render() {
   local load fails up
   load=$(cut -d' ' -f1-3 /proc/loadavg)
   fails=$(systemctl --failed --no-legend --plain 2>/dev/null | wc -l)
-  up=$(uptime -p | sed 's/^up //')
+  up=$(awk '{ s=int($1); d=int(s/86400); h=int(s%86400/3600); m=int(s%3600/60)
+               printf "%s%dh %02dm", (d ? d "d " : ""), h, m }' /proc/uptime)
 
-  printf '%s%s%s  %s·  up %s  ·  load %s  ·  ' "$C_B" "$(hostname)" "$C_0" "$C_D" "$up" "$load"
+  printf '%s%s%s  %s·  up %s  ·  load %s  ·  ' "$C_B" "$(cat /proc/sys/kernel/hostname)" "$C_0" "$C_D" "$up" "$load"
   if [ "$fails" -eq 0 ]; then printf '%sno failed units%s\n\n' "$C_G" "$C_0"
   else printf '%s%s failed unit(s)%s\n\n' "$C_R" "$fails" "$C_0"; fi
 
@@ -100,11 +103,11 @@ render() {
       "$(dot llama-chat.service 'chat loaded' 'chat asleep')"
   fi
 
-  local p name size alloc free frag cap health
+  local p name size alloc frag cap health
   for p in "${POOLS[@]}"; do
     pools=$(zpool list -Hp -o name,size,alloc,free,frag,cap,health "$p" 2>/dev/null) || continue
-    read -r name size alloc free frag cap health <<< "$pools"
-    label "$( [ "$p" = "${POOLS[0]}" ] && echo POOL)"
+    read -r name size alloc _ frag cap health <<< "$pools"
+    if [ "$p" = "${POOLS[0]}" ]; then label POOL; else label ""; fi
     printf '%-6s ' "$name"; bar "$cap" 16
     printf ' %7s / %s GiB  frag %s%%  ' "$(gib "$alloc")" "$(gib "$size")" "$frag"
     if [ "$health" = ONLINE ]; then printf '%s%s%s\n' "$C_G" "$health" "$C_0"; else printf '%s%s%s\n' "$C_R" "$health" "$C_0"; fi
@@ -119,10 +122,10 @@ render() {
 
   # side by side: top CPU (second top frame) | top resident memory
   printf '%s%-38s %s%s\n' "$C_F$C_B" "TOP CPU" "TOP MEMORY" "$C_0"
-  paste -d'\n' \
-    <(awk '/^ *PID /{ f++; next } f==2 && NF>=12 && n<5 { printf "%6.1f%%  %-28s\n", $9, $12; n++ }' "$tops") \
-    <(ps -eo rss=,comm= --sort=-rss | head -n5 | awk '{ printf "%6.1f GiB  %s\n", $1/1048576, $2 }') \
-    | paste -d' ' - - | awk -F'\n' '{ print }' | sed 's/^/ /'
+  local -a cl ml; local i
+  mapfile -t cl < <(awk "$PNAME"'/^ *PID /{ f++; next } f==2 && NF>=12 && $12 != "top" && n<5 { printf "%6.1f%%  %s\n", $9, pname($12); n++ }' "$tops")
+  mapfile -t ml < <(ps -eo rss=,args= --sort=-rss | head -n5 | awk "$PNAME"'{ printf "%6.1f GiB  %s\n", $1/1048576, pname($2) }')
+  for i in 0 1 2 3 4; do printf ' %-37s %s\n' "${cl[i]:-}" "${ml[i]:-}"; done
   rm -f "$tops"
 }
 
@@ -172,7 +175,7 @@ week() {
       if (!n) { printf "  %-14s       no data\n", name; return }
       s = 0; for (i=1; i<=n; i++) s += a[i]
       asort(a)
-      printf "  %-14s %9.1f %9.1f %9.1f  %s\n", name, s/n, a[int(0.95*(n-1))+1], a[n], unit
+      printf "  %-14s %9.1f %9.1f %9.1f  %s\n", name, s/n, a[int(0.95*n + 0.999)], a[n], unit
     }
     NR==1 { next }
     $1 >= since {
@@ -214,7 +217,6 @@ case "${1:-}" in
   -w|--watch) watch_mode "${2:-1}" ;;
   --log)      log_sample ;;
   --week)     week ;;
-  -h|--help)  sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//' ;;
   "")         render ;;
   *)          echo "usage: tn-usage [-w [secs] | --log | --week]" >&2; exit 2 ;;
 esac
