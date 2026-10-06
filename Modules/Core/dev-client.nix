@@ -2,7 +2,32 @@
   # Kvasir's side of "Akmon is the dev box": every way of starting work
   # (editor, terminal, one-off command) lands on Akmon when the tailnet can
   # reach it and quietly stays local when it can't. Server side: Tn-dev-host.
-  flake.nixosModules.Tn-dev-client = { ... }: {
+  flake.nixosModules.Tn-dev-client = { ... }:
+  let
+    sync = import ./_dev-sync.nix;
+  in {
+
+    # ~/Projects <-> Akmon. Everything else here is still GUI-managed
+    # (Grimoire, Media, ...), so declaring one folder must not delete the rest.
+    services.syncthing = {
+      overrideDevices = false;
+      overrideFolders = false;
+      settings = {
+        devices.Akmon = {
+          id        = sync.akmonId;
+          addresses = [ "tcp://akmon:22000" ];
+        };
+        folders.${sync.folderId} = {
+          label           = "Projects";
+          path            = "/home/xin/Projects";
+          devices         = [ "Akmon" ];
+          type            = "sendreceive";
+          # switching machines right after saving shouldn't lose the edit
+          fsWatcherDelayS = 1;
+          inherit (sync) ignorePatterns;
+        };
+      };
+    };
 
     home-manager.users.xin = {
       programs.ssh = {
