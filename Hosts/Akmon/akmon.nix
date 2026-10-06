@@ -14,6 +14,7 @@
       ./_hardware-configuration.nix
       ./_disko.nix
       ./_impermanence.nix
+      ./_auto-upgrade.nix
 
       inputs.disko.nixosModules.disko
       inputs.impermanence.nixosModules.impermanence
