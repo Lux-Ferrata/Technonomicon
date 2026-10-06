@@ -26,6 +26,6 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.BOT_TOKEN }}   # may push to working and main
       - name: weekly
-        run: ci/weekly.sh
+        run: bash ci/weekly.sh   # workspace may be noexec under the runner sandbox
         env:
           MODE: ${{ inputs.mode || 'live' }} # schedule has no inputs -> live
