@@ -36,6 +36,45 @@
       done
       echo "akmon-ready: Akmon hasn't caught up on ~/Projects yet; going ahead anyway" >&2
     '';
+    # deploy <akmon|kvasir|all> [nh args]: Akmon is evaluated here, built and
+    # switched there; Kvasir switches locally (heavy builds still go to Akmon).
+    # `all` asks for the password once (both hosts share xin-password) and
+    # hands it to nh through its askpass hook, so nh's diffs and checks stay.
+    askpass = pkgs.writeShellScript "deploy-askpass" ''printf '%s\n' "$TN_DEPLOY_PW"'';
+    deploy = pkgs.writeShellApplication {
+      name = "deploy";
+      runtimeInputs = [ pkgs.nh pkgs.sudo ];
+      text = ''
+        akmon()  { nh os switch --hostname Akmon --target-host xin@akmon --build-host xin@akmon "$@"; }
+        kvasir() { nh os switch --hostname Kvasir "$@"; }
+
+        target=$(printf '%s' "''${1:-}" | tr '[:upper:]' '[:lower:]')
+        [ $# -gt 0 ] && shift
+        case "$target" in
+          akmon)  akmon "$@" ;;
+          kvasir) kvasir "$@" ;;
+          all)
+            read -rsp "[sudo] password for $USER (Akmon + Kvasir): " pw; echo
+            # check it (and prime this terminal's sudo) before any build starts
+            printf '%s\n' "$pw" | /run/wrappers/bin/sudo -S -k -p "" -v 2>/dev/null \
+              || { echo "deploy: wrong password" >&2; exit 1; }
+            export TN_DEPLOY_PW=$pw NH_SUDO_ASKPASS=${askpass} SUDO_ASKPASS=${askpass}
+            unset pw
+            # the server first: Kvasir's builds go through it
+            if akmon "$@"; then a="✓"; else a="✗"; fi
+            if [ "$a" = "✓" ]; then
+              if kvasir "$@"; then k="✓"; else k="✗"; fi
+            else
+              k="– (skipped)"
+            fi
+            unset TN_DEPLOY_PW
+            printf '\nAkmon %s   Kvasir %s\n' "$a" "$k"
+            [ "$a$k" = "✓✓" ]
+            ;;
+          *) echo "usage: deploy <akmon|kvasir|all> [nh os switch args...]" >&2; exit 2 ;;
+        esac
+      '';
+    };
   in {
     # Chat stand-in for when Akmon is away: started by the first offline
     # chat request, stopped again after 10 idle minutes, so it costs no RAM
