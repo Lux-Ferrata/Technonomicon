@@ -117,9 +117,6 @@
       yazi
       # Accounting
       beancount
-      # AI Coding. From stable: on unstable (2026-10-01) litellm grew an
-      # exception aider refuses at import, so it fails its tests and crashes.
-      pkgs-stable.aider-chat
       # General Tooling
       qalculate-gtk
       libqalculate # provides the `qalc` CLI
@@ -280,6 +277,10 @@
           # Akmon it's the GPU server itself, on Kvasir the proxy that
           # prefers Akmon and falls back to the CPU model (Tn-dev-client).
           "llama-vscode.endpoint"             = "http://127.0.0.1:8012";
+          # chat, edit-selection and the tool-using agent: same idea, :8011
+          # (Akmon wakes its chat model on the first request)
+          "llama-vscode.endpoint_chat"        = "http://127.0.0.1:8011";
+          "llama-vscode.endpoint_tools"       = "http://127.0.0.1:8011";
           "llama-vscode.ask_install_llamacpp" = false;
           "llama-vscode.rag_enabled"          = false;
 

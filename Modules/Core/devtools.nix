@@ -19,6 +19,30 @@
       RUST_SRC_PATH      = "${pkgs.rustPlatform.rustLibSrc}";
     };
 
+    # Aider for multi-file asks, on the local chat model: 127.0.0.1:8011 is
+    # Akmon's chat server there, and the online/offline proxy on Kvasir
+    # (Tn-dev-host / Tn-dev-client). From stable: on unstable (2026-10-01)
+    # litellm grew an exception aider refuses at import.
+    home-manager.users.xin.programs.aider-chat = {
+      enable   = true;
+      package  = pkgs-stable.aider-chat;
+      settings = {
+        model                 = "openai/chat";
+        openai-api-base       = "http://127.0.0.1:8011/v1";
+        openai-api-key        = "local";   # llama.cpp ignores it; aider insists
+        edit-format           = "diff";
+        # you commit, not the model
+        auto-commits          = false;
+        dirty-commits         = false;
+        analytics-disable     = true;
+        check-update          = false;
+        # the local alias isn't in litellm's model list
+        show-model-warnings   = false;
+        # the first request may have to wake the model
+        timeout               = 300;
+      };
+    };
+
     environment.systemPackages = with pkgs; [
       claude-code
       lazygit

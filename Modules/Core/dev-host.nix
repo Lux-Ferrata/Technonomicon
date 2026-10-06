@@ -11,6 +11,32 @@
     # half-filled tree here can never be sent back. Empty this once done.
     seeding = [ ];
   in {
+    # ── Chat / edit-selection / aider, loaded on demand ──────────────────
+    # The first request after an idle spell wakes it (~10-20 s to load),
+    # 30 idle minutes put it back to sleep. --fit gives it whatever VRAM
+    # completion leaves; the MoE experts that don't fit run from RAM, which
+    # is fine with only ~3B parameters active per token.
+    imports = [
+      (import ./_llama-ondemand.nix {
+        inherit pkgs lib;
+        name        = "llama-chat";
+        description = "llama.cpp chat server (Qwen3-Coder-30B-A3B)";
+        listen      = "0.0.0.0";           # firewall: tailscale0 only
+        port        = 8011;
+        backendPort = 18011;
+        idle        = "30min";
+        args = [
+          "${config.services.llama-cpp.package}/bin/llama-server"
+          "--model ${models.chat-30b-a3b}"
+          "--alias chat"
+          "--jinja"                        # Qwen3 chat template + tool calls
+          "--ctx-size 32768 --parallel 1"
+          "--flash-attn on"
+          "--fit on --fit-target 512"      # leave 512 MiB of VRAM spare
+        ];
+      })
+    ];
+
 
     # shells that outlive the ssh connection (Kvasir's `ak` reattaches);
     # socket-activated user daemon, with linger so it survives the last logout
@@ -123,26 +149,32 @@
       after    = [ "srv-xin.service" ];
     };
     networking.firewall.interfaces.tailscale0 = {
-      allowedTCPPorts = [ 22000 8012 ];
+      allowedTCPPorts = [ 22000 8011 8012 ];
       allowedUDPPorts = [ 22000 ];
     };
 
     # ── Code completion (FIM) for the editor, on the GPU ─────────────────
-    # Always loaded and small; Kvasir reaches it through its local proxy
-    # (Tn-dev-client), which falls back to a CPU model when Akmon is away.
-    # Flags follow llama-vscode's recommended FIM server.
+    # The GPU is completion's: the biggest coder model that fits with its
+    # context, always loaded, so suggestions stay instant. Kvasir reaches it
+    # through its local proxy (Tn-dev-client), which falls back to a CPU
+    # model when Akmon is away. Flags follow llama-vscode's FIM server.
     services.llama-cpp = {
       enable   = true;
       package  = pkgs.llama-cpp.override { cudaSupport = true; };
       settings = {
         host           = "0.0.0.0";        # firewall: tailscale0 only
         port           = 8012;
-        model          = models.fim-3b;
+        model          = models.fim-14b;
         n-gpu-layers   = 99;
         flash-attn     = "on";
         batch-size     = 1024;
         ubatch-size    = 1024;
-        ctx-size       = 0;                # the model's own 32k
+        # shared by llama-vscode's parallel requests; 16k covers its
+        # prefix/suffix + extra-context chunks. 8-bit KV cache halves its
+        # VRAM so the 14B fits whole.
+        ctx-size       = 16384;
+        cache-type-k   = "q8_0";
+        cache-type-v   = "q8_0";
         cache-reuse    = 256;
       };
     };

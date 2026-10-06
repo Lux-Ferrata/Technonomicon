@@ -2,7 +2,7 @@
   # Kvasir's side of "Akmon is the dev box": every way of starting work
   # (editor, terminal, one-off command) lands on Akmon when the tailnet can
   # reach it and quietly stays local when it can't. Server side: Tn-dev-host.
-  flake.nixosModules.Tn-dev-client = { lib, pkgs, ... }:
+  flake.nixosModules.Tn-dev-client = { config, lib, pkgs, ... }:
   let
     sync   = import ./_sync.nix;
     models = pkgs.callPackage ./_models.nix { };
@@ -37,6 +37,27 @@
       echo "akmon-ready: Akmon hasn't caught up on ~/Projects yet; going ahead anyway" >&2
     '';
   in {
+    # Chat stand-in for when Akmon is away: started by the first offline
+    # chat request, stopped again after 10 idle minutes, so it costs no RAM
+    # the rest of the time.
+    imports = [
+      (import ./_llama-ondemand.nix {
+        inherit pkgs lib;
+        name        = "llama-chat-fallback";
+        description = "Offline chat model (Qwen2.5-Coder-3B-Instruct, CPU)";
+        port        = 8014;
+        backendPort = 8015;
+        idle        = "10min";
+        args = [
+          "${config.services.llama-cpp.package}/bin/llama-server"
+          "--model ${models.chat-3b}"
+          "--alias chat"
+          "--jinja --ctx-size 16384 --threads 4"
+        ];
+        extra = { Nice = 10; CPUWeight = 20; };
+      })
+    ];
+
 
     # Declarative now: folders/devices not in _sync.nix get dropped from
     # Syncthing (their files stay put). Everything goes through Akmon.
@@ -57,30 +78,34 @@
       }) sync.folders;
     };
 
-    # ── Code completion: one local endpoint, Akmon's GPU or a CPU fallback ─
-    # The editor always talks to 127.0.0.1:8012. nginx sends it to Akmon's
-    # llama.cpp (Tn-dev-host) and, when that can't be reached, to a small
-    # model on this machine -- so completion never needs a setting changed.
+    # ── Local LLM endpoints: Akmon's GPU when reachable, this CPU if not ──
+    # The editor and aider only ever talk to 127.0.0.1 -- 8012 completion
+    # (FIM), 8011 chat -- and nginx sends each to Akmon (Tn-dev-host) or,
+    # when that can't be reached, to the local stand-in. No setting ever
+    # changes between online and offline.
     services.nginx = {
       enable = true;
-      appendHttpConfig = ''
-        upstream llm_fim {
-          server ${akmonIp}:8012 max_fails=1 fail_timeout=30s;
-          server 127.0.0.1:8013 backup;
-        }
-        server {
-          listen 127.0.0.1:8012;
-          location / {
-            proxy_pass            http://llm_fim;
-            proxy_connect_timeout 1s;
-            proxy_next_upstream   error timeout;
-            proxy_buffering       off;
-            proxy_read_timeout    300s;
+      appendHttpConfig = let
+        route = name: port: backup: ''
+          upstream llm_${name} {
+            server ${akmonIp}:${toString port} max_fails=1 fail_timeout=30s;
+            server 127.0.0.1:${toString backup} backup;
           }
-        }
-      '';
+          server {
+            listen 127.0.0.1:${toString port};
+            location / {
+              proxy_pass            http://llm_${name};
+              proxy_connect_timeout 1s;
+              proxy_next_upstream   error timeout;
+              proxy_buffering       off;     # streamed tokens
+              proxy_read_timeout    600s;
+            }
+          }
+        '';
+      in route "fim" 8012 8013 + route "chat" 8011 8014;
     };
 
+    # FIM stand-in: small, always up (completion has to be instant)
     services.llama-cpp = {
       enable   = true;
       settings = {
