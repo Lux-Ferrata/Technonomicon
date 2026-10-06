@@ -24,7 +24,7 @@ let
       stdenv.cc.cc.lib
     ];
   };
-  extracted = pkgs.appimageTools.extractType2 { pname = "weiqi-hub"; inherit version src; };
+  extracted = pkgs.appimageTools.extract { pname = "weiqi-hub"; inherit version src; };
 in
 pkgs.symlinkJoin {
   name = "weiqi-hub-${version}";
