@@ -27,6 +27,7 @@
       self.nixosModules.Tn-shell
       self.nixosModules.Tn-server
       self.nixosModules.Tn-server-nvim
+      self.nixosModules.Tn-server-mail
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
