@@ -31,6 +31,7 @@
       self.nixosModules.Tn-server-mail
       self.nixosModules.Tn-build-host
       self.nixosModules.Tn-forgejo
+      self.nixosModules.Tn-dev-host
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
@@ -69,10 +70,6 @@
         sops.defaultSopsFormat = "yaml";
 
         networking.hostName = "Akmon";
-
-        # off until it's set up as a proper service with data on the fast pool;
-        # Tn-network's per-user setup would mint a new device ID every boot here
-        services.syncthing.enable = lib.mkForce false;
 
         home-manager = {
           useGlobalPkgs = true;

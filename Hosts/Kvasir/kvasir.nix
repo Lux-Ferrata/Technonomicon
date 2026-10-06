@@ -58,6 +58,7 @@
       self.nixosModules.Tn-utf
       self.nixosModules.Tn-virtualization
       self.nixosModules.Tn-build-client
+      self.nixosModules.Tn-dev-client
 
       ({ pkgs, config, ... }: {
         system.stateVersion = "23.11";
