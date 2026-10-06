@@ -43,7 +43,9 @@
       printf '%s' "$*" | ssh akmon grimoire-snapshot -m -
     '';
     # deploy <akmon|kvasir|all> [nh args]: Akmon is evaluated here, built and
-    # switched there; Kvasir switches locally (heavy builds still go to Akmon).
+    # switched there; Kvasir is built on Akmon too when it's reachable (the
+    # whole closure, not just what distributed builds would hand over) and
+    # switched locally; offline it builds here.
     # `all` asks for the password once (both hosts share xin-password). nh
     # only takes a remote sudo password from its own prompt, so for Akmon
     # `all` does nh's steps itself: evaluate, build on Akmon, switch over ssh
@@ -61,7 +63,14 @@
         step() { printf '\e[1;36m› %s\e[0m\n' "$*"; }
 
         akmon()  { nh os switch --hostname Akmon --target-host xin@akmon --build-host xin@akmon "$@"; }
-        kvasir() { nh os switch --hostname Kvasir "$@"; }
+        kvasir() {
+          if ssh -o BatchMode=yes -o ConnectTimeout=3 xin@akmon true 2>/dev/null; then
+            nh os switch --hostname Kvasir --build-host xin@akmon "$@"
+          else
+            step "Akmon unreachable: building Kvasir locally"
+            nh os switch --hostname Kvasir "$@"
+          fi
+        }
 
         akmon_with_pw() {
           local drv out

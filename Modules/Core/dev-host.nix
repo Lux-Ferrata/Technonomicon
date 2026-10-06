@@ -9,7 +9,7 @@
     home = "/srv/xin";          # fast/srv/xin: xin's synced data, survives the root wipe
     # folders still taking their first copy from Kvasir: receive-only, so a
     # half-filled tree here can never be sent back. Empty this once done.
-    seeding = [ "grimoire" ];
+    seeding = [ ];
   in {
     # ── Chat / edit-selection / aider, loaded on demand ──────────────────
     # The first request after an idle spell wakes it (~10-20 s to load),
