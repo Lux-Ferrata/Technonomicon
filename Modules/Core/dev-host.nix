@@ -8,7 +8,7 @@
     home = "/srv/xin";          # fast/srv/xin: xin's synced data, survives the root wipe
     # folders still taking their first copy from Kvasir: receive-only, so a
     # half-filled tree here can never be sent back. Empty this once done.
-    seeding = [ "projects" ];
+    seeding = [ ];
   in {
 
     # shells that outlive the ssh connection (Kvasir's `ak` reattaches);
