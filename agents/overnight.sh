@@ -27,6 +27,49 @@ mkdir -p "$WORKROOT"
 SUMMARY=$WORKROOT/summary.txt
 : > "$SUMMARY"
 exec > >(tee -a "$WORKROOT/log") 2>&1
+REPORTS=$WORKROOT/reports.md
+: > "$REPORTS"
+TASKS=0
+
+# Every run ends with an email -- including one that crashes -- so the
+# owner never has to keep a session open. The body carries each task's full
+# report; an empty queue only mails for manual (daytime) runs.
+finish() {
+  local rc=$?
+  if [ "$TASKS" -eq 0 ] && [ $rc -eq 0 ] && [ "$(date -d "@$START" +%H)" -lt 6 ]; then
+    exit 0
+  fi
+  local done_n other_n status subject
+  done_n=$(grep -c ': done' "$SUMMARY" || true)
+  other_n=$(grep -vc ': done' "$SUMMARY" || true)
+  if [ $rc -ne 0 ]; then status="FAILED (exit $rc)"
+  elif [ "$TASKS" -eq 0 ]; then status="nothing queued"
+  else status="$done_n done, $other_n other"; fi
+  subject="[Akmon] overnight agents: $status"
+  {
+    echo "To: $MAIL_TO"; echo "From: $MAIL_FROM"; echo "Subject: $subject"
+    echo "Content-Type: text/plain; charset=utf-8"; echo
+    echo "Overnight agent run $STAMP -- $status"
+    echo "Started $(date -d "@$START" '+%a %H:%M'), finished $(date '+%H:%M')."
+    echo
+    if [ -s "$SUMMARY" ]; then cat "$SUMMARY"; echo; fi
+    if [ $rc -ne 0 ]; then
+      echo "The run stopped early. Last 60 log lines:"; echo
+      tail -n 60 "$WORKROOT/log"; echo
+    fi
+    if [ -s "$REPORTS" ]; then
+      echo "======================================================================"
+      cat "$REPORTS"
+    fi
+    echo
+    echo "Queue: $WEB/$QUEUE/issues"
+    echo "Logs and work dirs: $WORKROOT on Akmon (kept 14 days)."
+    echo "To follow up, tell Claude: \"look at overnight run $STAMP\"."
+  } | /run/wrappers/bin/sendmail -t || echo "mail failed"
+  exit $rc
+}
+START=$(date +%s)
+trap finish EXIT
 
 # Stop starting new tasks at the deadline: before the 03:00 weekly job on
 # Wednesdays, before the 05:45 day-mode switch otherwise; a daytime manual
@@ -57,6 +100,7 @@ unset SSH_AUTH_SOCK
 issues=$(api GET "/repos/$QUEUE/issues?state=open&type=issues&labels=overnight&limit=50") \
   || { echo "cannot read the queue"; exit 1; }
 count=$(jq length <<<"$issues")
+TASKS=$count
 echo "overnight $STAMP: $count task(s), deadline $(date -d @"$DEADLINE" +%H:%M)"
 [ "$count" -gt 0 ] || exit 0
 
@@ -150,6 +194,7 @@ How to work:
   fi
   { [ -n "$link" ] && printf '**Result:** %s\n\n' "$link"; cat "$report"; } > "$out/comment.md"
   comment "$n" "$out/comment.md"
+  { echo "## #$n $title"; echo "$WEB/$QUEUE/issues/$n"; echo; cat "$out/comment.md"; echo; } >> "$REPORTS"
   remove_label "$n" in-progress
   remove_label "$n" overnight
   if [ -n "$link" ]; then
@@ -161,17 +206,3 @@ How to work:
     echo "- #$n $title: needs attention (no result; see the issue)" >> "$SUMMARY"
   fi
 done
-
-{
-  echo "Overnight agent run $STAMP"
-  echo
-  cat "$SUMMARY"
-  echo
-  echo "Queue: $WEB/$QUEUE/issues   Logs: $WORKROOT on Akmon"
-} > "$WORKROOT/mail"
-{
-  echo "To: $MAIL_TO"; echo "From: $MAIL_FROM"
-  echo "Subject: [Akmon] overnight agents: $(grep -c ': done' "$SUMMARY" || true) done, $(grep -vc ': done' "$SUMMARY" || true) other"
-  echo "Content-Type: text/plain; charset=utf-8"; echo
-  cat "$WORKROOT/mail"
-} | /run/wrappers/bin/sendmail -t || echo "mail failed"
