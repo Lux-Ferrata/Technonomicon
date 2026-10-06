@@ -12,6 +12,11 @@
 
     modules = [
       ./_hardware-configuration.nix
+      ./_disko.nix
+      ./_impermanence.nix
+
+      inputs.disko.nixosModules.disko
+      inputs.impermanence.nixosModules.impermanence
 
       inputs.sops-nix.nixosModules.sops
       inputs.home-manager.nixosModules.home-manager
@@ -23,7 +28,7 @@
       self.nixosModules.Tn-server
       self.nixosModules.Tn-server-nvim
 
-      ({ pkgs, config, ... }: {
+      ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
 
         tn.full_name     = "xin";
@@ -55,11 +60,15 @@
         virtualisation.docker.enable = true;
 
         sops.secrets.xin-password.neededForUsers = true;
-        sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+        sops.age.sshKeyPaths = [ "/persist/etc/ssh/ssh_host_ed25519_key" ];
         sops.defaultSopsFile = ../../_secrets.yaml;
         sops.defaultSopsFormat = "yaml";
 
         networking.hostName = "Akmon";
+
+        # off until it's set up as a proper service with data on the fast pool;
+        # Tn-network's per-user setup would mint a new device ID every boot here
+        services.syncthing.enable = lib.mkForce false;
 
         home-manager = {
           useGlobalPkgs = true;
