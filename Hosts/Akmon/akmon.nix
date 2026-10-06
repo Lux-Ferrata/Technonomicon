@@ -32,6 +32,7 @@
       self.nixosModules.Tn-build-host
       self.nixosModules.Tn-forgejo
       self.nixosModules.Tn-dev-host
+      self.nixosModules.Tn-devtools
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";

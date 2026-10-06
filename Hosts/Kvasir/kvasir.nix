@@ -59,6 +59,7 @@
       self.nixosModules.Tn-virtualization
       self.nixosModules.Tn-build-client
       self.nixosModules.Tn-dev-client
+      self.nixosModules.Tn-devtools
 
       ({ pkgs, config, ... }: {
         system.stateVersion = "23.11";

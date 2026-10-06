@@ -18,6 +18,18 @@
     systemd.user.sockets.shpool.wantedBy = [ "sockets.target" ];
     users.users.xin.linger     = true;
 
+    # ── VS Code server (Remote-SSH from Kvasir) ──────────────────────────
+    # The server and marketplace extensions ship generic-linux binaries
+    programs.nix-ld.enable = true;
+    # server + extensions survive the root wipe (else a re-download per boot)
+    environment.persistence."/persist".users.xin.directories = [
+      ".vscode-server"
+      ".local/share/direnv"
+    ];
+    # Projects arrive from Kvasir, where their .envrc files were already
+    # allowed; don't make each one be re-allowed here before `rb` works.
+    programs.direnv.settings.whitelist.prefix = [ "/home/xin/Projects" ];
+
     # ── Syncthing hub (topology in _sync.nix) ────────────────────────────
     # Every synced folder lands in fast/srv/xin/<dir>. The dataset is made on
     # first boot rather than by hand; sanoid already snapshots fast/srv
