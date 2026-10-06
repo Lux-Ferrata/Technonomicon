@@ -28,6 +28,7 @@
       self.nixosModules.Tn-shell
       self.nixosModules.Tn-server
       self.nixosModules.Tn-server-nvim
+      self.nixosModules.Tn-console-kanata
       self.nixosModules.Tn-server-mail
       self.nixosModules.Tn-build-host
       self.nixosModules.Tn-forgejo
