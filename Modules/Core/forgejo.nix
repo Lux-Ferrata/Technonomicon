@@ -73,7 +73,9 @@
       instances.akmon = {
         enable    = true;
         name      = config.networking.hostName;
-        url       = "https://${tsName}";
+        # same host: talk to Forgejo directly, so the runner doesn't race
+        # tailscaled/MagicDNS at boot (jobs still see ROOT_URL as server_url)
+        url       = "http://127.0.0.1:${toString cfg.settings.server.HTTP_PORT}";
         tokenFile = "${cfg.stateDir}/runner-token.env";
         # jobs run straight on the host (no containers): `runs-on: nixos`
         labels    = [ "nixos:host" ];
