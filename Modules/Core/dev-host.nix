@@ -13,7 +13,19 @@
 
     # shells that outlive the ssh connection (Kvasir's `ak` reattaches);
     # socket-activated user daemon, with linger so it survives the last logout
-    environment.systemPackages = [ pkgs.shpool ];
+    environment.systemPackages = [
+      pkgs.shpool
+      # Akmon has no editor of its own: inside a VS Code remote terminal,
+      # open in that window; anywhere else (`ak`), point back to Kvasir
+      (pkgs.writeShellScriptBin "eo" ''
+        if [ -n "''${VSCODE_IPC_HOOK_CLI:-}" ] && command -v code >/dev/null; then
+          exec code "''${@:-.}"
+        fi
+        echo "eo: Akmon is headless -- detach (Ctrl-Space Ctrl-q) and run eo on Kvasir;" >&2
+        echo "    it opens the window on Akmon from there." >&2
+        exit 1
+      '')
+    ];
     systemd.packages           = [ pkgs.shpool ];
     systemd.user.sockets.shpool.wantedBy = [ "sockets.target" ];
     users.users.xin.linger     = true;
