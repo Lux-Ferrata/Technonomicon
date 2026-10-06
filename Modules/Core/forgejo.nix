@@ -26,7 +26,7 @@
           ROOT_URL   = "https://${tsName}/";
           HTTP_ADDR  = "127.0.0.1";
           HTTP_PORT  = 3000;
-          SSH_DOMAIN = config.networking.hostName;
+          SSH_DOMAIN = lib.toLower config.networking.hostName;
         };
         service.DISABLE_REGISTRATION = true;
         session.COOKIE_SECURE         = true;
