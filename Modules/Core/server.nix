@@ -1,10 +1,14 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-server = { ... }: {
+  flake.nixosModules.Tn-server = { config, ... }: {
+
+    # single-use bootstrap key; only read while the node isn't logged in yet
+    sops.secrets.tailscale-authkey = {};
 
     # headless box, reached and deployed to from Kvasir over the tailnet
     services.tailscale = {
       enable       = true;
       openFirewall = true;   # direct UDP instead of DERP relays
+      authKeyFile  = config.sops.secrets.tailscale-authkey.path;
     };
 
     # sshd only answers on the tailnet; hardening settings live in Tn-network
