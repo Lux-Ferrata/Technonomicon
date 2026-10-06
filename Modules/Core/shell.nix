@@ -362,10 +362,8 @@
       nix-ld
       curl
       zoxide
-      gparted
       pciutils
       fastfetch
-      udiskie
       trash-cli
       ripgrep
       ripgrep-all
@@ -384,14 +382,11 @@
       dysk
       pastel
       gnumake
-      antigravity-ide-fhs
       usbutils
       bat
-      mpv
       sox
       aria2
       bzip3
-      nemo-with-extensions
       powertop
       # bitwarden-cli
       # bitwarden-desktop
@@ -401,8 +396,6 @@
       frogmouth
       opentimestamps-client
       inotify-tools
-    ] ++ pkgs.lib.optionals (pkgs.stdenv.hostPlatform.system == "x86_64-linux") [
-      github-desktop
     ];
   };
 }

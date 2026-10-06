@@ -16,7 +16,7 @@
 
     users.users.xin.openssh.authorizedKeys.keys = [
       # xin@Kvasir
-      "KVASIR_PUBKEY_PLACEHOLDER"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG0xOjA5uRmGhQjFGbZsnIcKvI7g7ZIq5PiR3EeiNimO xin@Kvasir"
     ];
 
     # remote builds / `nix copy` from Kvasir push unsigned paths

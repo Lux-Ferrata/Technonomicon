@@ -17,6 +17,9 @@
 
     security.rtkit.enable = true;
 
+    # needs the xdg portal below, so it lives with the desktop
+    services.flatpak.enable = true;
+
     services = {
       greetd = {
         enable = true;
@@ -153,6 +156,12 @@
       gnome-themes-extra
       adwaita-icon-theme
 
+      gparted
+      udiskie
+      nemo-with-extensions
+      antigravity-ide-fhs
+      mpv
+
       ploverPkg
       ploverOpen
       (makeDesktopItem {
@@ -163,6 +172,8 @@
         terminal    = false;
         categories  = [ "Utility" ];
       })
+    ] ++ pkgs.lib.optionals (pkgs.stdenv.hostPlatform.system == "x86_64-linux") [
+      github-desktop
     ];
 
     xdg.portal = {

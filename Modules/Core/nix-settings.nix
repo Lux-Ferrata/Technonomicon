@@ -1,11 +1,8 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-nix = { pkgs, ... }: {
     imports = [
-      inputs.nix-flatpak.nixosModules.nix-flatpak
       inputs.nix-index-database.nixosModules.nix-index
     ];
-
-    services.flatpak.enable = true;
 
     nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
