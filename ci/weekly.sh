@@ -71,7 +71,8 @@ claude_do() { # prompt allowed-tools
 build_all() { # -> 0 if every host builds; logs in $WORK/build-<host>.log
   local rc=0 h
   for h in "${HOSTS[@]}"; do
-    if nix build --keep-going -L --out-link "$WORK/result-$h" \
+    # no eval cache: a cached evaluation prints no warnings (see eval_warnings)
+    if nix build --keep-going -L --option eval-cache false --out-link "$WORK/result-$h" \
          ".#nixosConfigurations.$h.config.system.build.toplevel" \
          > "$WORK/build-$h.log" 2>&1; then
       echo "build $h: ok"
@@ -144,9 +145,61 @@ if [ $upgraded -eq 0 ]; then
   log "build working as-is"
   build_all
 fi
+
+# ---------------------------------------------------------------------------
+# evaluation warnings (deprecated options, renamed packages, ...). Only nix's
+# own warning lines: -L build output is prefixed "<drv>> ", so compiler
+# warnings never match.
+eval_warnings() { # -> $WORK/warnings.txt, empty if none
+  local h
+  : > "$WORK/warnings.txt"
+  for h in "${HOSTS[@]}"; do
+    grep -E -A4 '^(evaluation warning|trace: warning):' "$WORK/build-$h.log" \
+      | sed "s/^/[$h] /" >> "$WORK/warnings.txt" || true
+  done
+}
+fixed_warnings=0
+eval_warnings
+if [ -s "$WORK/warnings.txt" ]; then
+  log "warnings: fix"
+  warn_start=$(git rev-parse HEAD)
+  claude_do "Fix the Nix evaluation warnings this NixOS flake repository (the current directory) produces. They are listed in $WORK/warnings.txt (prefixed with the host); full build logs are $WORK/build-*.log (hosts: ${HOSTS[*]}).
+
+Rules from the repository owner:
+- Fix every warning caused by this repository's own configuration: renamed or deprecated options, renamed packages, deprecated functions, and so on. Use the replacement the warning names, and keep behaviour identical.
+- Leave alone warnings that come from inside a flake input (nixpkgs internals, home-manager modules, etc.) and that this repo cannot fix without patching the input.
+- Keep every change minimal. Follow CLAUDE.md. Never modify, weaken or route around the distraction-blocking configuration.
+- Do not commit or push; the calling script does that.
+- Verify with: nix build --no-link .#nixosConfigurations.<Host>.config.system.build.toplevel
+
+When done, write a short plain-text summary to $WORK/warning-fixes.txt: which warnings you fixed (and how), and which you left and why." \
+    "Read,Edit,Write,Glob,Grep,Bash(nix build:*),Bash(nix eval:*),Bash(nix log:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*)" \
+    || note "Claude warning-fix exited with an error"
+  if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+    if build_all; then
+      { echo "eval: fix evaluation warnings ($TODAY)"; echo
+        cat "$WORK/warning-fixes.txt" 2>/dev/null; } > "$WORK/warn-msg"
+      git add -A
+      git commit -q -F "$WORK/warn-msg"
+      fixed_warnings=1
+      note "evaluation warnings: fixes committed $(git rev-parse --short HEAD)"
+    else
+      note "evaluation warnings: fixes DROPPED, they broke the build"
+      git reset -q --hard "$warn_start"
+      git clean -fdq
+      build_all
+    fi
+  fi
+  eval_warnings
+  if [ -s "$WORK/warnings.txt" ]; then
+    note "evaluation warnings still present: $(grep -cE '\] (evaluation warning|trace: warning):' "$WORK/warnings.txt") (see warnings.txt / warning-fixes.txt)"
+  else
+    note "evaluation warnings: none left"
+  fi
+fi
 new=$(git rev-parse HEAD)
 
-if [ $upgraded -eq 1 ]; then
+if [ "$new" != "$start" ]; then
   log "push upgrade to working"
   # fast-forward only: if working moved during the run, stop rather than
   # race the human; the next run picks everything up
@@ -246,9 +299,9 @@ done
 log "email"
 claude_do "Write this week's summary email body (plain text, no markdown headings, ~150-400 words) for the owner of this NixOS config repo. Save it to $WORK/summary.txt.
 
-Material: $WORK/notes (facts from the run, include every problem), $WORK/curated.txt (new commits on main; may be missing if nothing changed), $WORK/plan.json, $WORK/flake-update.txt, $WORK/closures.txt (package version changes per host; may be empty), $WORK/fixes.txt (may be missing).
+Material: $WORK/notes (facts from the run, include every problem), $WORK/curated.txt (new commits on main; may be missing if nothing changed), $WORK/plan.json, $WORK/flake-update.txt, $WORK/closures.txt (package version changes per host; may be empty), $WORK/fixes.txt (may be missing), $WORK/warnings.txt and $WORK/warning-fixes.txt (evaluation warnings left and fixed; may be missing).
 
-Structure: one-line verdict; what changed this week grouped like the curated commits; package upgrades worth knowing about (skip noise); anything pinned or fixed and why; problems needing attention. End with exactly:
+Structure: one-line verdict; what changed this week grouped like the curated commits; package upgrades worth knowing about (skip noise); anything pinned or fixed and why; evaluation warnings fixed and any left over; problems needing attention. End with exactly:
 To update Kvasir:  cd ~/Projects/Technonomicon && git pull && deploy-kvasir
 Akmon:             deploy-akmon (until auto-upgrade is enabled)
 $([ "$MODE" = live ] || echo "Start with a line saying this was a DRY RUN and nothing was pushed.")" \
