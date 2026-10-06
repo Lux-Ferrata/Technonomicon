@@ -4,7 +4,8 @@
   # Client side: Tn-dev-client.
   flake.nixosModules.Tn-dev-host = { config, pkgs, lib, ... }:
   let
-    sync = import ./_sync.nix;
+    sync   = import ./_sync.nix;
+    models = pkgs.callPackage ./_models.nix { };
     home = "/srv/xin";          # fast/srv/xin: xin's synced data, survives the root wipe
     # folders still taking their first copy from Kvasir: receive-only, so a
     # half-filled tree here can never be sent back. Empty this once done.
@@ -122,8 +123,30 @@
       after    = [ "srv-xin.service" ];
     };
     networking.firewall.interfaces.tailscale0 = {
-      allowedTCPPorts = [ 22000 ];
+      allowedTCPPorts = [ 22000 8012 ];
       allowedUDPPorts = [ 22000 ];
     };
+
+    # ── Code completion (FIM) for the editor, on the GPU ─────────────────
+    # Always loaded and small; Kvasir reaches it through its local proxy
+    # (Tn-dev-client), which falls back to a CPU model when Akmon is away.
+    # Flags follow llama-vscode's recommended FIM server.
+    services.llama-cpp = {
+      enable   = true;
+      package  = pkgs.llama-cpp.override { cudaSupport = true; };
+      settings = {
+        host           = "0.0.0.0";        # firewall: tailscale0 only
+        port           = 8012;
+        model          = models.fim-3b;
+        n-gpu-layers   = 99;
+        flash-attn     = "on";
+        batch-size     = 1024;
+        ubatch-size    = 1024;
+        ctx-size       = 0;                # the model's own 32k
+        cache-reuse    = 256;
+      };
+    };
+    # the CUDA runtime maps writable+executable memory
+    systemd.services.llama-cpp.serviceConfig.MemoryDenyWriteExecute = lib.mkForce false;
   };
 }

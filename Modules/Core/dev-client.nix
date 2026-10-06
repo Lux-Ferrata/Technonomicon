@@ -4,7 +4,11 @@
   # reach it and quietly stays local when it can't. Server side: Tn-dev-host.
   flake.nixosModules.Tn-dev-client = { lib, pkgs, ... }:
   let
-    sync = import ./_sync.nix;
+    sync   = import ./_sync.nix;
+    models = pkgs.callPackage ./_models.nix { };
+    # tailnet IP, not the name: nginx resolves upstreams once at start, and
+    # at boot MagicDNS may not be up yet
+    akmonIp = "100.122.244.58";
 
     # Exit 0 when <path> (default .) should be worked on on Akmon: it's a
     # synced project, Akmon answers within 2s, and Akmon has every change
@@ -51,6 +55,50 @@
         fsWatcherDelayS = 1;
         ignorePatterns  = f.ignorePatterns or null;
       }) sync.folders;
+    };
+
+    # ── Code completion: one local endpoint, Akmon's GPU or a CPU fallback ─
+    # The editor always talks to 127.0.0.1:8012. nginx sends it to Akmon's
+    # llama.cpp (Tn-dev-host) and, when that can't be reached, to a small
+    # model on this machine -- so completion never needs a setting changed.
+    services.nginx = {
+      enable = true;
+      appendHttpConfig = ''
+        upstream llm_fim {
+          server ${akmonIp}:8012 max_fails=1 fail_timeout=30s;
+          server 127.0.0.1:8013 backup;
+        }
+        server {
+          listen 127.0.0.1:8012;
+          location / {
+            proxy_pass            http://llm_fim;
+            proxy_connect_timeout 1s;
+            proxy_next_upstream   error timeout;
+            proxy_buffering       off;
+            proxy_read_timeout    300s;
+          }
+        }
+      '';
+    };
+
+    services.llama-cpp = {
+      enable   = true;
+      settings = {
+        port        = 8013;
+        model       = models.fim-1_5b;
+        threads     = 4;                   # leave half the CPU to the user
+        ctx-size    = 8192;
+        batch-size  = 1024;
+        ubatch-size = 512;
+        cache-reuse = 256;
+      };
+    };
+    # it only matters when Akmon is away; never compete with the desktop
+    systemd.services.llama-cpp.serviceConfig = {
+      Nice           = 10;
+      CPUWeight      = 20;
+      # a missing/broken fallback shouldn't wait 5 min to come back
+      RestartSec     = lib.mkForce 10;
     };
 
     home-manager.users.xin = {

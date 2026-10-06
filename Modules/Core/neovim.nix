@@ -17,11 +17,14 @@
       # licensed to official VS Code only; this is the open replacement,
       # and VSCodium's product.json already allows its proposed APIs.
       jeanp413.open-remote-ssh
+      # Code completion (and later chat/edit) from local llama.cpp models;
+      # always via 127.0.0.1:8012 (Tn-dev-client picks Akmon or the fallback)
+      ggml-org.llama-vscode
     ]) ++ [
       # Harpoon-style pinned files (MIT). Published only to the MS
       # marketplace, so it comes from that index rather than Open VSX --
       # and so Akmon's server can't fetch it: it runs on the UI side
-      # (remote.extensionKind below), which works on remote files too.
+      # (uiExtensions), which works on remote files too.
       vscodeMkt.tobias-z.vscode-harpoon
     ] ++ (with pkgs.vscode-extensions; [
       arcticicestudio.nord-visual-studio-code
@@ -48,6 +51,15 @@
       # Spell checker (GPL-3.0). Limited to comments in code, see cSpell.*
       streetsidesoftware.code-spell-checker
     ]);
+
+    # Extensions that run on the local (UI) side even in remote windows:
+    # the remote connector itself, Harpoon (marketplace-only, so Akmon's
+    # server can't fetch it) and llama-vscode (talks to Kvasir's proxy).
+    uiExtensions = [
+      "jeanp413.open-remote-ssh"
+      "tobias-z.vscode-harpoon"
+      "ggml-org.llama-vscode"
+    ];
 
     mcpy = pkgs.python3Packages.buildPythonPackage rec {
       pname = "mcpy";
@@ -260,11 +272,16 @@
           # platform rather than letting it probe; ControlMaster etc. come
           # from ~/.ssh/config (Tn-dev-client).
           "remote.SSH.remotePlatform"    = { akmon = "linux"; };
-          # everything except the two that run on this (UI) side
-          "remote.SSH.defaultExtensions" = lib.subtractLists
-            [ "jeanp413.open-remote-ssh" "tobias-z.vscode-harpoon" ]
+          # everything except what runs on this (UI) side
+          "remote.SSH.defaultExtensions" = lib.subtractLists uiExtensions
             (map (e: e.vscodeExtUniqueId) editorExtensions);
-          "remote.extensionKind" = { "tobias-z.vscode-harpoon" = [ "ui" ]; };
+          "remote.extensionKind" = lib.genAttrs uiExtensions (_: [ "ui" ]);
+
+          # llama-vscode: the local proxy is the only endpoint it needs to
+          # know. It runs UI-side, so remote windows use Kvasir's proxy too.
+          "llama-vscode.endpoint"             = "http://127.0.0.1:8012";
+          "llama-vscode.ask_install_llamacpp" = false;
+          "llama-vscode.rag_enabled"          = false;
 
           # ms-python.python would otherwise try to start Pylance; the
           # standalone pyright extension provides the language server.

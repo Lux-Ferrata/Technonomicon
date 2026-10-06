@@ -51,6 +51,10 @@
         # videoDrivers is how NixOS loads it, it doesn't start X
         services.xserver.videoDrivers = [ "nvidia" ];
 
+        # RTX 5080 (Blackwell): build CUDA packages for sm_120 only, not
+        # every architecture nixpkgs supports
+        nixpkgs.config.cudaCapabilities = [ "12.0" ];
+
         hardware = {
           nvidia-container-toolkit.enable = true;
           nvidia = {
