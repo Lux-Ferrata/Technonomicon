@@ -33,15 +33,20 @@
     };
 
     # same absolute path as on Kvasir, so error paths, compile_commands.json
-    # and editor state mean the same thing on both machines
+    # and editor state mean the same thing on both machines. Not part of
+    # local-fs.target: srv-xin.service runs after sysinit, so the default
+    # Before=local-fs.target would be an ordering cycle.
     systemd.mounts = [{
-      what     = "${home}/Projects";
-      where    = "/home/xin/Projects";
-      type     = "none";
-      options  = "bind";
-      requires = [ "srv-xin.service" ];
-      after    = [ "srv-xin.service" ];
-      wantedBy = [ "multi-user.target" ];
+      what      = "${home}/Projects";
+      where     = "/home/xin/Projects";
+      type      = "none";
+      options   = "bind";
+      requires  = [ "srv-xin.service" ];
+      after     = [ "srv-xin.service" ];
+      before    = [ "umount.target" ];
+      conflicts = [ "umount.target" ];
+      wantedBy  = [ "multi-user.target" ];
+      unitConfig.DefaultDependencies = false;
     }];
 
     # Runs as xin (not a system user) because the synced files must be xin's
