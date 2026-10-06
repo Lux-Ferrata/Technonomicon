@@ -45,10 +45,10 @@
   search_url_a https://arxiv.org/search/?query=
   search_url_l http://libgen.rs/search.php?req=
 
-  # 3. Inverse Search (Click PDF -> Jump to the source line in VS Code)
+  # 3. Inverse Search (Click PDF -> Jump to the source line in VSCodium)
   #    Absolute store path: sioyek can be launched with a minimal PATH.
   #    -r reuses the existing window instead of spawning one per click.
-  inverse_search_command ${pkgs.vscode}/bin/code -r --goto "%1:%2"
+  inverse_search_command ${pkgs.vscodium}/bin/codium -r --goto "%1:%2"
     '';
 
     home-manager.users.xin.home.file.".config/sioyek/keys_user.config".text = ''

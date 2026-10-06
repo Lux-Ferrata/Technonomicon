@@ -1,6 +1,6 @@
 { inputs, ... }: {
 
-  flake.nixosModules.Tn-neovim = { pkgs, pkgs-stable, ... }:
+  flake.nixosModules.Tn-neovim = { pkgs, pkgs-stable, lib, ... }:
   let
     openVsx   = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.open-vsx;
     vscodeMkt = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.vscode-marketplace;
@@ -260,7 +260,10 @@
           # platform rather than letting it probe; ControlMaster etc. come
           # from ~/.ssh/config (Tn-dev-client).
           "remote.SSH.remotePlatform"    = { akmon = "linux"; };
-          "remote.SSH.defaultExtensions" = map (e: e.vscodeExtUniqueId) editorExtensions;
+          # everything except the two that run on this (UI) side
+          "remote.SSH.defaultExtensions" = lib.subtractLists
+            [ "jeanp413.open-remote-ssh" "tobias-z.vscode-harpoon" ]
+            (map (e: e.vscodeExtUniqueId) editorExtensions);
           "remote.extensionKind" = { "tobias-z.vscode-harpoon" = [ "ui" ]; };
 
           # ms-python.python would otherwise try to start Pylance; the

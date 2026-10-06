@@ -15,11 +15,11 @@
     # socket-activated user daemon, with linger so it survives the last logout
     environment.systemPackages = [
       pkgs.shpool
-      # Akmon has no editor of its own: inside a VS Code remote terminal,
+      # Akmon has no editor of its own: inside a VSCodium remote terminal,
       # open in that window; anywhere else (`ak`), point back to Kvasir
       (pkgs.writeShellScriptBin "eo" ''
-        if [ -n "''${VSCODE_IPC_HOOK_CLI:-}" ] && command -v code >/dev/null; then
-          exec code "''${@:-.}"
+        if [ -n "''${VSCODE_IPC_HOOK_CLI:-}" ] && command -v codium >/dev/null; then
+          exec codium "''${@:-.}"
         fi
         echo "eo: Akmon is headless -- detach (Ctrl-Space Ctrl-q) and run eo on Kvasir;" >&2
         echo "    it opens the window on Akmon from there." >&2
@@ -35,12 +35,12 @@
     # would vanish. Show it unconditionally.
     programs.starship.settings.hostname.ssh_only = lib.mkForce false;
 
-    # ── VS Code server (Remote-SSH from Kvasir) ──────────────────────────
+    # ── VSCodium server (Open Remote - SSH from Kvasir) ──────────────────
     # The server and marketplace extensions ship generic-linux binaries
     programs.nix-ld.enable = true;
     # server + extensions survive the root wipe (else a re-download per boot)
     environment.persistence."/persist".users.xin.directories = [
-      ".vscode-server"
+      ".vscodium-server"
       ".local/share/direnv"
     ];
     # Projects arrive from Kvasir, where their .envrc files were already
