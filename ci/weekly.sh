@@ -233,6 +233,8 @@ fi
 for h in "${HOSTS[@]}"; do
   if [ -e "$ROOTS/$h" ]; then
     { echo "== $h"; nix store diff-closures "$ROOTS/$h" "$WORK/result-$h" | head -n 60; echo; } >> "$WORK/closures.txt" || true
+  else
+    echo "== $h: no baseline yet (first live run records one); not a problem" >> "$WORK/closures.txt"
   fi
   if [ "$MODE" = live ]; then
     rm -f "$ROOTS/$h"
