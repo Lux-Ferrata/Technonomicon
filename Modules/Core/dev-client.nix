@@ -28,12 +28,13 @@
         # keeps it alive there). Inside ~/Projects/<p> the session is named
         # after the project and starts in the same path -- the paths are
         # identical on both machines -- otherwise it's "main" in ~.
+        # Technonomicon isn't synced to Akmon, so it counts as "otherwise".
         # Reconnects by itself whenever the connection drops (ssh exit 255).
         ak = ''
           set -l name $argv[1]
           set -l dir $HOME
           set -l rel (string replace -- "$HOME/Projects/" "" $PWD)
-          if test "$rel" != "$PWD"; and test -d $PWD
+          if test "$rel" != "$PWD"; and not string match -q -- "Technonomicon*" $rel
             set dir $PWD
             test -z "$name"; and set name (string split -m1 / -- $rel)[1]
           end
