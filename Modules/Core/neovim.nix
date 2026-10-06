@@ -407,13 +407,14 @@
 
     # `eo` is a plain $PATH binary, so putting it here makes VSCodium the
     # default target while still letting a project dev shell win by
-    # prepending its own.
+    # prepending its own. `--new-window` keeps it from handing the path to
+    # an already-open window.
     home-manager.users.xin.home.packages = [
       (pkgs.writeShellScriptBin "eo" ''
         if [ "$#" -eq 0 ]; then
-          exec ${pkgs.vscodium}/bin/codium .
+          exec ${pkgs.vscodium}/bin/codium --new-window .
         fi
-        exec ${pkgs.vscodium}/bin/codium "$@"
+        exec ${pkgs.vscodium}/bin/codium --new-window "$@"
       '')
     ];
 
@@ -426,10 +427,10 @@
         linemode       = "mtime"
         scrolloff      = 5
 
-        # Enter on text/code opens VSCodium (detached); `O` offers nvim too
+        # Enter on text/code opens VSCodium via `eo` (detached); `O` offers nvim too
         [opener]
         edit = [
-          { run = 'codium "$@"', orphan = true, desc = "VSCodium" },
+          { run = 'eo "$@"', orphan = true, desc = "VSCodium" },
           { run = 'nvim "$@"', block = true, desc = "Neovim" },
         ]
       '';
@@ -452,7 +453,7 @@
 
         [[mgr.prepend_keymap]]
         on   = [ "C" ]
-        run  = "shell 'codium .' --orphan"
+        run  = "shell 'eo .' --orphan"
         desc = "Open directory in VSCodium"
 
         # t/T match the shell's zoxide `t`; new tab moves to Ctrl-t
