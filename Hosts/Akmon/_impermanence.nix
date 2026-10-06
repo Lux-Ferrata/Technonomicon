@@ -7,6 +7,12 @@
   boot.zfs.devNodes         = "/dev/disk/by-id";
   networking.hostId         = "c0fbb727";
 
+  # "fast": the Samsung 990 EVO Plus 2TB, whole-disk single-vdev pool for
+  # service data. fast/srv -> /srv (native zfs mount, not in fstab, so a missing
+  # pool never blocks boot); fast/reserved holds 50G headroom. Deliberately NOT
+  # in _disko.nix so an OS reinstall can't touch it.
+  boot.zfs.extraPools = [ "fast" ];
+
   services.zfs = {
     autoScrub.enable = true;
     trim.enable      = true;
