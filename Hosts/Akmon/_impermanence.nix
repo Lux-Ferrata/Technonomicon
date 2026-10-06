@@ -58,6 +58,7 @@
       "/var/lib/iwd"              # wifi
       "/etc/NetworkManager/system-connections"
       "/var/lib/docker"
+      "/var/db/sudo"              # "lectured" flag, else the sudo lecture every boot
     ];
     files = [ "/etc/machine-id" ];
 
