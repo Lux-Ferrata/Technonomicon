@@ -20,6 +20,22 @@
     trim.enable      = true;
   };
 
+  # snapshots of everything that persists; replicate to the DAS once it exists
+  services.sanoid = {
+    enable = true;
+    templates.standard = {
+      hourly    = 24;
+      daily     = 30;
+      monthly   = 6;
+      autosnap  = true;
+      autoprune = true;
+    };
+    datasets = {
+      "fast/srv"           = { useTemplate = [ "standard" ]; recursive = true; };
+      "rpool/safe/persist" = { useTemplate = [ "standard" ]; };
+    };
+  };
+
   # no swap partition (swap on ZFS is a bad idea); compressed RAM swap instead
   zramSwap.enable = true;
 
