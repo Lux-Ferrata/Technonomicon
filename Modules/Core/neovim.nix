@@ -240,7 +240,8 @@
           "editor.formatOnSave"      = true;
           "editor.wordWrap"          = "on";
           "editor.renderLineHighlight" = "all";
-          "terminal.integrated.fontFamily" = "'JetBrains Mono', monospace";
+          # Nerd Font variant: eza/starship icons render instead of boxes
+          "terminal.integrated.fontFamily" = "'JetBrainsMono Nerd Font', monospace";
           # let F4 and the harpoon jumps through instead of sending them to fish
           "terminal.integrated.commandsToSkipShell" = [
             "workbench.action.terminal.toggleTerminal"
