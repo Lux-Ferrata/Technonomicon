@@ -54,8 +54,21 @@
           || echo "grimoire-snapshot: push failed, will retry next run" >&2
       '';
     };
+
+    # any git command on the vault, with Forgejo push access (vault-review
+    # diffs, tags and pushes through this; Kvasir's grimoire-git ssh's here)
+    vaultGit = pkgs.writeShellApplication {
+      name = "grimoire-git";
+      runtimeInputs = with pkgs; [ git openssh ];
+      text = ''
+        # --stdin-args: NUL-separated args on stdin (Kvasir's grimoire-git)
+        if [ "''${1:-}" = --stdin-args ]; then mapfile -d "" args; set -- "''${args[@]}"; fi
+        tok=$(cat ${config.sops.secrets.forgejo-agent-token.path})
+        exec git -C ${vault} -c "http.extraHeader=Authorization: token $tok" "$@"
+      '';
+    };
   in {
-    environment.systemPackages = [ snapshot ];
+    environment.systemPackages = [ snapshot vaultGit ];
 
     sops.secrets.forgejo-agent-token = { owner = "xin"; mode = "0400"; };
 
