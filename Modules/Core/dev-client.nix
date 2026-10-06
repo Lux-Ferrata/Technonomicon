@@ -129,6 +129,51 @@
     home-manager.users.xin = {
       home.packages = [ akmonReady ];
 
+      # Offline readiness: while Akmon is reachable (its binary cache and
+      # builders do the work), realise every project's dev environment here
+      # so `direnv`/`nix develop` work instantly with no network. nix-direnv
+      # roots what it builds under each project's .direnv; flakes without an
+      # .envrc get a profile root under ~/.cache/devshells.
+      systemd.user.services.prewarm-devshells = {
+        Unit.Description = "Pre-build ~/Projects dev shells for offline use";
+        Service = {
+          Type     = "oneshot";
+          Nice     = 19;
+          IOSchedulingClass = "idle";
+          Environment = [
+            "DIRENV_CONFIG=/etc/direnv"
+            "PATH=${lib.makeBinPath [ pkgs.nix pkgs.direnv pkgs.git pkgs.bash pkgs.coreutils pkgs.curl pkgs.gnugrep ]}"
+          ];
+          ExecStart = pkgs.writeShellScript "prewarm-devshells" ''
+            # only while the cache/builders are there: otherwise this would
+            # build everything on the laptop
+            curl -sf -m 5 http://${akmonIp}:5000/nix-cache-info >/dev/null || {
+              echo "Akmon unreachable; skipping"; exit 0; }
+            roots=$HOME/.cache/devshells; mkdir -p "$roots"
+            for d in "$HOME"/Projects/*/; do
+              name=$(basename "$d")
+              [ "$name" = Technonomicon ] && continue
+              if [ -f "$d/.envrc" ]; then
+                echo "== $name (direnv)"
+                direnv exec "$d" true || echo "   failed (not allowed, or the shell doesn't build)"
+              elif [ -f "$d/flake.nix" ] && nix flake show "$d" --json 2>/dev/null | grep -q '"devShells"'; then
+                echo "== $name (flake)"
+                nix develop "$d" --profile "$roots/$name" -c true || echo "   failed"
+              fi
+            done
+          '';
+        };
+      };
+      systemd.user.timers.prewarm-devshells = {
+        Unit.Description = "Pre-build ~/Projects dev shells for offline use";
+        Timer = {
+          OnBootSec        = "15min";
+          OnUnitActiveSec  = "3h";
+          Persistent       = true;
+        };
+        Install.WantedBy = [ "timers.target" ];
+      };
+
       programs.ssh = {
         enable              = true;
         enableDefaultConfig = false;
