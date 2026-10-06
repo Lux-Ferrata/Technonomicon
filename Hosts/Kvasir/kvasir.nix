@@ -108,6 +108,9 @@
 
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 
+        # tailnet client: reaches and deploys to Akmon (ssh xin@akmon)
+        services.tailscale.enable = true;
+
         home-manager = {
           useGlobalPkgs = true;
           useUserPackages = true;
