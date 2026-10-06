@@ -5,6 +5,8 @@
 
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.devNodes         = "/dev/disk/by-id";
+  # rpool has been imported under this hostId since the first boot
+  boot.zfs.forceImportRoot  = false;
   networking.hostId         = "c0fbb727";
 
   # "fast": the Samsung 990 EVO Plus 2TB, whole-disk single-vdev pool for
