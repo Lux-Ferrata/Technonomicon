@@ -278,7 +278,7 @@
         hostname = {
           ssh_only   = true;
           ssh_symbol = "";
-          style      = "bold #ebcb8b";
+          style      = "bold #a3be8c";   # nord14 green
           format     = "[$ssh_symbol$hostname]($style) ";
         };
 
