@@ -38,9 +38,36 @@
     '';
     # Grimoire's git history lives on Akmon (Tn-grimoire), which also takes
     # the named commits; the message travels on stdin, not through fish
-    grimoireCommit = pkgs.writeShellScriptBin "grimoire-commit" ''
-      [ $# -gt 0 ] || { echo "usage: grimoire-commit MESSAGE" >&2; exit 1; }
-      printf '%s' "$*" | ssh akmon grimoire-snapshot -m -
+    # Both first wait (up to ~10 s) for Syncthing to hand Akmon the latest edits.
+    grimoireCmds = pkgs.writeShellApplication {
+      name = "grimoire-commit";
+      runtimeInputs = with pkgs; [ curl jq gnugrep openssh coreutils ];
+      text = ''
+        synced() {
+          key=$(grep -oP '(?<=<apikey>)[^<]+' ~/.config/syncthing/config.xml) || return 0
+          api=http://127.0.0.1:8385/rest
+          curl -sf -X POST -H "X-API-Key: $key" "$api/db/scan?folder=grimoire" >/dev/null || return 0
+          for _ in $(seq 20); do
+            c=$(curl -sf -H "X-API-Key: $key" \
+                  "$api/db/completion?folder=grimoire&device=${sync.devices.Akmon}" | jq -r .completion)
+            [ "$c" = 100 ] && return 0
+            sleep 0.5
+          done
+          echo "grimoire: Akmon hasn't caught up yet; going ahead anyway" >&2
+        }
+        synced
+        case "$(basename "$0")" in
+          grimoire-git)
+            # the args travel NUL-separated on stdin: no quoting through fish
+            printf '%s\0' "$@" | ssh akmon grimoire-git --stdin-args ;;
+          *)
+            [ $# -gt 0 ] || { echo "usage: grimoire-commit MESSAGE" >&2; exit 1; }
+            printf '%s' "$*" | ssh akmon grimoire-snapshot -m - ;;
+        esac
+      '';
+    };
+    grimoireGit = pkgs.runCommand "grimoire-git" { } ''
+      mkdir -p $out/bin && ln -s ${grimoireCmds}/bin/grimoire-commit $out/bin/grimoire-git
     '';
     # deploy <akmon|kvasir|all> [nh args]: Akmon is evaluated here, built and
     # switched there; Kvasir is built on Akmon too when it's reachable (the
@@ -208,7 +235,7 @@
     };
 
     home-manager.users.xin = {
-      home.packages = [ akmonReady deploy grimoireCommit ];
+      home.packages = [ akmonReady deploy grimoireCmds grimoireGit ];
       xdg.configFile."fish/completions/deploy.fish".text = ''
         complete -c deploy -f -n __fish_use_subcommand -a akmon  -d "build + switch on Akmon"
         complete -c deploy -f -n __fish_use_subcommand -a kvasir -d "switch this laptop"
