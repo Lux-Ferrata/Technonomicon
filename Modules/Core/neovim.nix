@@ -17,8 +17,7 @@
       # licensed to official VS Code only; this is the open replacement,
       # and VSCodium's product.json already allows its proposed APIs.
       jeanp413.open-remote-ssh
-      # Code completion (and later chat/edit) from local llama.cpp models;
-      # always via 127.0.0.1:8012 (Tn-dev-client picks Akmon or the fallback)
+      # Code completion (and later chat/edit) from local llama.cpp models
       ggml-org.llama-vscode
     ]) ++ [
       # Harpoon-style pinned files (MIT). Published only to the MS
@@ -53,12 +52,11 @@
     ]);
 
     # Extensions that run on the local (UI) side even in remote windows:
-    # the remote connector itself, Harpoon (marketplace-only, so Akmon's
-    # server can't fetch it) and llama-vscode (talks to Kvasir's proxy).
+    # the remote connector itself, and Harpoon (marketplace-only, so Akmon's
+    # server can't fetch it).
     uiExtensions = [
       "jeanp413.open-remote-ssh"
       "tobias-z.vscode-harpoon"
-      "ggml-org.llama-vscode"
     ];
 
     mcpy = pkgs.python3Packages.buildPythonPackage rec {
@@ -277,8 +275,10 @@
             (map (e: e.vscodeExtUniqueId) editorExtensions);
           "remote.extensionKind" = lib.genAttrs uiExtensions (_: [ "ui" ]);
 
-          # llama-vscode: the local proxy is the only endpoint it needs to
-          # know. It runs UI-side, so remote windows use Kvasir's proxy too.
+          # llama-vscode runs next to the code (it needs the Git extension,
+          # which does too), and 127.0.0.1:8012 is right on either side: on
+          # Akmon it's the GPU server itself, on Kvasir the proxy that
+          # prefers Akmon and falls back to the CPU model (Tn-dev-client).
           "llama-vscode.endpoint"             = "http://127.0.0.1:8012";
           "llama-vscode.ask_install_llamacpp" = false;
           "llama-vscode.rag_enabled"          = false;
