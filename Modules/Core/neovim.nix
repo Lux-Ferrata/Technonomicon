@@ -7,23 +7,27 @@
 
     acLibrary = pkgs.callPackage ./_ac-library.nix { };
 
-    # Installed locally by home-manager, and on Akmon's VS Code server through
-    # remote.SSH.defaultExtensions (by ID, from the marketplace).
+    # Installed locally by home-manager, and on Akmon's VSCodium server through
+    # remote.SSH.defaultExtensions (by ID, from Open VSX).
     editorExtensions = (with openVsx; [
       # Not packaged in nixpkgs. Deliberately left without a `quarto.path`
       # so the blog flake's direnv-provided CLI is the one it picks up.
       quarto.quarto
+      # Remote windows on Akmon (Tn-dev-client's `eo`). MS's Remote-SSH is
+      # licensed to official VS Code only; this is the open replacement,
+      # and VSCodium's product.json already allows its proposed APIs.
+      jeanp413.open-remote-ssh
     ]) ++ [
       # Harpoon-style pinned files (MIT). Published only to the MS
-      # marketplace, so it comes from that index rather than Open VSX.
+      # marketplace, so it comes from that index rather than Open VSX --
+      # and so Akmon's server can't fetch it: it runs on the UI side
+      # (remote.extensionKind below), which works on remote files too.
       vscodeMkt.tobias-z.vscode-harpoon
     ] ++ (with pkgs.vscode-extensions; [
       arcticicestudio.nord-visual-studio-code
       vscodevim.vim
-      ms-vscode-remote.remote-ssh
-      # Picked back when this was VSCodium: free alternatives to the
-      # MS-only Pylance and cpptools. Both are possible on VS Code now,
-      # but the free ones work, so they stay until there's a reason.
+      # Every extension below is MIT/BSD0 and Open-VSX-clean. Pylance is
+      # deliberately absent: it is unfree and refuses to run on VSCodium.
       mkhl.direnv
       jnoortheen.nix-ide
       ms-pyright.pyright
@@ -36,7 +40,8 @@
       llvm-vs-code-extensions.vscode-clangd
       ziglang.vscode-zig
       rust-lang.rust-analyzer
-      # CodeLLDB is the debug adapter for C/C++/Rust.
+      # CodeLLDB is the debug adapter for C/C++/Rust. ms-vscode.cpptools
+      # is unfree and licensed to official VS Code builds only.
       vadimcn.vscode-lldb
       ms-vscode.cmake-tools
       james-yu.latex-workshop
@@ -122,11 +127,10 @@
       luajitPackages.magick
     ];
 
-    # VS Code (not VSCodium) for Remote-SSH: `eo` opens projects on Akmon
-    # whenever it's reachable (Tn-dev-client). Unfree; telemetry off below.
-    home-manager.users.xin.programs.vscode = {
+    # VSCodium; `eo` opens projects on Akmon over Open Remote - SSH whenever
+    # it's reachable (Tn-dev-client).
+    home-manager.users.xin.programs.vscodium = {
       enable  = true;
-      package = pkgs.vscode;
       profiles.default = {
         extensions = editorExtensions;
 
@@ -252,12 +256,12 @@
           "extensions.autoUpdate"  = false;
           "extensions.autoCheckUpdates" = false;
 
-          # Remote-SSH. Akmon's login shell is fish, so tell it the platform
-          # rather than letting it probe; ControlMaster etc. come from
-          # ~/.ssh/config (Tn-dev-client).
-          "remote.SSH.remotePlatform"     = { akmon = "linux"; };
-          "remote.SSH.defaultExtensions"  = map (e: e.vscodeExtUniqueId) editorExtensions;
-          "remote.SSH.showLoginTerminal"  = false;
+          # Open Remote - SSH. Akmon's login shell is fish, so tell it the
+          # platform rather than letting it probe; ControlMaster etc. come
+          # from ~/.ssh/config (Tn-dev-client).
+          "remote.SSH.remotePlatform"    = { akmon = "linux"; };
+          "remote.SSH.defaultExtensions" = map (e: e.vscodeExtUniqueId) editorExtensions;
+          "remote.extensionKind" = { "tobias-z.vscode-harpoon" = [ "ui" ]; };
 
           # ms-python.python would otherwise try to start Pylance; the
           # standalone pyright extension provides the language server.
@@ -329,7 +333,7 @@
       };
     };
 
-    # `eo` is a plain $PATH binary, so putting it here makes VS Code the
+    # `eo` is a plain $PATH binary, so putting it here makes VSCodium the
     # default target while still letting a project dev shell win by
     # prepending its own. `--new-window` keeps it from handing the path to
     # an already-open window. When `akmon-ready` (Tn-dev-client) says the
@@ -337,8 +341,8 @@
     # same path on both machines -- otherwise it opens locally.
     home-manager.users.xin.home.packages = [
       (pkgs.writeShellScriptBin "eo" ''
-        code=${pkgs.vscode}/bin/code
-        # the CLI half of `code` warns about the wrapper's Wayland flags,
+        code=${pkgs.vscodium}/bin/codium
+        # the CLI half of `codium` warns about the wrapper's Wayland flags,
         # which are meant for the window; drop just those lines
         exec 2> >(grep -v "is not in the list of known options" >&2)
         [ "$#" -eq 0 ] && set -- .
@@ -364,10 +368,10 @@
         linemode       = "mtime"
         scrolloff      = 5
 
-        # Enter on text/code opens VS Code via `eo` (detached); `O` offers nvim too
+        # Enter on text/code opens VSCodium via `eo` (detached); `O` offers nvim too
         [opener]
         edit = [
-          { run = 'eo "$@"', orphan = true, desc = "VS Code" },
+          { run = 'eo "$@"', orphan = true, desc = "VSCodium" },
           { run = 'nvim "$@"', block = true, desc = "Neovim" },
         ]
       '';
@@ -391,7 +395,7 @@
         [[mgr.prepend_keymap]]
         on   = [ "C" ]
         run  = "shell 'eo .' --orphan"
-        desc = "Open directory in VS Code"
+        desc = "Open directory in VSCodium"
 
         # t/T match the shell's zoxide `t`; new tab moves to Ctrl-t
         [[mgr.prepend_keymap]]
@@ -622,7 +626,7 @@
 
           autocmds = ''
             -- `_` separates words, so w/e/b/dw stop at underscores (matches
-            -- the VS Code vim.iskeyword setting). Done per-FileType rather
+            -- the VSCodium vim.iskeyword setting). Done per-FileType rather
             -- than in options, because ftplugins can reset iskeyword wholesale.
             vim.opt.iskeyword:remove("_")
             vim.api.nvim_create_autocmd("FileType", {
