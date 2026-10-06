@@ -12,7 +12,14 @@
 
 URL=${LAGENT_URL:-http://127.0.0.1:8011}
 
-usage() { sed -n '3,9p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() {
+  cat >&2 <<'EOF'
+usage: lagent ask  [-s SYSTEM] [-n MAX_TOKENS] PROMPT...   (stdin = extra context)
+       lagent code DIR INSTRUCTION [FILE...]               (aider edit, never commits)
+       lagent status
+EOF
+  exit 2
+}
 
 ask() {
   local system="You are a careful senior software engineer. Be concise and concrete." max=2048
