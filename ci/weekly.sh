@@ -11,7 +11,7 @@
 #
 # Anything going wrong -> main is not touched and a failure email goes out.
 # MODE=dry-run does all the work but pushes/tags nothing (email says so).
-set -euo pipefail
+set -eEuo pipefail   # -E: the ERR trap also fires inside functions
 
 HOSTS=(Akmon Kvasir)
 MAIL_TO="xin@ironshark.org"
@@ -64,7 +64,7 @@ CLAUDE_CODE_OAUTH_TOKEN=$(cat /run/secrets/claude-oauth-token)
 
 # headless Claude; only the tools each step needs, nothing that can push
 claude_do() { # prompt allowed-tools
-  claude -p "$1" --output-format text --max-turns 60 \
+  claude -p "$1" --output-format text \
     --add-dir "$WORK" --allowedTools "$2"
 }
 
@@ -88,7 +88,9 @@ git config user.name  "Technonomicon bot"
 git config user.email "homelab@ironshark.org"
 git config commit.gpgsign false
 git config tag.gpgsign false
-git fetch --quiet --tags origin working main
+git fetch --quiet --tags origin \
+  '+refs/heads/working:refs/remotes/origin/working' \
+  '+refs/heads/main:refs/remotes/origin/main'
 prev_tag=$(git tag -l 'curated/*' --sort=-creatordate | head -n 1)
 [ -n "$prev_tag" ] || { echo "no curated/* tag to start from"; false; }
 git checkout -q -B weekly origin/working
@@ -153,7 +155,8 @@ fi
 
 # ---------------------------------------------------------------------------
 log "curate"
-git diff --name-status origin/main "$new" > "$WORK/files.txt"
+# --no-renames: a rename is just delete + add, so every path is handled on its own
+git diff --no-renames --name-status origin/main "$new" > "$WORK/files.txt"
 git log --reverse --format='%h %ad %s' --date=short "$prev_tag..$new" > "$WORK/commits.txt"
 git diff --stat origin/main "$new" > "$WORK/diffstat.txt"
 
@@ -169,7 +172,7 @@ Inputs: $WORK/commits.txt (the raw commits, many are auto-generated 'auto: updat
 
 Write JSON to $WORK/plan.json, exactly this shape:
 {\"groups\": [{\"title\": \"...\", \"body\": \"...\", \"files\": [\"path\", ...]}]}
-- Every path from files.txt in exactly one group (for renames list both the old and the new path).
+- Every path from files.txt in exactly one group.
 - Usually 2-8 groups, ordered so earlier groups make sense on their own.
 - title: imperative, <= 72 chars, scope prefix like 'akmon:', 'kvasir:', 'shell:', 'flake:', 'ci:'.
 - body: 1-6 plain lines, what changed and why, written for the owner reading the log later.
@@ -187,14 +190,17 @@ Only write plan.json; change nothing else." \
     title=$(jq -r ".groups[$i].title" "$WORK/plan.json")
     body=$(jq -r ".groups[$i].body"  "$WORK/plan.json")
     while IFS= read -r f; do
-      grep -qP "\t\Q$f\E$" "$WORK/files.txt" && take "$f"
+      # only paths that really changed (exact match on the path column)
+      if awk -F'\t' -v f="$f" '$2 == f {found=1} END {exit !found}' "$WORK/files.txt"; then
+        take "$f"
+      fi
     done < <(jq -r ".groups[$i].files[]" "$WORK/plan.json")
     if ! git diff --cached --quiet; then
       git commit -q -m "$title" -m "$body"
     fi
   done
   # anything the plan missed
-  leftover=$(git diff --name-only HEAD "$new")
+  leftover=$(git diff --no-renames --name-only HEAD "$new")
   if [ -n "$leftover" ]; then
     while IFS= read -r f; do take "$f"; done <<< "$leftover"
     git commit -q -m "misc: remaining changes from the week" \
@@ -217,8 +223,8 @@ if [ $curated -eq 1 ]; then
   push origin "HEAD:refs/heads/main"
 fi
 if [ "$MODE" = live ]; then
-  git tag -a "curated/$TODAY" -m "Weekly cutoff $TODAY" "$new"
-  push origin "curated/$TODAY"
+  git tag -f -a "curated/$TODAY" -m "Weekly cutoff $TODAY" "$new"   # -f: same-day rerun
+  push -f origin "curated/$TODAY"
 fi
 
 # keep this week's systems alive in the store (Akmon's cache serves them to

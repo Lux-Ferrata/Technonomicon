@@ -9,7 +9,9 @@
     host = config.networking.hostName;
   in {
 
-    sops.secrets.smtp-password = {};     # root-only; everything below mails as root
+    # root + members of mail-senders (e.g. the CI runner) can send
+    users.groups.mail-senders = {};
+    sops.secrets.smtp-password = { group = "mail-senders"; mode = "0440"; };
 
     programs.msmtp = {
       enable       = true;

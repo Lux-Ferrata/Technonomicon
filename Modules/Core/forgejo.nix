@@ -82,13 +82,23 @@
           gitMinimal openssh curl jq
           nix
           nodejs            # JS actions such as actions/checkout
+          claude-code       # weekly job: fixes, grouping, summary (ci/weekly.sh)
         ];
-        settings.runner.capacity = 2;
+        settings.runner = {
+          capacity = 2;
+          timeout  = "12h"; # first weekly run builds every host from scratch
+        };
       };
     };
+
+    # secrets jobs may read (DynamicUser can still join static groups)
+    users.groups.ci-secrets = {};
+    sops.secrets.claude-oauth-token = { group = "ci-secrets"; mode = "0440"; };
+
     systemd.services."gitea-runner-akmon" = {
       after = [ "forgejo.service" ];
       wants = [ "forgejo.service" ];
+      serviceConfig.SupplementaryGroups = [ "ci-secrets" "mail-senders" ];
     };
 
     # HTTPS on the tailnet name; tailscaled persists the serve config, this
