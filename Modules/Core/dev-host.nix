@@ -4,7 +4,7 @@
   # Client side: Tn-dev-client.
   flake.nixosModules.Tn-dev-host = { config, pkgs, lib, ... }:
   let
-    sync = import ./_dev-sync.nix;
+    sync = import ./_sync.nix;
     home = "/srv/xin";          # fast/srv/xin: xin's synced data, survives the root wipe
   in {
 
@@ -15,9 +15,10 @@
     systemd.user.sockets.shpool.wantedBy = [ "sockets.target" ];
     users.users.xin.linger     = true;
 
-    # ── ~/Projects, synced with Kvasir ───────────────────────────────────
-    # The dataset is made on first boot rather than by hand; sanoid already
-    # snapshots fast/srv recursively.
+    # ── Syncthing hub (topology in _sync.nix) ────────────────────────────
+    # Every synced folder lands in fast/srv/xin/<dir>. The dataset is made on
+    # first boot rather than by hand; sanoid already snapshots fast/srv
+    # recursively, so these copies double as versioned backups.
     systemd.services.srv-xin = {
       description = "Create xin's dataset on the fast pool";
       after       = [ "zfs-mount.service" ];
@@ -26,7 +27,8 @@
       serviceConfig = { Type = "oneshot"; RemainAfterExit = true; };
       script = ''
         zfs list fast/srv/xin >/dev/null 2>&1 || zfs create fast/srv/xin
-        install -d -o xin -g users -m 0750 ${home} ${home}/Projects ${home}/.syncthing
+        install -d -o xin -g users -m 0750 ${home} ${home}/.syncthing \
+          ${lib.concatMapStringsSep " " (f: "${home}/${f.akmon}") (lib.attrValues sync.folders)}
       '';
     };
 
@@ -63,18 +65,19 @@
           urAccepted            = -1;
         };
         devices.Kvasir = {
-          id        = sync.kvasirId;
+          id        = sync.devices.Kvasir;
           addresses = [ "tcp://kvasir:22000" ];
         };
-        folders.${sync.folderId} = {
-          label           = "Projects";
-          path            = "${home}/Projects";
+        folders = lib.mapAttrs (id: f: {
+          inherit id;
+          inherit (f) label;
+          path            = "${home}/${f.akmon}";
           devices         = [ "Kvasir" ];
           # first sync: take Kvasir's tree as-is, never send anything back
           type            = "receiveonly";
           fsWatcherDelayS = 1;
-          inherit (sync) ignorePatterns;
-        };
+          ignorePatterns  = f.ignorePatterns or null;
+        }) sync.folders;
       };
     };
     systemd.services.syncthing = {

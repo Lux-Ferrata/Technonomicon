@@ -2,49 +2,46 @@
   # Kvasir's side of "Akmon is the dev box": every way of starting work
   # (editor, terminal, one-off command) lands on Akmon when the tailnet can
   # reach it and quietly stays local when it can't. Server side: Tn-dev-host.
-  flake.nixosModules.Tn-dev-client = { ... }:
+  flake.nixosModules.Tn-dev-client = { lib, ... }:
   let
-    sync = import ./_dev-sync.nix;
+    sync = import ./_sync.nix;
   in {
 
-    # ~/Projects <-> Akmon. Everything else here is still GUI-managed
-    # (Grimoire, Media, ...), so declaring one folder must not delete the rest.
-    services.syncthing = {
-      overrideDevices = false;
-      overrideFolders = false;
-      settings = {
-        devices.Akmon = {
-          id        = sync.akmonId;
-          addresses = [ "tcp://akmon:22000" ];
-        };
-        folders.${sync.folderId} = {
-          label           = "Projects";
-          path            = "/home/xin/Projects";
-          devices         = [ "Akmon" ];
-          type            = "sendreceive";
-          # switching machines right after saving shouldn't lose the edit
-          fsWatcherDelayS = 1;
-          inherit (sync) ignorePatterns;
-        };
+    # Declarative now: folders/devices not in _sync.nix get dropped from
+    # Syncthing (their files stay put). Everything goes through Akmon.
+    services.syncthing.settings = {
+      devices.Akmon = {
+        id        = sync.devices.Akmon;
+        addresses = [ "tcp://akmon:22000" ];
       };
+      folders = lib.mapAttrs (id: f: {
+        inherit id;
+        inherit (f) label;
+        path            = f.kvasir;
+        devices         = [ "Akmon" ];
+        type            = "sendreceive";
+        # switching machines right after saving shouldn't lose the edit
+        fsWatcherDelayS = 1;
+        ignorePatterns  = f.ignorePatterns or null;
+      }) sync.folders;
     };
 
     home-manager.users.xin = {
       programs.ssh = {
         enable              = true;
         enableDefaultConfig = false;
-        matchBlocks.akmon = {
+        settings.akmon = {
           # one TCP connection shared by ak / rb / eo / Remote-SSH: later
           # connects are instant and the reachability probe is nearly free
-          controlMaster  = "auto";
-          controlPath    = "~/.ssh/cm-%C";
-          controlPersist = "10m";
+          ControlMaster  = "auto";
+          ControlPath    = "~/.ssh/cm-%C";
+          ControlPersist = "10m";
           # tailscale keeps akmon's address across wifi changes, so a TCP
           # session can ride out ~2 minutes of no network before giving up
-          serverAliveInterval    = 15;
-          serverAliveCountMax    = 8;
+          ServerAliveInterval = 15;
+          ServerAliveCountMax = 8;
           # push to Forgejo/GitHub from shells and editor windows on Akmon
-          forwardAgent = true;
+          ForwardAgent = true;
         };
       };
 
