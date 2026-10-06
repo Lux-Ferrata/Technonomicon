@@ -50,7 +50,7 @@
           systemctl status --full --no-pager "$unit" || true
           echo
           journalctl -u "$unit" -n 60 --no-pager || true
-        } | /run/wrappers/bin/sendmail -t
+        } 2>&1 | /run/wrappers/bin/sendmail -t
       '';
     };
 
