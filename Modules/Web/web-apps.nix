@@ -10,7 +10,7 @@
         stenoJig     = icon "keyboard.svg"       "https://api.iconify.design/tabler:keyboard.svg?width=128&height=128"               "062f03p0fnp1biyig9c3rlalzk37j52qf297484hjmrsfwmg51a6";
         typeyType    = icon "typey-type.png"     "https://didoesdigital.com/typey-type/favicon-192x192.png"                          "0736jdsqnj0pj8m1gpqpqrhwgbf8diz6zwn2qp8xcd7rm8f3s54j";
         gmail        = pkgs.fetchurl { name = "gmail.svg"; sha256 = "01gvhxl2wxjmfj5fhdmr3l12ydlmkiqna5snpgk1nd4wjgzrs4ny"; url = "https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg"; };
-        calendar     = icon "google-calendar.svg"  "https://api.iconify.design/logos:google-calendar.svg?width=128&height=128"       "16m2wvm5rm5gqfv6zgrwbqkhb4jinbk1p5l3mdjdsmxrqcm0grj5";
+        calendar     = icon "google-calendar.svg"  "https://api.iconify.design/logos:google-calendar.svg?width=128&height=128"       "sha256-v4oOkriF27KZ5wcnDKow9Xs5vvOHXntKqaMRWbZkwJw="; # 2026-10-05: upstream iconify SVG changed, hash refreshed
         toggl        = icon "toggl.svg"            "https://api.iconify.design/simple-icons:toggl.svg?width=128&height=128"          "1ljdq4vgzzxiflpjn4ag6yyzlh27fx2ljh41lyyw4zyanlq5ygwd";
         syncthing    = icon "syncthing.svg"        "https://api.iconify.design/simple-icons:syncthing.svg?width=128&height=128"      "1qkwh9029zslazknaacvpjvzs2dgblizf9k89pc8rhjr2hbzq80f";
         exercism     = icon "exercism.svg"         "https://api.iconify.design/simple-icons:exercism.svg?width=128&height=128"       "1hcb0ny4yc45g50srmzzni1pxlkbbivghkknrzfsgpp1dsy1gpw7";
