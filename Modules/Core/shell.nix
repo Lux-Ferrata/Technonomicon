@@ -269,8 +269,16 @@
     programs.starship = {
       enable = true;
       settings = {
-        format = "$directory$nix_shell$git_branch$git_commit$git_state$git_status$cmd_duration\n$character";
+        format = "$hostname$directory$nix_shell$git_branch$git_commit$git_state$git_status$cmd_duration\n$character";
         time.disabled = true;
+
+        # only shown over ssh, so a remote shell never looks like a local one
+        hostname = {
+          ssh_only   = true;
+          ssh_symbol = "";
+          style      = "bold #ebcb8b";
+          format     = "[$ssh_symbol$hostname]($style) ";
+        };
 
         cmd_duration = {
           min_time = 3000;
