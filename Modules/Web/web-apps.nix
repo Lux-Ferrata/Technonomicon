@@ -23,7 +23,7 @@
         ogs          = pkgs.fetchurl { name = "ogs.svg";     sha256 = "1v6fgy5d18fkaz5sv9h71kq91xmw3s1mpcyw2g2lrbd8v041cz6d"; url = "https://api.iconify.design/simple-icons:go.svg?width=128&height=128"; };
         tsumego      = pkgs.fetchurl { name = "tsumego.svg"; sha256 = "0hcldvigsh69fp1yvgjsmchxk9fj38rzfczczw60pf0h0373c1xa"; url = "https://api.iconify.design/game-icons:stone-pile.svg?width=128&height=128"; };
         kifubara     = pkgs.fetchurl { name = "kifubara.svg"; sha256 = "0xh0lqfyvyn1bfa4k5515dq0p1z57zii66154xfa5f3lnqp58g9m"; url = "https://api.iconify.design/game-icons:abstract-119.svg?width=128&height=128"; };
-        googleDrive  = icon "google-drive.svg"  "https://api.iconify.design/logos:google-drive.svg?width=128&height=128"             "0106wgz3hh84r7xi3fqfqz29f32n5rjnxm3fsslkfwwx61nnxlmj";
+        googleDrive  = icon "google-drive.svg"  "https://api.iconify.design/logos:google-drive.svg?width=128&height=128"             "sha256-rYGQpNUdENre/ZwZbAiOxihlTNtXUR4Cf7lvbEn5c2k="; # 2026-10-05: upstream iconify SVG changed, hash refreshed
         googleDocs   = icon "google-docs.svg"   "https://api.iconify.design/simple-icons:googledocs.svg?width=128&height=128"      "1jr8vcbz578z02zgc9cq6ss51x4dh8ckv8sg7kf4cdcxwvx7pnan";
         blog         = icon "blog.svg"          "https://api.iconify.design/mdi:post-outline.svg?width=128&height=128"               "0vfzawg165h3gdi5dkpzpwq551nj8y4l0ywsmj9mnbh1m719jwpi";
         desmos       = icon "desmos.svg"        "https://api.iconify.design/mdi:function-variant.svg?width=128&height=128"           "0njbnvs1p61vzr6k7v2vpdlf8yj76wy0yb0cf6zk664kbgdhbr6n";
