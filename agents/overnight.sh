@@ -126,7 +126,10 @@ How to work:
 
   # ---- publish ----------------------------------------------------------
   report=$out/REPORT.md
-  [ -s "$report" ] || { echo "No REPORT.md was written. Last output:"; tail -n 40 "$out/claude.txt" 2>/dev/null; } > "$report.tmp" && [ -s "$report.tmp" ] && mv "$report.tmp" "$report"
+  if [ ! -s "$report" ]; then
+    { echo "No REPORT.md was written$([ "$kind" = failed ] && echo " (the clone failed)"). Last output:"
+      echo '```'; tail -n 40 "$out/claude.txt" 2>/dev/null; echo '```'; } > "$report"
+  fi
   link=""
   if [ "$kind" = code ] && [ -n "$(git -C "$dir" log --oneline "$base..$branch" 2>/dev/null)" ]; then
     if [ -n "$repo" ]; then
