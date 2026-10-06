@@ -132,7 +132,8 @@
       nixfmt
       nixd
       # Python
-      python3 pyright ruff black coconut
+      # 2026-10-05: coconut pinned to stable; unstable python3.12-anyio 4.14.2 tests fail (tls server_hostname)
+      python3 pyright ruff black pkgs-stable.coconut
       # BQN
       cbqn
       # Bash / Shell
