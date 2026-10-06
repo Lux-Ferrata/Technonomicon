@@ -337,6 +337,9 @@
     home-manager.users.xin.home.packages = [
       (pkgs.writeShellScriptBin "eo" ''
         code=${pkgs.vscode}/bin/code
+        # the CLI half of `code` warns about the wrapper's Wayland flags,
+        # which are meant for the window; drop just those lines
+        exec 2> >(grep -v "is not in the list of known options" >&2)
         [ "$#" -eq 0 ] && set -- .
         if command -v akmon-ready >/dev/null && akmon-ready "$1"; then
           args=()

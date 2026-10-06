@@ -81,7 +81,9 @@
         rb = ''
           test (count $argv) -gt 0; or begin; echo "usage: rb <command...>"; return 1; end
           if akmon-ready $PWD
-            ssh -t akmon "cd "(string escape -- $PWD)" && direnv exec . "(string join " " -- (string escape -- $argv))
+            # a terminal only when there is one (interactive tools, colours)
+            set -l tty; isatty stdin; and set tty -t
+            ssh $tty akmon "cd "(string escape -- $PWD)" && direnv exec . "(string join " " -- (string escape -- $argv))
           else
             $argv
           end
