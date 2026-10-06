@@ -1,7 +1,7 @@
 # Akmon: ZFS root that rolls back to an empty snapshot on every boot.
 # Anything not listed under environment.persistence (or living on /nix or a
 # data pool) is gone after a reboot -- that's the point.
-{ config, pkgs, ... }: {
+{ config, pkgs, lib, ... }: {
 
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.devNodes         = "/dev/disk/by-id";
