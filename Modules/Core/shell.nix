@@ -99,6 +99,8 @@
           power-off = "bash /etc/scripts/clean-power-off.sh";
           restart   = "bash /etc/scripts/clean-reboot.sh";
           logout    = "sudo kill -9 -1";
+          # evaluate here, build + switch on Akmon over the tailnet
+          deploy-akmon = "nh os switch --hostname Akmon --target-host xin@akmon --build-host xin@akmon";
         };
 
         shellAliases = {
