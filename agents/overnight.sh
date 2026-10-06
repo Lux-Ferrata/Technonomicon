@@ -72,7 +72,7 @@ for row in $(jq -r 'sort_by(.number) | .[] | @base64' <<<"$issues"); do
 
   project=$(grep -oP '^\s*project:\s*\K\S+' <<<"$body" | head -1 || true)
   repo=$(grep -oP '^\s*repo:\s*\K\S+' <<<"$body" | head -1 || true)
-  slug=$(tr -cs 'a-zA-Z0-9' '-' <<<"$title" | tr 'A-Z' 'a-z' | cut -c1-40 | sed 's/-$//')
+  slug=$(tr -cs '[:alnum:]' '-' <<<"$title" | tr '[:upper:]' '[:lower:]' | cut -c1-40 | sed 's/-$//')
   branch="overnight/$n-$slug"
   dir=$WORKROOT/$n; out=$WORKROOT/$n.out; mkdir -p "$out"
   echo; echo "==== #$n $title (project=${project:-} repo=${repo:-}) budget $((budget/60))m"
@@ -153,7 +153,7 @@ How to work:
   remove_label "$n" in-progress
   remove_label "$n" overnight
   if [ -n "$link" ]; then
-    add_label "$n" done
+    add_label "$n" "done"
     api PATCH "/repos/$QUEUE/issues/$n" '{"state":"closed"}' >/dev/null
     echo "- #$n $title: done -- $link" >> "$SUMMARY"
   else

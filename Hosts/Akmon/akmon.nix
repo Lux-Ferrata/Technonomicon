@@ -33,6 +33,7 @@
       self.nixosModules.Tn-forgejo
       self.nixosModules.Tn-dev-host
       self.nixosModules.Tn-devtools
+      self.nixosModules.Tn-overnight
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";

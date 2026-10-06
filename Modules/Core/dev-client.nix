@@ -193,6 +193,33 @@
       };
 
       programs.fish.functions = {
+        # Queue a task for the overnight agents (Akmon, Tn-overnight):
+        #   overnight-add "Write tests for parser.py" [project|owner/repo] [details...]
+        # A name with a slash is a Forgejo repo (result: PR), a bare name a
+        # git project in ~/Projects (result: branch), none a research task.
+        overnight-add = ''
+          test (count $argv) -ge 1; or begin
+            echo "usage: overnight-add TITLE [PROJECT|OWNER/REPO] [DETAILS...]"; return 1
+          end
+          set -l body ""
+          if test (count $argv) -ge 2; and test -n "$argv[2]"
+            if string match -q "*/*" -- $argv[2]
+              set body "repo: $argv[2]"
+            else
+              set body "project: $argv[2]"
+            end
+          end
+          test (count $argv) -ge 3; and set body "$body"\n\n(string join " " -- $argv[3..])
+          set -l api https://akmon.tail607809.ts.net/api/v1/repos/xin/agent-tasks
+          set -l tok (cat ~/.config/forgejo-token)
+          set -l label (curl -sf -H "Authorization: token $tok" "$api/labels" | jq '.[] | select(.name=="overnight") | .id')
+          jq -n --arg t "$argv[1]" --arg b (printf "%b" "$body") --argjson l "[$label]" '{title:$t, body:$b, labels:$l}' \
+            | curl -sf -X POST -H "Authorization: token $tok" -H "Content-Type: application/json" -d @- "$api/issues" \
+            | jq -r '"queued #\(.number): \(.html_url)"'
+        '';
+        # start a run now instead of waiting for 00:10
+        overnight-now = "ssh akmon systemctl --user start --no-block overnight; and echo 'started; follow with: ssh akmon journalctl --user -fu overnight'";
+
         # Run one command on Akmon in the same directory (with the project's
         # direnv env) when it can be, locally otherwise. Output and build
         # artifacts stay wherever it ran.
