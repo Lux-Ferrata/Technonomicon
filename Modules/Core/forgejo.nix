@@ -57,6 +57,39 @@
       fi
     '';
 
+    # ---- Actions runner ---------------------------------------------------
+    # Forgejo mints a registration token on every start; the runner only uses
+    # it the first time (afterwards it has its own .runner credentials, which
+    # live under /var/lib/private -- persisted in _impermanence.nix).
+    systemd.services.forgejo.postStart = lib.mkAfter ''
+      tok=$("${lib.getExe cfg.package}" actions generate-runner-token)
+      install -m 0600 /dev/null ${cfg.stateDir}/runner-token.env
+      echo "TOKEN=$tok" > ${cfg.stateDir}/runner-token.env
+    '';
+
+    services.gitea-actions-runner = {
+      package = pkgs.forgejo-runner;
+      instances.akmon = {
+        enable    = true;
+        name      = config.networking.hostName;
+        url       = "https://${tsName}";
+        tokenFile = "${cfg.stateDir}/runner-token.env";
+        # jobs run straight on the host (no containers): `runs-on: nixos`
+        labels    = [ "nixos:host" ];
+        hostPackages = with pkgs; [
+          bash coreutils findutils gnugrep gnused gawk diffutils
+          gitMinimal openssh curl jq
+          nix
+          nodejs            # JS actions such as actions/checkout
+        ];
+        settings.runner.capacity = 2;
+      };
+    };
+    systemd.services."gitea-runner-akmon" = {
+      after = [ "forgejo.service" ];
+      wants = [ "forgejo.service" ];
+    };
+
     # HTTPS on the tailnet name; tailscaled persists the serve config, this
     # just (re)asserts it on every boot
     systemd.services.tailscale-serve-forgejo = {
