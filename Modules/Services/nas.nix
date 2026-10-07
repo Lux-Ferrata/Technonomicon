@@ -35,6 +35,7 @@
         services.samba = {
           enable = true;
           nmbd.enable = false;          # no NetBIOS browsing on a tailnet
+          winbindd.enable = false;      # no domain
           settings = {
             global = {
               "server string"   = "Akmon";
@@ -75,6 +76,9 @@
           '';
         };
         environment.persistence."/persist".directories = [ "/var/lib/samba" ];
+        # the persisted dir starts empty; smbd won't create private/ itself
+        systemd.tmpfiles.rules = [ "d /var/lib/samba/private 0700 root root -" ];
+        systemd.services.samba-smbd.serviceConfig.ExecStartPre = [ "${pkgs.coreutils}/bin/mkdir -p -m 0700 /var/lib/samba/private" ];
       }
 
       (lib.mkIf (cfg.bulkPool != null) {
