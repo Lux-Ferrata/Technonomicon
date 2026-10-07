@@ -89,7 +89,6 @@
         flake=''${flake%/}
         step() { printf '\e[1;36m› %s\e[0m\n' "$*"; }
 
-        akmon()  { nh os switch --hostname Akmon --target-host xin@akmon --build-host xin@akmon "$@"; }
         kvasir() {
           if ssh -o BatchMode=yes -o ConnectTimeout=3 xin@akmon true 2>/dev/null; then
             nh os switch --hostname Kvasir --build-host xin@akmon "$@"
