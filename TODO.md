@@ -40,7 +40,7 @@ The Google login is done; the token is on Akmon at
 - [ ] LanguageTool in Obsidian and the Brave extension → `https://lt.ironshark.org`.
 - [ ] Karakeep: make the first (admin) account, add the Brave extension.
 - [ ] Immich: first login, then Administration → External Libraries.
-- [ ] Google Drive: run `gdrive-login` once on Kvasir.
+- [x] Google Drive: run `gdrive-login` once on Kvasir.
 - [ ] Delete the old Web-type OAuth client in the Google console.
 
 ## Later
