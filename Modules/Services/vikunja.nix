@@ -69,5 +69,60 @@
     };
 
     tn.web.vhosts.tasks = { port = cfg.port; maxBody = "50m"; };   # attachments
+
+    # ── offline task list check ───────────────────────────────────────────
+    # Thunderbird on Kvasir caches the projects in _vikunja-projects.nix. A
+    # project made (or deleted) in Vikunja since then becomes a self-reported
+    # issue; Claude's review labels it for the overnight agent, whose PR
+    # edits that file. Resolves itself once the list matches again.
+    systemd.services.vikunja-projects-check = let
+      known = pkgs.writeText "vikunja-projects.json"
+        (builtins.toJSON (import ./_vikunja-projects.nix));
+    in {
+      description = "Check Thunderbird's offline task list against Vikunja";
+      after    = [ "vikunja.service" ];
+      requires = [ "vikunja.service" ];
+      path = with pkgs; [ curl jq coreutils config.tn.alerts.issuePackage ];
+      serviceConfig = {
+        Type = "oneshot";
+        LoadCredential = "password:${config.sops.secrets.vikunja-password.path}";
+      };
+      script = ''
+        api=http://127.0.0.1:${toString cfg.port}/api/v1
+        tok=$(jq -nc --arg p "$(tr -d '\n' < "$CREDENTIALS_DIRECTORY/password")" '{username: "${user}", password: $p}' \
+              | curl -sf -X POST "$api/login" -H 'Content-Type: application/json' -d @- | jq -r .token)
+        live=$(curl -sf -H "Authorization: Bearer $tok" "$api/projects?per_page=200" \
+               | jq -c '[.[] | select(.is_archived | not) | select(.id > 0) | {id, title}]')
+
+        # in Vikunja, not in the list
+        jq -r --slurpfile k ${known} '.[] | select(.id as $i | [$k[0][]] | index($i) | not) | "\(.id)\t\(.title)"' <<<"$live" |
+        while IFS=$'\t' read -r id title; do
+          printf 'Vikunja project "%s" (id %s) is not in Thunderbird'"'"'s offline task list, so it is not available offline on Kvasir.\n\nFix: add this line to Modules/Services/_vikunja-projects.nix, then deploy Kvasir:\n\n    "%s" = %s;\n' \
+            "$title" "$id" "$title" "$id" > /tmp/vikunja-body
+          tn-issue report "vikunja-project:$id" digest "Vikunja project '$title' isn't available offline yet" /tmp/vikunja-body
+        done
+
+        # in the list, gone from Vikunja (deleted or archived)
+        jq -r --argjson live "$live" 'to_entries[] | select(.value as $i | [$live[].id] | index($i) | not) | "\(.value)\t\(.key)"' ${known} |
+        while IFS=$'\t' read -r id title; do
+          printf 'Thunderbird still lists Vikunja project "%s" (id %s), which no longer exists (or is archived).\n\nFix: remove its line from Modules/Services/_vikunja-projects.nix, then deploy Kvasir.\n' \
+            "$title" "$id" > /tmp/vikunja-body
+          tn-issue report "vikunja-stale:$id" digest "Thunderbird lists a Vikunja project that's gone: '$title'" /tmp/vikunja-body
+        done
+
+        # everything that matches now: resolve any earlier report
+        for id in $(jq -r '.[].id' <<<"$live"); do
+          jq -e --argjson i "$id" '[.[]] | index($i)' ${known} >/dev/null && tn-issue resolve "vikunja-project:$id"
+        done
+        for id in $(jq -r '.[]' ${known}); do
+          jq -e --argjson i "$id" '[.[].id] | index($i)' <<<"$live" >/dev/null && tn-issue resolve "vikunja-stale:$id"
+        done
+        rm -f /tmp/vikunja-body
+      '';
+    };
+    systemd.timers.vikunja-projects-check = {
+      wantedBy = [ "timers.target" ];
+      timerConfig.OnCalendar = "05:20";   # before Claude's 05:40 review
+    };
   };
 }
