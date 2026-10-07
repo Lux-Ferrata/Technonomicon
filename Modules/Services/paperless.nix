@@ -12,6 +12,11 @@
   in {
     sops.secrets.paperless-admin-password = {};
 
+    # configureTika brings Gotenberg, whose default port is Forgejo's 3000:
+    # whichever starts first after a boot wins, and on 2026-10-07 it was
+    # Gotenberg (Forgejo down after the 06:00 auto-upgrade reboot)
+    services.gotenberg.port = 3070;
+
     services.paperless = {
       enable         = true;
       dataDir        = "/srv/paperless";
