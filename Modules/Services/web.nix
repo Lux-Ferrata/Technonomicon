@@ -121,6 +121,10 @@
           RestartSec      = 60;
           DynamicUser     = true;
           LoadCredential  = "token:${config.sops.secrets.dns-api-token.path}";
+          # services that started with the deploy may already have looked a
+          # new name up and cached "no such host" (~30 min); forget that (as
+          # root: the "+")
+          ExecStartPost   = "+${config.systemd.package}/bin/resolvectl flush-caches";
         };
         script = ''
           api=https://api.cloudflare.com/client/v4

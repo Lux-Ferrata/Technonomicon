@@ -293,9 +293,12 @@
       };
 
       services.prometheus.exporters = {
+        # ports 9400/9415, not the defaults 9100/9115: OpenCloud (Tn-office)
+        # runs its internal services on 9100-9300
         node = {
           enable        = true;
           listenAddress = "127.0.0.1";
+          port          = 9400;
           enabledCollectors = [ "processes" ];
           extraFlags    = [ "--collector.textfile.directory=${textfile}" ];
         };
@@ -321,6 +324,7 @@
         blackbox = {
           enable        = true;
           listenAddress = "127.0.0.1";
+          port          = 9415;
           configFile = pkgs.writeText "blackbox.yml" (builtins.toJSON {
             modules = {
               # "the service answers": anything but a 5xx/timeout (login

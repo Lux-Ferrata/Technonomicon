@@ -57,6 +57,7 @@
       self.nixosModules.Tn-nas
       self.nixosModules.Tn-torrent
       self.nixosModules.Tn-hosting
+      self.nixosModules.Tn-office
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
