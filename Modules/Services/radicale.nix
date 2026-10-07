@@ -25,9 +25,9 @@
         cp -r infcloud $out
         cd $out
         # Radicale at the origin's root, not the default /caldav.php/
+        perl -0pi -e "s{href: location\.protocol.*?'/caldav\.php/',}{href: location.protocol+'//'+location.hostname+'/',}s" config.js
+        grep -q "location.hostname+'/'," config.js
         substituteInPlace config.js \
-          --replace-fail "location.pathname.replace(RegExp('/+[^/]+/*(index\.html)?\$'),'')+
-		'/caldav.php/'," "'/'," \
           --replace-fail "var globalTimeZone='Europe/Berlin';" "var globalTimeZone='${config.time.timeZone}';"
         # appcache (removed from browsers) would only serve stale copies
         sed -i 's/ manifest="cache.manifest"//' index.html
