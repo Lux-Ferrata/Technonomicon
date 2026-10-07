@@ -356,5 +356,13 @@ fi
 subject="[Technonomicon] weekly $TODAY: $(wc -l < "$WORK/curated.txt" 2>/dev/null || echo 0) commits"
 [ $upgraded -eq 1 ] && subject="$subject + flake update"
 [ "$MODE" = live ] || subject="$subject (DRY RUN)"
-send_mail "$subject" "$WORK/summary.txt" "$WORK/usage.txt"
+# the chart report (Tn-server-reports: Grafana panels inline + PDF) when the
+# host has it; otherwise the text mail with the usage table
+TN_REPORT=/run/current-system/sw/bin/tn-report
+if [ -x "$TN_REPORT" ] && hold_until_morning \
+   && "$TN_REPORT" weekly --text "$WORK/summary.txt" --subject "$subject" --to "$MAIL_TO"; then
+  :
+else
+  send_mail "$subject" "$WORK/summary.txt" "$WORK/usage.txt"
+fi
 echo "done"

@@ -79,3 +79,12 @@ The Google login is done; the token is on Akmon at
       contact fields plus a marked, generated block of email threads (archive
       search, `mid:` links into Thunderbird) and calendar events. Must respect
       the vault rule (write via the Obsidian CLI / marked blocks only).
+
+## Queue (after the monitoring stack)
+
+- [ ] **Office suite on Akmon.** Kvasir has OnlyOffice desktop (`Tn-learning`),
+      but nothing serves documents from the server. Options: Collabora Online
+      (LibreOffice in the browser) or OnlyOffice Document Server, at e.g.
+      `office.ironshark.org`. Decide what it edits first: files on WebDAV
+      (`dav.`), the Syncthing folders, or Paperless documents. That choice
+      decides which frontend (WOPI host) it needs.
