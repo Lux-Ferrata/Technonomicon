@@ -50,9 +50,9 @@
         install -d -m 0755 ${dir}
         cd ${dir}
         # -C -: a failed run resumes where it stopped
-        curl -fL --retry 5 -C - -o lid.176.bin.part ${lid}
+        curl -fsSL --retry 5 -C - -o lid.176.bin.part ${lid}
         mv lid.176.bin.part lid.176.bin
-        curl -fL --retry 5 -C - -o ngrams.zip.part ${ngrams}
+        curl -fsSL --retry 5 -C - -o ngrams.zip.part ${ngrams}
         rm -rf ngrams.tmp
         unzip -q ngrams.zip.part -d ngrams.tmp
         rm -rf ngrams && mv ngrams.tmp ngrams && rm ngrams.zip.part
