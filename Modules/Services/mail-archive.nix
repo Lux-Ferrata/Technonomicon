@@ -141,7 +141,7 @@
           "fts flatcurve" = { substring_search = true; };
           fts_autoindex = true;
           fts_decoder_driver   = "tika";
-          fts_decoder_tika_url = "http://127.0.0.1:9998/";
+          fts_decoder_tika_url = "http://127.0.0.1:9998/tika/";   # Tika takes PUTs at /tika/ (/ is 405)
           "language en" = { default = true; };
           language_tokenizers = [ "generic" "email-address" ];
         };
