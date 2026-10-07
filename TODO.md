@@ -74,3 +74,8 @@ The Google login is done; the token is on Akmon at
       library grows enough for it to matter.
 - [ ] Karakeep: turn off sign-ups once the account exists (`DISABLE_SIGNUPS`).
 - [ ] Hydrus, if exact tag-based image search turns out to be missing.
+- [ ] BBDB-style people hub: Google Contacts -> Radicale (CardDAV, vdirsyncer
+      google_contacts); a nightly generator keeps Obsidian `People/` notes with
+      contact fields plus a marked, generated block of email threads (archive
+      search, `mid:` links into Thunderbird) and calendar events. Must respect
+      the vault rule (write via the Obsidian CLI / marked blocks only).
