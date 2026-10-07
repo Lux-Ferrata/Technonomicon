@@ -44,6 +44,8 @@
       self.nixosModules.Tn-calendar-push
       self.nixosModules.Tn-webdav
       self.nixosModules.Tn-paperless
+      self.nixosModules.Tn-immich
+      self.nixosModules.Tn-karakeep
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";

@@ -5,16 +5,13 @@
   # woken on demand) -- nothing leaves the box. Clients: the Brave extension
   # and the phone app, server https://keep.ironshark.org.
   #
-  # The first account made becomes the admin. Data is on the fast pool
-  # (/srv/karakeep, bound over /var/lib/karakeep).
+  # The first account made becomes the admin. Data stays in
+  # /var/lib/karakeep, persisted: the module reads its generated secrets
+  # from there before any unit namespace exists, so it can't be bound in
+  # from /srv per unit.
   flake.nixosModules.Tn-karakeep = { config, lib, pkgs, ... }:
   let
     port = 3010;   # its default 3000 is Forgejo's
-    data = "/srv/karakeep";
-    onSrv = {
-      unitConfig.RequiresMountsFor = [ data ];
-      serviceConfig.BindPaths = [ "${data}:/var/lib/karakeep" ];
-    };
   in {
     services.karakeep = {
       enable = true;
@@ -35,10 +32,9 @@
       };
     };
 
-    systemd.services.karakeep-init    = onSrv;
-    systemd.services.karakeep-workers = onSrv;
-    systemd.services.karakeep-web     = onSrv;
-    systemd.tmpfiles.rules = [ "d ${data} 0750 karakeep karakeep -" ];
+    environment.persistence."/persist".directories = [
+      { directory = "/var/lib/karakeep"; user = "karakeep"; group = "karakeep"; mode = "0750"; }
+    ];
 
     tn.web.vhosts.keep = { inherit port; maxBody = "100m"; };
   };
