@@ -59,10 +59,12 @@ status() {
   else
     echo "chat model: not answering yet (it starts on first request)"
   fi
-  if systemctl is-active --quiet llama-cpp.service; then
-    echo "completion server: running (day mode -- chat shares the GPU)"
+  if systemctl is-active --quiet llama-fim-server.service; then
+    echo "completion server: loaded (chat shares the GPU)"
+  elif systemctl is-active --quiet llama-fim.socket; then
+    echo "completion server: asleep until the next completion request"
   else
-    echo "completion server: stopped (night mode -- chat has the whole GPU)"
+    echo "completion server: off (night mode or gpu-lend -- chat has the whole GPU)"
   fi
 }
 

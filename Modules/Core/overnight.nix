@@ -49,13 +49,13 @@
     };
 
     # ── Night mode: 00:00-05:45 the chat model gets the whole GPU ────────
-    # Stopping the completion server frees ~13 GB of VRAM; the chat server
-    # is stopped too so its next wake-up --fits into all of it. In the
-    # morning the order reverses.
+    # Stopping completion (and its socket, so nothing wakes it) frees ~13 GB
+    # of VRAM; the chat server is stopped too so its next wake-up --fits
+    # into all of it. In the morning completion goes back to on-request.
     systemd.services.llama-night = {
       description = "Night mode: GPU to the chat model";
       serviceConfig.Type = "oneshot";
-      script = "systemctl stop llama-cpp.service llama-chat-server.service";
+      script = "systemctl stop llama-fim.socket llama-fim.service llama-fim-server.service llama-chat-server.service";
     };
     systemd.timers.llama-night = {
       wantedBy = [ "timers.target" ];
@@ -66,7 +66,7 @@
       serviceConfig.Type = "oneshot";
       script = ''
         systemctl stop llama-chat-server.service
-        systemctl start llama-cpp.service
+        systemctl start llama-fim.socket
       '';
     };
     systemd.timers.llama-day = {

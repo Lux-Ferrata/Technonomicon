@@ -10,6 +10,34 @@
     # folders still taking their first copy from Kvasir: receive-only, so a
     # half-filled tree here can never be sent back. Empty this once done.
     seeding = [ ];
+    llama = pkgs.llama-cpp.override { cudaSupport = true; };
+
+    # Lend the GPU to a job: both llama servers stop (and can't be woken)
+    # while CMD runs, then go back to sleeping-until-asked. xin may do this
+    # without sudo (polkit rule below).
+    llamaUnits = [ "llama-fim.socket" "llama-chat.socket"
+                   "llama-fim.service" "llama-chat.service"
+                   "llama-fim-server.service" "llama-chat-server.service" ];
+    gpuLend = pkgs.writeShellApplication {
+      name = "gpu-lend";
+      runtimeInputs = [ pkgs.coreutils config.hardware.nvidia.package.bin ];
+      text = ''
+        if [ $# -eq 0 ]; then
+          echo "Usage: gpu-lend CMD [ARGS...]   run CMD with the llama models off the GPU"
+          nvidia-smi --query-gpu=memory.used,memory.total --format=csv
+          exit 2
+        fi
+        systemctl stop ${lib.concatStringsSep " " llamaUnits}
+        restore() {
+          # night mode (00:00-05:45, Tn-overnight) keeps completion off
+          if [ "$(date +%H%M)" -lt 0545 ]; then systemctl start llama-chat.socket
+          else systemctl start llama-fim.socket llama-chat.socket; fi
+        }
+        trap restore EXIT
+        echo "gpu-lend: llama models stopped; $(nvidia-smi --query-gpu=memory.used --format=csv,noheader) of VRAM still in use" >&2
+        "$@"
+      '';
+    };
   in {
     # ── Chat / edit-selection / aider, loaded on demand ──────────────────
     # The first request after an idle spell wakes it (~10-20 s to load),
@@ -26,7 +54,7 @@
         backendPort = 18011;
         idle        = "30min";
         args = [
-          "${config.services.llama-cpp.package}/bin/llama-server"
+          "${llama}/bin/llama-server"
           "--model ${models.chat-30b-a3b}"
           "--alias chat"
           "--jinja"                        # Qwen3 chat template + tool calls
@@ -35,12 +63,51 @@
           "--fit on --fit-target 512"      # leave 512 MiB of VRAM spare
         ];
       })
+
+      # ── Code completion (FIM) for the editor, on the GPU ───────────────
+      # The biggest coder model that fits whole with its context. Loaded on
+      # the first request and kept while you're working; after an idle hour
+      # it unloads and the GPU is free for anything else (the next
+      # suggestion then waits a few seconds for it). Kvasir reaches it
+      # through its local proxy (Tn-dev-client), which falls back to a CPU
+      # model when Akmon is away. Flags follow llama-vscode's FIM server.
+      (import ./_llama-ondemand.nix {
+        inherit pkgs lib;
+        name        = "llama-fim";
+        description = "llama.cpp completion server (FIM)";
+        listen      = "0.0.0.0";           # firewall: tailscale0 only
+        port        = 8012;
+        backendPort = 18012;
+        idle        = "1h";
+        args = [
+          "${llama}/bin/llama-server"
+          "--model ${models.fim-14b}"
+          "--n-gpu-layers 99 --flash-attn on"
+          "--batch-size 1024 --ubatch-size 1024"
+          # shared by llama-vscode's parallel requests; 16k covers its
+          # prefix/suffix + extra-context chunks. 8-bit KV cache halves its
+          # VRAM so the 14B fits whole.
+          "--ctx-size 16384 --cache-type-k q8_0 --cache-type-v q8_0"
+          "--cache-reuse 256"
+        ];
+      })
     ];
+
+    security.polkit.extraConfig = ''
+      polkit.addRule(function(action, subject) {
+        var units = ${builtins.toJSON llamaUnits};
+        if (action.id == "org.freedesktop.systemd1.manage-units" &&
+            subject.user == "xin" &&
+            units.indexOf(action.lookup("unit")) >= 0)
+          return polkit.Result.YES;
+      });
+    '';
 
 
     # shells that outlive the ssh connection (Kvasir's `ak` reattaches);
     # socket-activated user daemon, with linger so it survives the last logout
     environment.systemPackages = [
+      gpuLend
       pkgs.shpool
       # Akmon has no editor of its own: inside a VSCodium remote terminal,
       # open in that window; anywhere else (`ak`), point back to Kvasir
@@ -167,33 +234,5 @@
       allowedTCPPorts = [ 22000 8011 8012 ];
       allowedUDPPorts = [ 22000 ];
     };
-
-    # ── Code completion (FIM) for the editor, on the GPU ─────────────────
-    # The GPU is completion's: the biggest coder model that fits with its
-    # context, always loaded, so suggestions stay instant. Kvasir reaches it
-    # through its local proxy (Tn-dev-client), which falls back to a CPU
-    # model when Akmon is away. Flags follow llama-vscode's FIM server.
-    services.llama-cpp = {
-      enable   = true;
-      package  = pkgs.llama-cpp.override { cudaSupport = true; };
-      settings = {
-        host           = "0.0.0.0";        # firewall: tailscale0 only
-        port           = 8012;
-        model          = models.fim-14b;
-        n-gpu-layers   = 99;
-        flash-attn     = "on";
-        batch-size     = 1024;
-        ubatch-size    = 1024;
-        # shared by llama-vscode's parallel requests; 16k covers its
-        # prefix/suffix + extra-context chunks. 8-bit KV cache halves its
-        # VRAM so the 14B fits whole.
-        ctx-size       = 16384;
-        cache-type-k   = "q8_0";
-        cache-type-v   = "q8_0";
-        cache-reuse    = 256;
-      };
-    };
-    # the CUDA runtime maps writable+executable memory
-    systemd.services.llama-cpp.serviceConfig.MemoryDenyWriteExecute = lib.mkForce false;
   };
 }
