@@ -143,6 +143,10 @@
       enable  = true;
       profiles.default = {
         extensions = editorExtensions;
+        # settings.json is a real file: each switch merges userSettings into
+        # it (these win), and keys VSCodium writes itself -- e.g. the
+        # llama-vscode menu's completion toggle -- survive.
+        mutableUserSettings = true;
 
         keybindings = [
           # Normal mode only, so ctrl+space keeps triggering completion while
