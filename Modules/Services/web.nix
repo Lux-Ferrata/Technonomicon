@@ -2,9 +2,9 @@
   # Akmon's front door: nginx on the tailnet, one wildcard cert for
   # *.ironshark.org (ACME DNS-01 through Cloudflare), and the shared Postgres.
   # The service names are public A records pointing at Akmon's tailnet IP,
-  # so they only work from inside the tailnet. Forgejo keeps its MagicDNS
-  # name, with a cert from `tailscale cert` (nginx and `tailscale serve`
-  # can't share :443).
+  # so they only work from inside the tailnet. Forgejo lives at git.; its
+  # old MagicDNS name is still served, with a cert from `tailscale cert`
+  # (nginx and `tailscale serve` can't share :443).
   #
   # A service module only declares its name and port:
   #   tn.web.vhosts.docs = { port = 28981; };   ->  https://docs.ironshark.org
@@ -26,6 +26,8 @@
           port    = lib.mkOption { type = lib.types.port; };
           maxBody = lib.mkOption { type = lib.types.str; default = "100m"; };
           extraConfig = lib.mkOption { type = lib.types.lines; default = ""; };
+          # inside `location /`, after the proxy headers (so it can override Host)
+          locationConfig = lib.mkOption { type = lib.types.lines; default = ""; };
         };
       });
     };
@@ -145,13 +147,15 @@
           locations."/" = {
             proxyPass       = "http://127.0.0.1:${toString v.port}";
             proxyWebsockets = true;
+            extraConfig     = v.locationConfig;
           };
           extraConfig = ''
             client_max_body_size ${v.maxBody};
             ${v.extraConfig}
           '';
         }) config.tn.web.vhosts // {
-          # Forgejo, at the name every remote, script and runner already uses
+          # Forgejo's old name (git. is the real one): still proxied, not
+          # redirected, so API calls and https clones that use it keep working
           ${tsName} = {
             forceSSL           = true;
             sslCertificate     = "${tsCerts}/${tsName}.crt";

@@ -332,7 +332,7 @@
             end
           end
           test (count $argv) -ge 3; and set body "$body"\n\n(string join " " -- $argv[3..])
-          set -l api https://akmon.tail607809.ts.net/api/v1/repos/xin/agent-tasks
+          set -l api https://git.ironshark.org/api/v1/repos/xin/agent-tasks
           set -l tok (cat ~/.config/forgejo-token)
           set -l label (curl -sf -H "Authorization: token $tok" "$api/labels" | jq '.[] | select(.name=="overnight") | .id')
           jq -n --arg t "$argv[1]" --arg b (printf "%b" "$body") --argjson l "[$label]" '{title:$t, body:$b, labels:$l}' \

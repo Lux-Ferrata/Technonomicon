@@ -113,8 +113,19 @@
     sops.secrets.syncthing-akmon-cert = { owner = "xin"; };
     sops.secrets.syncthing-akmon-key  = { owner = "xin"; };
 
+    # GUI at https://sync.ironshark.org (user xin). The REST API scripts
+    # (grimoire-snapshot, Kvasir's sync checks) use the API key and don't
+    # need it.
+    sops.secrets.syncthing-gui-password = { owner = "xin"; };
+    tn.web.vhosts.sync = {
+      port = lib.toInt (lib.last (lib.splitString ":" config.services.syncthing.guiAddress));
+      # Syncthing only answers to Host: localhost unless told otherwise
+      locationConfig = "proxy_set_header Host localhost;";
+    };
+
     services.syncthing = {
       enable           = true;
+      guiPasswordFile  = config.sops.secrets.syncthing-gui-password.path;
       dataDir          = lib.mkForce home;
       configDir        = "${home}/.syncthing";
       cert             = config.sops.secrets.syncthing-akmon-cert.path;
@@ -122,6 +133,7 @@
       # only reached over the tailnet
       openDefaultPorts = lib.mkForce false;
       settings = {
+        gui.user = "xin";
         options = {
           globalAnnounceEnabled = false;
           localAnnounceEnabled  = false;

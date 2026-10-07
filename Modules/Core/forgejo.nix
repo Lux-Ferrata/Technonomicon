@@ -1,17 +1,20 @@
 { inputs, ... }: {
   # Forgejo: primary git host + Actions CI, tailnet-only.
-  #   web:  https://<host>.<tailnet>.ts.net  (nginx -> 127.0.0.1:3000, Tn-server-web)
+  #   web:  https://git.ironshark.org  (nginx -> 127.0.0.1:3000, Tn-server-web;
+  #         the old https://akmon.tail607809.ts.net still works)
   #   ssh:  forgejo@<host>:<owner>/<repo>.git (through the system sshd)
   # Data lives on the fast pool (/srv/forgejo); the admin account is created
   # from sops on first start.
   flake.nixosModules.Tn-forgejo = { config, lib, pkgs, ... }:
   let
     cfg     = config.services.forgejo;
-    tsName  = "akmon.tail607809.ts.net";
+    name    = "git.ironshark.org";
     admin   = "xin";
   in {
 
     sops.secrets.forgejo-admin-password = { owner = cfg.user; };
+
+    tn.web.vhosts.git = { port = cfg.settings.server.HTTP_PORT; maxBody = "1g"; };   # LFS, release assets
 
     services.forgejo = {
       enable   = true;
@@ -22,8 +25,8 @@
       settings = {
         DEFAULT.APP_NAME = "Forgejo on Akmon";
         server = {
-          DOMAIN     = tsName;
-          ROOT_URL   = "https://${tsName}/";
+          DOMAIN     = name;
+          ROOT_URL   = "https://${name}/";
           HTTP_ADDR  = "127.0.0.1";
           HTTP_PORT  = 3000;
           SSH_DOMAIN = lib.toLower config.networking.hostName;

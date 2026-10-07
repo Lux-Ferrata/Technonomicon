@@ -15,7 +15,7 @@
 set -uo pipefail
 
 API=http://127.0.0.1:3000/api/v1
-WEB=https://akmon.tail607809.ts.net
+WEB=https://git.ironshark.org
 QUEUE=${QUEUE:-xin/agent-tasks}
 TOKEN=$(cat /run/secrets/forgejo-agent-token)
 MAIL_TO="xin@ironshark.org"
