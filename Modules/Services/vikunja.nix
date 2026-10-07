@@ -52,10 +52,16 @@
       # idempotent: create the account once the server (and its migrations) is up
       postStart = ''
         for _ in $(seq 60); do vikunja healthcheck >/dev/null 2>&1 && break; sleep 1; done
-        if ! vikunja user list 2>/dev/null | grep -qw ${user}; then
+        row() { vikunja user list -e xin@ironshark.org 2>/dev/null | grep -w ${user} || true; }
+        if [ -z "$(row)" ]; then
           vikunja user create -u ${user} -e xin@ironshark.org \
             -p "$(tr -d '\n' < "$CREDENTIALS_DIRECTORY/password")"
         fi
+        # with the mailer on, new accounts wait for an email confirmation
+        if ! row | grep -q Active; then
+          vikunja user change-status --enable "$(row | grep -oE '[0-9]+' | head -1)"
+        fi
+        vikunja user set-admin ${user} >/dev/null
       '';
     };
 
