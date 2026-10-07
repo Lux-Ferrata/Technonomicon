@@ -120,15 +120,25 @@
         target=$(printf '%s' "''${1:-}" | tr '[:upper:]' '[:lower:]')
         [ $# -gt 0 ] && shift
         case "$target" in
-          akmon)  akmon "$@" ;;
+          akmon|kvasir|all) ;;
+          *) echo "usage: deploy <akmon|kvasir|all> [nh os switch args (Kvasir only)...]" >&2; exit 2 ;;
+        esac
+        if [ "$target" = akmon ] && [ $# -gt 0 ]; then
+          echo "deploy: nh args only apply to Kvasir; ignoring: $*" >&2
+        fi
+
+        # the password up front, so a long build doesn't end at a prompt
+        read -rsp "[sudo] password for $USER: " pw; echo
+        # check it (and prime this terminal's sudo) before any build starts
+        printf '%s\n' "$pw" | /run/wrappers/bin/sudo -S -k -p "" -v 2>/dev/null \
+          || { echo "deploy: wrong password" >&2; exit 1; }
+        export TN_DEPLOY_PW=$pw NH_SUDO_ASKPASS=${askpass} SUDO_ASKPASS=${askpass}
+        unset pw
+
+        case "$target" in
+          akmon)  akmon_with_pw ;;
           kvasir) kvasir "$@" ;;
           all)
-            read -rsp "[sudo] password for $USER (Akmon + Kvasir): " pw; echo
-            # check it (and prime this terminal's sudo) before any build starts
-            printf '%s\n' "$pw" | /run/wrappers/bin/sudo -S -k -p "" -v 2>/dev/null \
-              || { echo "deploy: wrong password" >&2; exit 1; }
-            export TN_DEPLOY_PW=$pw NH_SUDO_ASKPASS=${askpass} SUDO_ASKPASS=${askpass}
-            unset pw
             # the server first: Kvasir's builds go through it
             if akmon_with_pw; then a="✓"; else a="✗"; fi
             if [ "$a" = "✓" ]; then
