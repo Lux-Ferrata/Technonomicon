@@ -33,6 +33,8 @@
       self.nixosModules.Tn-server-mail
       self.nixosModules.Tn-server-alerts
       self.nixosModules.Tn-server-metrics
+      self.nixosModules.Tn-server-reports
+      self.nixosModules.Tn-server-review
       self.nixosModules.Tn-build-host
       self.nixosModules.Tn-forgejo
       self.nixosModules.Tn-server-web
