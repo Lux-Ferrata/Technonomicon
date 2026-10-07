@@ -41,6 +41,7 @@
         pinchflat      = icon "television-classic.svg" "https://api.iconify.design/mdi:television-classic.svg?width=128&height=128"  "0kx4dssja7j4h9chndw2305ncj2v5yvzf09626f4s42q9bcy0a8c";
         radicale       = icon "calendar-sync.svg"  "https://api.iconify.design/mdi:calendar-sync.svg?width=128&height=128"           "1lvjm5wnynv67rdrx06aav4imhxwl8ilvzz72p6rq9y902dp2x58";
         opencloud      = icon "file-document-multiple.svg" "https://api.iconify.design/mdi:file-document-multiple.svg?width=128&height=128" "0cwkxdrmfh30zzf0240y8k2hppkszc60c377rdsf5yxykbaj9y53";
+        vikunja        = icon "vikunja.svg"        "https://api.iconify.design/simple-icons:vikunja.svg?width=128&height=128"        "01xv1dzcx2rj48hpfqyr57kmk7ar0fz586xx6zfc4d1y8v75qsd7";
         vaultwarden    = icon "vaultwarden.svg"    "https://api.iconify.design/simple-icons:vaultwarden.svg?width=128&height=128"    "19fanbkz33wm9ayk36ai5xms9skwbqhijhms3danhrj5jxvmf4la";
       };
 
@@ -50,8 +51,7 @@
       } (builtins.readFile ./_tasks-offline.py);
 
       # one launcher entry per Akmon service with a web UI (tailnet-only).
-      # Not here on purpose: tasks. (the Vikunja desktop app is the entry),
-      # vault. (the Vaultwarden entry below), dav./lt./wopi./collabora. (no UI
+      # Not here on purpose: vault. (the Vaultwarden entry below), dav./lt./wopi./collabora. (no UI
       # of their own), metrics. (Grafana only draws the report charts).
       akmon = id: title: sub: path: ico: keywords: pkgs.makeDesktopItem {
         name = "akmon-${id}";
@@ -328,6 +328,7 @@
         categories = [ "Application" "Network" ];
       })
 
+      (akmon "tasks"      "Tasks"             "tasks"      "/" icons.vikunja        [ "tasks" "vikunja" "todo" "projects" "kanban" ])
       (akmon "office"     "Office"            "office"     "/" icons.opencloud      [ "office" "opencloud" "documents" "files" "word" "spreadsheet" "collabora" ])
       (akmon "photos"     "Photos"            "photos"     "/" icons.immich         [ "photos" "immich" "pictures" "images" "gallery" ])
       (akmon "media"      "Jellyfin"          "media"      "/" icons.jellyfin       [ "jellyfin" "media" "movies" "tv" "shows" ])

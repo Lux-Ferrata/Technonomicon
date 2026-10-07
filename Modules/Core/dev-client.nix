@@ -79,6 +79,42 @@
     # Akmon, switch over ssh with the password on sudo's stdin (as nh
     # does). Kvasir gets it through nh's local askpass hook. nh args only
     # go to Kvasir.
+    # tn-check <akmon|kvasir|all>: "does it build?" without switching or a
+    # password. Evaluates here, builds on Akmon and leaves the result in
+    # Akmon's store (nothing copied back); builds here only when Akmon is
+    # unreachable. Prints each host's system path; exit 1 if any fails.
+    tn-check = pkgs.writeShellApplication {
+      name = "tn-check";
+      excludeShellChecks = [ "SC2029" ];
+      text = ''
+        flake=''${NH_OS_FLAKE:-''${NH_FLAKE:-$HOME/Projects/Technonomicon}}
+        flake=''${flake%/}
+        target=$(printf '%s' "''${1:-}" | tr '[:upper:]' '[:lower:]')
+        case "$target" in
+          akmon) hosts=(Akmon) ;; kvasir) hosts=(Kvasir) ;; all) hosts=(Akmon Kvasir) ;;
+          *) echo "usage: tn-check <akmon|kvasir|all>" >&2; exit 2 ;;
+        esac
+        remote=0
+        ssh -o BatchMode=yes -o ConnectTimeout=3 xin@akmon true 2>/dev/null && remote=1
+        rc=0
+        for h in "''${hosts[@]}"; do
+          attr="$flake#nixosConfigurations.$h.config.system.build.toplevel"
+          if [ $remote = 1 ]; then
+            if drv=$(nix eval --raw "$attr.drvPath") \
+               && nix copy --derivation --to ssh-ng://xin@akmon "$drv" \
+               && out=$(ssh xin@akmon "nix build --no-link --print-out-paths -L '$drv^out'"); then
+              echo "$h: ok (built on akmon) $out"
+            else echo "$h: FAILED" >&2; rc=1; fi
+          else
+            if out=$(nix build --no-link --print-out-paths -L "$attr"); then
+              echo "$h: ok (built here, Akmon unreachable) $out"
+            else echo "$h: FAILED" >&2; rc=1; fi
+          fi
+        done
+        exit $rc
+      '';
+    };
+
     askpass = pkgs.writeShellScript "deploy-askpass" ''printf '%s\n' "$TN_DEPLOY_PW"'';
     deploy = pkgs.writeShellApplication {
       name = "deploy";
@@ -264,7 +300,7 @@
     };
 
     home-manager.users.xin = {
-      home.packages = [ akmonReady deploy grimoireCmds grimoireGit
+      home.packages = [ akmonReady deploy tn-check grimoireCmds grimoireGit
         (pkgs.callPackage ./_stt.nix { })   # speech to text, Akmon's GPU or local CPU
         (pkgs.callPackage ./_tts.nix { })   # text to speech, local (Kokoro)
       ];

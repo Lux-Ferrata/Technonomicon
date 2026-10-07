@@ -647,10 +647,8 @@
             hl.exec_cmd("${pkgs.hyprpolkitagent}/libexec/hyprpolkitagent")
             hl.exec_cmd("fcitx5 -d --replace")
             hl.exec_cmd("[workspace 8 silent] obsidian")
-            hl.exec_cmd("[workspace 9 silent] flatpak run com.discordapp.Discord")
             -- hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
             hl.exec_cmd("[workspace 9 silent] ${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized")
-            ${lib.optionalString (lib.elem pkgs.vikunja-desktop nixosCfg.environment.systemPackages) ''hl.exec_cmd("[workspace 9 silent] vikunja-desktop")''}
           end)
 
           hl.config({
