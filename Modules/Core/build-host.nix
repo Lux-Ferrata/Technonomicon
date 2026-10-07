@@ -20,6 +20,10 @@
     nix.settings.trusted-users = [ "nix-builder" ];
 
     sops.secrets.harmonia-signing-key = {};
+    # sign everything built here with the cache key too, so Kvasir accepts
+    # it whichever way it arrives (harmonia, or `nix copy` over ssh from
+    # deploy's --build-host)
+    nix.settings.secret-key-files = [ config.sops.secrets.harmonia-signing-key.path ];
 
     services.harmonia.cache = {
       enable       = true;

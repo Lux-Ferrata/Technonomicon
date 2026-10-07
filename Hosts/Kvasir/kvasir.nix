@@ -42,6 +42,7 @@
       self.nixosModules.Tn-network
       self.nixosModules.Tn-communication
       self.nixosModules.Tn-email
+      self.nixosModules.Tn-gdrive
       self.nixosModules.Tn-sound
       self.nixosModules.Tn-shell
       self.nixosModules.Tn-pdf
@@ -58,6 +59,8 @@
       self.nixosModules.Tn-utf
       self.nixosModules.Tn-virtualization
       self.nixosModules.Tn-build-client
+      self.nixosModules.Tn-dev-client
+      self.nixosModules.Tn-devtools
 
       ({ pkgs, config, ... }: {
         system.stateVersion = "23.11";
@@ -94,23 +97,37 @@
 
         networking.hostName = "Kvasir";
 
+        # Vikunja desktop app; the server is Akmon's (Tn-vikunja), so set the
+        # app's server URL to https://tasks.ironshark.org. The old local
+        # server's data stays in /var/lib/private/vikunja until removed by hand.
         environment.systemPackages = [ pkgs.vikunja-desktop ];
-
-        # Local-only Vikunja server for the desktop app (Custom server URL →
-        # http://localhost:3456). SQLite + attachments live in
-        # /var/lib/private/vikunja (DynamicUser).
-        services.vikunja = {
-          enable           = true;
-          address          = "127.0.0.1";
-          port             = 3456;
-          frontendScheme   = "http";
-          frontendHostname = "localhost:3456";
-        };
 
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 
         # tailnet client: reaches and deploys to Akmon (ssh xin@akmon)
-        services.tailscale.enable = true;
+        services.tailscale = {
+          enable        = true;
+          # lets xin's own session receive Taildrop files (and run `tailscale file`)
+          extraSetFlags = [ "--operator=xin" ];
+        };
+
+        # Taildrop: phone's share sheet -> "Tailscale" -> Kvasir lands files in
+        # ~/Downloads; `send <files>` goes the other way
+        home-manager.users.xin = {
+          systemd.user.services.taildrop-receive = {
+            Unit.Description = "Move incoming Taildrop files into ~/Downloads";
+            Service = {
+              ExecStart  = "${pkgs.tailscale}/bin/tailscale file get --loop --conflict=rename %h/Downloads";
+              Restart    = "always";
+              RestartSec = 10;
+            };
+            Install.WantedBy = [ "default.target" ];
+          };
+          programs.fish.functions.send = ''
+            test (count $argv) -gt 0; or begin; echo "usage: send <files...>"; return 1; end
+            tailscale file cp $argv pixel-10-pro-xl:
+          '';
+        };
 
         home-manager = {
           useGlobalPkgs = true;

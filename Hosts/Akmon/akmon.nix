@@ -28,9 +28,31 @@
       self.nixosModules.Tn-shell
       self.nixosModules.Tn-server
       self.nixosModules.Tn-server-nvim
+      self.nixosModules.Tn-console-kanata
+      self.nixosModules.Tn-server-usage
       self.nixosModules.Tn-server-mail
       self.nixosModules.Tn-build-host
       self.nixosModules.Tn-forgejo
+      self.nixosModules.Tn-server-web
+      self.nixosModules.Tn-dev-host
+      self.nixosModules.Tn-devtools
+      self.nixosModules.Tn-overnight
+      self.nixosModules.Tn-grimoire
+      self.nixosModules.Tn-languagetool
+      self.nixosModules.Tn-vikunja
+      self.nixosModules.Tn-radicale
+      self.nixosModules.Tn-calendar-push
+      self.nixosModules.Tn-webdav
+      self.nixosModules.Tn-paperless
+      self.nixosModules.Tn-immich
+      self.nixosModules.Tn-karakeep
+      self.nixosModules.Tn-mail-archive
+      self.nixosModules.Tn-miniflux
+      self.nixosModules.Tn-vaultwarden
+      self.nixosModules.Tn-media
+      self.nixosModules.Tn-nas
+      self.nixosModules.Tn-torrent
+      self.nixosModules.Tn-hosting
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
@@ -48,6 +70,10 @@
         # headless: the driver is only here for compute (CUDA containers etc.);
         # videoDrivers is how NixOS loads it, it doesn't start X
         services.xserver.videoDrivers = [ "nvidia" ];
+
+        # RTX 5080 (Blackwell): build CUDA packages for sm_120 only, not
+        # every architecture nixpkgs supports
+        nixpkgs.config.cudaCapabilities = [ "12.0" ];
 
         hardware = {
           nvidia-container-toolkit.enable = true;
@@ -69,10 +95,6 @@
         sops.defaultSopsFormat = "yaml";
 
         networking.hostName = "Akmon";
-
-        # off until it's set up as a proper service with data on the fast pool;
-        # Tn-network's per-user setup would mint a new device ID every boot here
-        services.syncthing.enable = lib.mkForce false;
 
         home-manager = {
           useGlobalPkgs = true;

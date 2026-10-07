@@ -1,7 +1,7 @@
 # Akmon: ZFS root that rolls back to an empty snapshot on every boot.
 # Anything not listed under environment.persistence (or living on /nix or a
 # data pool) is gone after a reboot -- that's the point.
-{ config, pkgs, ... }: {
+{ config, pkgs, lib, ... }: {
 
   boot.supportedFilesystems = [ "zfs" ];
   boot.zfs.devNodes         = "/dev/disk/by-id";
@@ -38,6 +38,23 @@
 
   # no swap partition (swap on ZFS is a bad idea); compressed RAM swap instead
   zramSwap.enable = true;
+
+  # ARC defaults to ~all of RAM. The llama.cpp models are mmapped from ZFS,
+  # so their pages sit in the page cache AND in ARC; cap ARC so the chat
+  # model's CPU-side experts and builds don't have to wait for it to shrink.
+  # The page cache still keeps both model files (17G + 12G) warm.
+  # Module option for boot, activation script so a switch applies it too.
+  boot.extraModprobeConfig = "options zfs zfs_arc_max=${toString (16 * 1024 * 1024 * 1024)}";
+  system.activationScripts.zfsArcMax = ''
+    echo ${toString (16 * 1024 * 1024 * 1024)} > /sys/module/zfs/parameters/zfs_arc_max || true
+  '';
+
+  # / is already wiped by the rollback, /tmp with it; RAM-backed it just
+  # spares the SSD the churn. Nix builds stage in /nix/var/nix/builds, not
+  # here, so the cap can't starve them.
+  boot.tmp.useTmpfs   = true;
+  boot.tmp.tmpfsSize  = "16G";
+  boot.tmp.cleanOnBoot = lib.mkForce false;   # Tn-nix's; a tmpfs starts empty
 
   # keep the fallback ESP on sys1 bootable
   boot.loader.systemd-boot.extraInstallCommands = ''

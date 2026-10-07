@@ -1,30 +1,66 @@
 { inputs, ... }: {
 
-  flake.nixosModules.Tn-neovim = { pkgs, pkgs-stable, ... }:
+  flake.nixosModules.Tn-neovim = { pkgs, pkgs-stable, lib, ... }:
   let
     openVsx   = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.open-vsx;
     vscodeMkt = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.vscode-marketplace;
 
-    # nixpkgs' `ac-library` installs only bin/expander -- it ships none of the
-    # atcoder/*.hpp headers, so it cannot actually be #included. This packages
-    # the headers themselves; `expander` from nixpkgs still inlines them into a
-    # single file for submission.
-    acLibrary = pkgs.stdenvNoCC.mkDerivation {
-      pname   = "ac-library-headers";
-      version = "1.6";
-      src = pkgs.fetchFromGitHub {
-        owner  = "atcoder";
-        repo   = "ac-library";
-        rev    = "v1.6";
-        hash   = "sha256-zV2G9Ur2v8elGVKuO9w7ampaB13wDod9qzo7+QXq6G4=";
-      };
-      dontBuild = true;
-      installPhase = ''
-        mkdir -p $out/include
-        cp -r atcoder $out/include/
-      '';
-      meta.description = "Official AtCoder Library, headers only";
-    };
+    acLibrary = pkgs.callPackage ./_ac-library.nix { };
+
+    # Installed locally by home-manager, and on Akmon's VSCodium server through
+    # remote.SSH.defaultExtensions (by ID, from Open VSX).
+    editorExtensions = (with openVsx; [
+      # Not packaged in nixpkgs. Deliberately left without a `quarto.path`
+      # so the blog flake's direnv-provided CLI is the one it picks up.
+      quarto.quarto
+      # Remote windows on Akmon (Tn-dev-client's `eo`). MS's Remote-SSH is
+      # licensed to official VS Code only; this is the open replacement,
+      # and VSCodium's product.json already allows its proposed APIs.
+      jeanp413.open-remote-ssh
+      # Code completion (and later chat/edit) from local llama.cpp models
+      ggml-org.llama-vscode
+      # Grammar/style in LaTeX, Markdown and Typst, against Akmon's
+      # LanguageTool (MPL-2.0)
+      ltex-plus.vscode-ltex-plus
+    ]) ++ [
+      # Harpoon-style pinned files (MIT). Published only to the MS
+      # marketplace, so it comes from that index rather than Open VSX --
+      # and so Akmon's server can't fetch it: it runs on the UI side
+      # (uiExtensions), which works on remote files too.
+      vscodeMkt.tobias-z.vscode-harpoon
+    ] ++ (with pkgs.vscode-extensions; [
+      arcticicestudio.nord-visual-studio-code
+      vscodevim.vim
+      # Every extension below is MIT/BSD0 and Open-VSX-clean. Pylance is
+      # deliberately absent: it is unfree and refuses to run on VSCodium.
+      mkhl.direnv
+      jnoortheen.nix-ide
+      ms-pyright.pyright
+      ms-python.python
+      ms-python.black-formatter
+      charliermarsh.ruff
+      mkhl.shfmt
+      ms-toolsai.jupyter
+      haskell.haskell
+      llvm-vs-code-extensions.vscode-clangd
+      ziglang.vscode-zig
+      rust-lang.rust-analyzer
+      # CodeLLDB is the debug adapter for C/C++/Rust. ms-vscode.cpptools
+      # is unfree and licensed to official VS Code builds only.
+      vadimcn.vscode-lldb
+      ms-vscode.cmake-tools
+      james-yu.latex-workshop
+      # Spell checker (GPL-3.0). Limited to comments in code, see cSpell.*
+      streetsidesoftware.code-spell-checker
+    ]);
+
+    # Extensions that run on the local (UI) side even in remote windows:
+    # the remote connector itself, and Harpoon (marketplace-only, so Akmon's
+    # server can't fetch it).
+    uiExtensions = [
+      "jeanp413.open-remote-ssh"
+      "tobias-z.vscode-harpoon"
+    ];
 
     mcpy = pkgs.python3Packages.buildPythonPackage rec {
       pname = "mcpy";
@@ -71,153 +107,42 @@
     '';
   in {
 
-    # NixOS does not link /include into the system profile, so ACL and testlib
-    # headers are in the store but invisible to a bare `g++ foo.cpp`. This puts
-    # them on the default C++ search path, matching AtCoder's own judge where
-    # `#include <atcoder/all>` just works.
-    environment.variables.CPLUS_INCLUDE_PATH =
-      "${acLibrary}/include:${pkgs.testlib}/include/testlib";
-
+    # Compilers, language servers, formatters and the rest of the headless
+    # toolchain live in Tn-devtools (shared with Akmon, where remote editor
+    # windows run). This is the desktop/editor side only.
     environment.systemPackages = with pkgs; [
       previewImage
       openInGhostty
       openInObsidian
       imv
-      lazygit
       ghostty
-      # JS / TypeScript
-      nodejs
-      typescript-language-server
-      prettier
       # File Management
       yazi
-      # Git
-      delta
-      # DAP Debug Adapters
-      lldb
-      python3Packages.debugpy
       # Accounting
       beancount
-      # AI Coding. From stable: on unstable (2026-10-01) litellm grew an
-      # exception aider refuses at import, so it fails its tests and crashes.
-      pkgs-stable.aider-chat
-      # Markdown LSP
-      marksman
       # General Tooling
       qalculate-gtk
       libqalculate # provides the `qalc` CLI
-      claude-code
-      sqlite
-      gdb
-      # Export Tooling
-      pandoc
       # Chart Tooling
       mermaid-cli
       drawio
       pdf2svg
       # PDF Tooling
       poppler
-      # LaTeX / Typst
-      texliveFull
-      texlab # LaTeX LSP (lang.tex extra configures it; installDependencies defaults off)
-      typst
-      tinymist
-      # Spell / Grammar Checking
-      hunspell
-      hunspellDicts.en_US
-      harper # provides harper-ls: offline grammar + spell LSP
-      # Haskell
-      ghc cabal-install haskell-language-server haskellPackages.hoogle
-      # Nix
-      nixfmt
-      nixd
-      # Python
-      # 2026-10-05: coconut pinned to stable; unstable python3.12-anyio 4.14.2 tests fail (tls server_hostname)
-      python3 pyright ruff black pkgs-stable.coconut
-      # BQN
-      cbqn
-      # Bash / Shell
-      shellcheck shfmt
-      # Scheme & Racket
-      guile racket
-      # C / C++
-      clang-tools   # clangd, clang-format, clang-tidy
-      gcc           # cc / c++ — nothing else in this config provides a compiler
-      cmake
-      ninja         # cmake's default generator for anything modern
-      bear          # generates compile_commands.json so clangd resolves headers
-      valgrind
-      # Competitive programming (AtCoder / Codeforces)
-      acLibrary                      # atcoder/*.hpp headers
-      ac-library                     # `expander` — inlines ACL for submission
-      online-judge-tools             # `oj`: fetch samples, run tests, submit
-      online-judge-template-generator # `oj-template`: boilerplate from a problem URL
-      testlib                        # write generators/checkers for stress tests
-      hyperfine                      # timing runs when hunting a TLE
-      # Rust
-      rustc cargo rustfmt clippy rust-analyzer
-      # Needed by both: most C builds and any crate with a -sys dependency
-      # shell out to pkg-config. Library dev deps themselves (openssl, etc.)
-      # belong in a per-project flake, not here.
-      pkg-config
-      # Zig
-      zig zls
-      # Assembly & Forth. gforth from stable: on unstable (2026-10-01) its
-      # bundled swig-3.0.9 fails to configure, pcre1 having been dropped.
-      # Move it back to `pkgs` once unstable builds it again.
-      nasm pkgs-stable.gforth
-      # Verilog & VHDL
-      # verilator from stable: unstable's 5.052 fails its SystemC example
-      # link (2026-10-01).
-      pkgs-stable.verilator verible ghdl vhdl-ls
-      # Jupyter Notebooks
-      zeromq
-      python3Packages.jupyter
+      # nvim's notebook/image plugins (molten, image.nvim)
       python3Packages.pynvim
-      python3Packages.jupyter-client
-      python3Packages.nbformat
       python3Packages.cairosvg
       mcpy
       # image.nvim — provides the magick luarock via nix instead of luarocks
       luajitPackages.magick
     ];
 
+    # VSCodium; `eo` opens projects on Akmon over Open Remote - SSH whenever
+    # it's reachable (Tn-dev-client).
     home-manager.users.xin.programs.vscodium = {
-      enable = true;
+      enable  = true;
       profiles.default = {
-        extensions = (with openVsx; [
-          # Not packaged in nixpkgs. Deliberately left without a `quarto.path`
-          # so the blog flake's direnv-provided CLI is the one it picks up.
-          quarto.quarto
-        ]) ++ [
-          # Harpoon-style pinned files (MIT). Published only to the MS
-          # marketplace, so it comes from that index rather than Open VSX.
-          vscodeMkt.tobias-z.vscode-harpoon
-        ] ++ (with pkgs.vscode-extensions; [
-          arcticicestudio.nord-visual-studio-code
-          vscodevim.vim
-          # Every extension below is MIT/BSD0 and Open-VSX-clean. Pylance is
-          # deliberately absent: it is unfree and refuses to run on VSCodium.
-          mkhl.direnv
-          jnoortheen.nix-ide
-          ms-pyright.pyright
-          ms-python.python
-          ms-python.black-formatter
-          charliermarsh.ruff
-          mkhl.shfmt
-          ms-toolsai.jupyter
-          haskell.haskell
-          llvm-vs-code-extensions.vscode-clangd
-          ziglang.vscode-zig
-          rust-lang.rust-analyzer
-          # CodeLLDB is the debug adapter for C/C++/Rust. ms-vscode.cpptools
-          # is unfree and licensed to official VS Code builds only.
-          vadimcn.vscode-lldb
-          ms-vscode.cmake-tools
-          james-yu.latex-workshop
-          # Spell checker (GPL-3.0). Limited to comments in code, see cSpell.*
-          streetsidesoftware.code-spell-checker
-        ]);
+        extensions = editorExtensions;
 
         keybindings = [
           # Normal mode only, so ctrl+space keeps triggering completion while
@@ -321,6 +246,15 @@
           "latex-workshop.linting.chktex.enabled"  = true;
           "latex-workshop.view.pdf.viewer"         = "tab";
 
+          # LTeX+: the nixpkgs server (on PATH on both hosts, Tn-devtools)
+          # rather than a download, checking against Akmon's LanguageTool
+          # (English n-grams + zh-CN; tailnet only, so no grammar offline).
+          # `auto` lets the server tell English from Mandarin; a file can pin
+          # it with a `% LTeX: language=zh-CN` comment.
+          "ltex.ltex-ls.path"                = "${pkgs.ltex-ls-plus}";
+          "ltex.languageToolHttpServerUri"   = "https://lt.ironshark.org/";
+          "ltex.language"                    = "auto";
+
           # Quarto has no packaged extension; .qmd is markdown plus fenced
           # cells, so this gets highlighting without one.
           "files.associations" = { "*.qmd" = "markdown"; };
@@ -329,12 +263,38 @@
           "editor.formatOnSave"      = true;
           "editor.wordWrap"          = "on";
           "editor.renderLineHighlight" = "all";
-          "terminal.integrated.fontFamily" = "'JetBrains Mono', monospace";
+          # Nerd Font variant: eza/starship icons render instead of boxes
+          "terminal.integrated.fontFamily" = "'JetBrainsMono Nerd Font', monospace";
           # let F4 and the harpoon jumps through instead of sending them to fish
           "terminal.integrated.commandsToSkipShell" = [
             "workbench.action.terminal.toggleTerminal"
           ] ++ map (n: "vscode-harpoon.gotoEditor${toString n}") [ 1 2 3 4 5 ];
           "telemetry.telemetryLevel" = "off";
+          # nix owns versions, locally and (by ID) on Akmon's server
+          "update.mode"            = "none";
+          "extensions.autoUpdate"  = false;
+          "extensions.autoCheckUpdates" = false;
+
+          # Open Remote - SSH. Akmon's login shell is fish, so tell it the
+          # platform rather than letting it probe; ControlMaster etc. come
+          # from ~/.ssh/config (Tn-dev-client).
+          "remote.SSH.remotePlatform"    = { akmon = "linux"; };
+          # everything except what runs on this (UI) side
+          "remote.SSH.defaultExtensions" = lib.subtractLists uiExtensions
+            (map (e: e.vscodeExtUniqueId) editorExtensions);
+          "remote.extensionKind" = lib.genAttrs uiExtensions (_: [ "ui" ]);
+
+          # llama-vscode runs next to the code (it needs the Git extension,
+          # which does too), and 127.0.0.1:8012 is right on either side: on
+          # Akmon it's the GPU server itself, on Kvasir the proxy that
+          # prefers Akmon and falls back to the CPU model (Tn-dev-client).
+          "llama-vscode.endpoint"             = "http://127.0.0.1:8012";
+          # chat, edit-selection and the tool-using agent: same idea, :8011
+          # (Akmon wakes its chat model on the first request)
+          "llama-vscode.endpoint_chat"        = "http://127.0.0.1:8011";
+          "llama-vscode.endpoint_tools"       = "http://127.0.0.1:8011";
+          "llama-vscode.ask_install_llamacpp" = false;
+          "llama-vscode.rag_enabled"          = false;
 
           # ms-python.python would otherwise try to start Pylance; the
           # standalone pyright extension provides the language server.
@@ -409,13 +369,26 @@
     # `eo` is a plain $PATH binary, so putting it here makes VSCodium the
     # default target while still letting a project dev shell win by
     # prepending its own. `--new-window` keeps it from handing the path to
-    # an already-open window.
+    # an already-open window. When `akmon-ready` (Tn-dev-client) says the
+    # project can run on Akmon, the window opens there over Remote-SSH --
+    # same path on both machines -- otherwise it opens locally.
     home-manager.users.xin.home.packages = [
       (pkgs.writeShellScriptBin "eo" ''
-        if [ "$#" -eq 0 ]; then
-          exec ${pkgs.vscodium}/bin/codium --new-window .
+        code=${pkgs.vscodium}/bin/codium
+        # the CLI half of `codium` warns about the wrapper's Wayland flags,
+        # which are meant for the window; drop just those lines
+        exec 2> >(grep -v "is not in the list of known options" >&2)
+        [ "$#" -eq 0 ] && set -- .
+        if command -v akmon-ready >/dev/null && akmon-ready "$1"; then
+          args=()
+          for p in "$@"; do
+            p=$(realpath -m -- "$p")
+            if [ -d "$p" ]; then args+=(--folder-uri "vscode-remote://ssh-remote+akmon$p")
+            else                 args+=(--file-uri   "vscode-remote://ssh-remote+akmon$p"); fi
+          done
+          exec "$code" --new-window "''${args[@]}"
         fi
-        exec ${pkgs.vscodium}/bin/codium --new-window "$@"
+        exec "$code" --new-window "$@"
       '')
     ];
 
