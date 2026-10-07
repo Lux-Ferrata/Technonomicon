@@ -80,6 +80,16 @@ The Google login is done; the token is on Akmon at
       search, `mid:` links into Thunderbird) and calendar events. Must respect
       the vault rule (write via the Obsidian CLI / marked blocks only).
 
+## Monitoring follow-ups
+
+- [ ] **Around 2026-10-14:** VictoriaMetrics has a week of data. Remove the
+      `tn-usage-log` CSV logger (`Modules/Core/server-usage.nix`; keep `aku`)
+      and stop feeding `usage.txt` to the weekly summary.
+- [ ] **External dead-man switch?** Nothing on Akmon can report Akmon being
+      completely down; only the missing 06:00 report shows it. A free
+      healthchecks.io check pinged every 5 min would mail within minutes. It
+      needs a signup and sends heartbeats off the box, so it's xin's call.
+
 ## Queue (after the monitoring stack)
 
 - [ ] **Office suite on Akmon.** Kvasir has OnlyOffice desktop (`Tn-learning`),
