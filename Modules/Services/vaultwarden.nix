@@ -56,7 +56,7 @@
       after    = [ "network-online.target" ];
       wants    = [ "network-online.target" ];
       unitConfig.RequiresMountsFor = [ backups ];
-      path = [ pkgs.coreutils pkgs.findutils ];
+      path = [ pkgs.coreutils pkgs.findutils pkgs.gnugrep ];
       serviceConfig = {
         Type  = "oneshot";
         User  = "bwexport";
