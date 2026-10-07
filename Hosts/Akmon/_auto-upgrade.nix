@@ -9,7 +9,8 @@
     enable  = true;
     flake   = "git+http://127.0.0.1:3000/xin/Technonomicon.git?ref=main#Akmon";
     upgrade = false;        # honour main's flake.lock, never update inputs here
-    dates   = "06:00";      # Wed's job starts 03:00; usually done long before
+    dates   = "05:30";      # Wed's job starts 03:00; usually done long before.
+                            # Before the 06:00 alert digest, which reports on it
     # reboot only when kernel/initrd/modules changed, and only at night
     allowReboot  = true;
     rebootWindow = { lower = "05:00"; upper = "07:00"; };

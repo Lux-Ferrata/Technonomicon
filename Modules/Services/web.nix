@@ -200,7 +200,7 @@
         backupAll   = true;
         location    = "/srv/backup/postgresql";
         compression = "zstd";
-        startAt     = "*-*-* 02:15:00";   # clear of overnight (00:10), weekly (Wed 03:00), upgrade (06:00)
+        startAt     = "*-*-* 02:15:00";   # clear of overnight (00:10), weekly (Wed 03:00), upgrade (05:30)
       };
       systemd.tmpfiles.rules = [
         "d /srv/postgresql         0750 postgres postgres -"

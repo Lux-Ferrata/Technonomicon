@@ -31,7 +31,19 @@ log()   { STAGE=$*; printf '\n==== %s ====\n' "$*"; }
 note()  { printf -- '- %s\n' "$*" >> "$WORK/notes"; }
 push()  { if [ "$MODE" = live ]; then git push "$@"; else echo "[dry-run] git push $*"; fi; }
 
+# scheduled runs start at 03:00 but mail at 06:00 (xin's wake-up), never
+# earlier; runs started by hand mail straight away
+hold_until_morning() {
+  [ "${GITHUB_EVENT_NAME:-}" = schedule ] || return 0
+  local now target
+  now=$(date +%s); target=$(date -d 'today 06:00' +%s)
+  if [ "$now" -lt "$target" ]; then
+    echo "holding the mail until 06:00"; sleep $((target - now))
+  fi
+}
+
 send_mail() { # subject body-file [monospace-file]
+  hold_until_morning
   # multipart: plain text, plus HTML so the optional table (column-aligned
   # with spaces) shows in a monospace block instead of Gmail's proportional font
   local b="tn-$$-$RANDOM"
@@ -333,7 +345,7 @@ Material: $WORK/notes (facts from the run, include every problem), $WORK/curated
 
 Structure: one-line verdict; what changed this week grouped like the curated commits; package upgrades worth knowing about (skip noise); anything pinned or fixed and why; evaluation warnings fixed and any left over; a two-or-three-sentence paragraph on Akmon's usage this week (what it mostly did, anything unusual: sustained high load, pool growth, reboots, gaps, failed units; the full table is appended after your text, so don't repeat it); problems needing attention. End with exactly:
 To update Kvasir:  cd ~/Projects/Technonomicon && git pull && deploy kvasir
-Akmon:             updates itself from main at 06:00
+Akmon:             updates itself from main at 05:30
 $([ "$MODE" = live ] || echo "Start with a line saying this was a DRY RUN and nothing was pushed.")" \
   "Read,Write,Bash(git log:*),Bash(git show:*)" || true
 

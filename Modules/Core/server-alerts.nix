@@ -12,9 +12,9 @@
   #                  in that window mails at once, at most every 6 h per error.
   #                  Catches services that are "running" but broken, which
   #                  never trip OnFailure (the CI runner 404ing for 12 h).
-  #   daily digest   07:30: units that failed in the last day, every distinct
+  #   daily digest   06:00: units that failed in the last day, every distinct
   #                  error the journal logged (with counts), what is failed
-  #                  right now, and how the 06:00 auto-upgrade went. Not sent
+  #                  right now, and how the 05:30 auto-upgrade went. Not sent
   #                  when there is nothing to say.
   #
   # Errors = journal priority err or worse, plus info-level lines that say
@@ -276,7 +276,7 @@
       };
       systemd.timers.tn-alerts-daily = {
         wantedBy  = [ "timers.target" ];
-        timerConfig.OnCalendar = "07:30";
+        timerConfig.OnCalendar = "06:00";   # after the 05:30 auto-upgrade
       };
     };
   };
