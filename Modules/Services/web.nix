@@ -18,6 +18,12 @@
     tailscale = lib.getExe config.services.tailscale.package;
     pg       = config.services.postgresql;
   in {
+    # names that need a DNS record but no nginx vhost (e.g. mail. for IMAP)
+    options.tn.web.extraNames = lib.mkOption {
+      type    = lib.types.listOf lib.types.str;
+      default = [];
+    };
+
     options.tn.web.vhosts = lib.mkOption {
       default = {};
       description = "Services behind nginx at <name>.${domain}.";
@@ -96,7 +102,7 @@
       # those records; never deletes and never touches anything else in the
       # zone (mail, the apex, www are hand-managed).
       systemd.services.cloudflare-dns-sync = let
-        names = lib.concatStringsSep " " (lib.attrNames config.tn.web.vhosts);
+        names = lib.concatStringsSep " " (lib.attrNames config.tn.web.vhosts ++ config.tn.web.extraNames);
       in {
         description = "Ensure Cloudflare A records for Akmon's services";
         after    = [ "network-online.target" ];

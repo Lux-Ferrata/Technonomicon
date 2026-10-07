@@ -56,6 +56,51 @@
     sops.secrets.radicale-password = { owner = "xin"; };
 
     home-manager.users.xin = {
+      # ── Thunderbird: mail, calendar, RSS ───────────────────────────────
+      # Gmail signs in with OAuth2 in Thunderbird's own window on first
+      # start. "Archive" is Akmon's permanent copy (Tn-mail-archive), read-only
+      # and full-text searchable; its password is sops mail-archive-password.
+      # Calendars: File > New > Calendar > On the Network, URL
+      # https://cal.ironshark.org/ (Radicale, finds them all); Google Calendar
+      # the same way with a Google login. Feeds live in the "Feeds" account.
+      accounts.email.accounts = {
+        ironshark = {
+          primary     = true;
+          address     = "xin@ironshark.org";
+          userName    = "xin@ironshark.org";
+          realName    = config.tn.full_name;
+          flavor      = "gmail.com";
+          thunderbird.enable = true;
+        };
+        archive = {
+          address  = "archive@ironshark.org";   # never sends; just names the account
+          userName = "xin";
+          realName = "Archive (Akmon)";
+          imap = { host = "mail.ironshark.org"; port = 993; tls.enable = true; };
+          thunderbird = {
+            enable   = true;
+            settings = id: {
+              # look only: no Trash/Sent/Drafts handling on a read-only store
+              "mail.server.server_${id}.delete_model"   = 0;
+              "mail.server.server_${id}.check_all_folders_for_new" = false;
+            };
+          };
+        };
+      };
+      programs.thunderbird = {
+        enable = true;
+        profiles.default = {
+          isDefault    = true;
+          feedAccounts.Feeds = {};
+          settings = {
+            "mail.shell.checkDefaultClient"  = false;
+            "datareporting.healthreport.uploadEnabled" = false;
+            "toolkit.telemetry.enabled"      = false;
+            "calendar.timezone.useSystemTimezone" = true;
+          };
+        };
+      };
+
       xdg.configFile."vdirsyncer/config".text = ''
         [general]
         status_path = "~/.local/share/vdirsyncer/status/"

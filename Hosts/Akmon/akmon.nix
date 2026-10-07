@@ -46,6 +46,7 @@
       self.nixosModules.Tn-paperless
       self.nixosModules.Tn-immich
       self.nixosModules.Tn-karakeep
+      self.nixosModules.Tn-mail-archive
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";

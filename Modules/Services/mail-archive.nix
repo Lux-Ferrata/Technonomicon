@@ -102,10 +102,11 @@
       };
 
       # ── Dovecot: the archive over IMAP, read-only ─────────────────────
-      sops.secrets.mail-archive-passwd = { owner = config.services.dovecot2.user; };   # xin:{BLF-CRYPT}...
+      sops.secrets.mail-archive-passwd = { owner = "dovecot2"; };   # xin:{BLF-CRYPT}...
       services.dovecot2 = {
         enable    = true;
         enablePAM = false;
+        package   = pkgs.dovecot;   # 2.4; stateVersion 23.11 would pick 2.3
         settings = let pkg = config.services.dovecot2.package; in {
           dovecot_config_version  = pkg.version;
           dovecot_storage_version = pkg.version;
