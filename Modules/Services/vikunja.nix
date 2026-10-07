@@ -52,8 +52,11 @@
       # idempotent: create the account once the server (and its migrations) is up
       postStart = ''
         for _ in $(seq 60); do vikunja healthcheck >/dev/null 2>&1 && break; sleep 1; done
-        row() { vikunja user list -e xin@ironshark.org 2>/dev/null | grep -w ${user} || true; }
-        if [ -z "$(row)" ]; then
+        users=$(vikunja user list 2>/dev/null || true)
+        # the username column, exactly (tablewriter draws │ or | borders)
+        row() { vikunja user list 2>/dev/null | grep -E '[│|] *${user} *[│|]' || true; }
+        # only on an empty instance: a restored dump brings its own accounts
+        if ! grep -qE '^[│|] *[0-9]+ ' <<<"$users"; then
           vikunja user create -u ${user} -e xin@ironshark.org \
             -p "$(tr -d '\n' < "$CREDENTIALS_DIRECTORY/password")"
         fi
