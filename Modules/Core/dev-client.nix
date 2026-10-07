@@ -150,7 +150,6 @@
             printf '\nAkmon %s   Kvasir %s\n' "$a" "$k"
             [ "$a$k" = "✓✓" ]
             ;;
-          *) echo "usage: deploy <akmon|kvasir|all> [nh os switch args...]" >&2; exit 2 ;;
         esac
       '';
     };
