@@ -52,6 +52,22 @@ The Google login is done; the token is on Akmon at
 - [x] Google Drive: run `gdrive-login` once on Kvasir.
 - [ ] Delete the old Web-type OAuth client in the Google console.
 
+## Round 3 setup (manual)
+
+- [ ] Vaultwarden (`vault.ironshark.org`): create the account, import the
+      newest `/srv/backup/bitwarden/` export (export password: sops
+      `bitwarden-export-password`), then set `SIGNUPS_ALLOWED = false`
+      (`Modules/Services/vaultwarden.nix`).
+- [ ] Jellyfin (`media.`), Audiobookshelf (`audiobooks.`), Pinchflat (`yt.`):
+      first-run admin accounts, then libraries under `/srv/media/...`
+      (placeholder layout). Jellyfin: Dashboard > Playback > NVIDIA NVENC.
+- [ ] Phone: Jellyfin, Audiobookshelf, and a Miniflux reader (Read You /
+      Capy Reader) on `rss.ironshark.org`.
+- [ ] Torrent VPN: when the Mullvad exit node is on, set
+      `tn.torrent.vpnInterface = "tailscale0"`.
+- [ ] DAS: once bought, create the `bulk` pool and set `tn.nas.bulkPool`.
+- [ ] Thunderbird: drop the Feeds account once Miniflux has taken over.
+
 ## Later
 
 - [ ] Immich machine learning on the GPU (CUDA build, compiled on Akmon) if the

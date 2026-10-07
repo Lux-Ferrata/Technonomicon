@@ -50,6 +50,9 @@
       self.nixosModules.Tn-miniflux
       self.nixosModules.Tn-vaultwarden
       self.nixosModules.Tn-media
+      self.nixosModules.Tn-nas
+      self.nixosModules.Tn-torrent
+      self.nixosModules.Tn-hosting
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";

@@ -26,6 +26,12 @@
       distrobox
     ];
 
+    # Akmon's VMs (Tn-hosting) next to the local ones
+    home-manager.users.xin.dconf.settings."org/virt-manager/virt-manager/connections" = {
+      autoconnect = [ "qemu:///system" ];
+      uris        = [ "qemu:///system" "qemu+ssh://xin@akmon/system" ];
+    };
+
     programs = {
       virt-manager.enable = true;
       dconf.enable = true;
