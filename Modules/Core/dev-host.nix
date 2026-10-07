@@ -119,8 +119,6 @@
     sops.secrets.syncthing-gui-password = { owner = "xin"; };
     tn.web.vhosts.sync = {
       port = lib.toInt (lib.last (lib.splitString ":" config.services.syncthing.guiAddress));
-      # Syncthing only answers to Host: localhost unless told otherwise
-      locationConfig = "proxy_set_header Host localhost;";
     };
 
     services.syncthing = {
@@ -133,7 +131,12 @@
       # only reached over the tailnet
       openDefaultPorts = lib.mkForce false;
       settings = {
-        gui.user = "xin";
+        gui = {
+          user = "xin";
+          # the host check guards a password-less GUI against DNS rebinding;
+          # this one has a password and is reached as sync.ironshark.org
+          insecureSkipHostcheck = true;
+        };
         options = {
           globalAnnounceEnabled = false;
           localAnnounceEnabled  = false;

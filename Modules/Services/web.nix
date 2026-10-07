@@ -26,8 +26,6 @@
           port    = lib.mkOption { type = lib.types.port; };
           maxBody = lib.mkOption { type = lib.types.str; default = "100m"; };
           extraConfig = lib.mkOption { type = lib.types.lines; default = ""; };
-          # inside `location /`, after the proxy headers (so it can override Host)
-          locationConfig = lib.mkOption { type = lib.types.lines; default = ""; };
         };
       });
     };
@@ -147,7 +145,6 @@
           locations."/" = {
             proxyPass       = "http://127.0.0.1:${toString v.port}";
             proxyWebsockets = true;
-            extraConfig     = v.locationConfig;
           };
           extraConfig = ''
             client_max_body_size ${v.maxBody};
