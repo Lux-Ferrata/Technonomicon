@@ -84,14 +84,16 @@ Write exactly two files:
 1. $WORK/review.md: at most 120 words of plain text (no headings, no markdown) for the top of today's email. Lead with what matters; say what is fine; end with what, if anything, the owner should do. If nothing is wrong, one sentence.
 2. $WORK/triage.json: a JSON array with one object per issue in needs-diagnosis.txt:
    {\"issue\": N, \"comment\": \"<markdown: likely cause, the evidence (log lines, metric values), and the fix>\", \"fixable_in_config\": true|false}
-   fixable_in_config is true only when a change to the NixOS configuration would fix it and the comment says which change. It is false for hardware, upstream bugs, one-off blips, and anything needing the owner's decision. An empty array when needs-diagnosis.txt is empty."
+   First check whether the problem is still happening now (unit state, current metric values, recent journal); say so in the comment either way. fixable_in_config is true only when the problem is still present, a change to the NixOS configuration would fix it, and the comment says which change. It is false for problems that have already stopped (they close on their own), hardware, upstream bugs, one-off blips, and anything needing the owner's decision. An empty array when needs-diagnosis.txt is empty.
+
+If your commands fail, say so at the top of review.md."
 
 chown -R tn-health:tn-health "$WORK"
 CLAUDE_CODE_OAUTH_TOKEN=$(cat /run/secrets/claude-oauth-token)
 export CLAUDE_CODE_OAUTH_TOKEN
 cd "$WORK" || exit 1
 setpriv --reuid=tn-health --regid=tn-health --init-groups --reset-env -- \
-  env HOME="$STATE" PATH="$PATH" CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN" \
+  env HOME="$STATE" PATH="$PATH" SHELL="$(command -v bash)" CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN" \
   claude -p "$prompt" --output-format text --add-dir "$WORK" \
     --allowedTools "Read,Write,Glob,Grep,Bash(journalctl:*),Bash(systemctl status:*),Bash(systemctl show:*),Bash(systemctl list-units:*),Bash(systemctl list-timers:*),Bash(zpool status:*),Bash(zpool list:*),Bash(df:*),Bash(free:*),Bash(curl -s http://127.0.0.1:8428/*),Bash(curl -s 'http://127.0.0.1:8428/*)" \
   > "$WORK/claude.log" 2>&1 || echo "claude exited $?" >> "$WORK/claude.log"
