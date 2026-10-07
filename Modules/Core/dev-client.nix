@@ -73,11 +73,12 @@
     # switched there; Kvasir is built on Akmon too when it's reachable (the
     # whole closure, not just what distributed builds would hand over) and
     # switched locally; offline it builds here.
-    # `all` asks for the password once (both hosts share xin-password). nh
-    # only takes a remote sudo password from its own prompt, so for Akmon
-    # `all` does nh's steps itself: evaluate, build on Akmon, switch over ssh
-    # with the password on sudo's stdin (as nh does). Kvasir gets it through
-    # nh's local askpass hook. In `all`, nh args only go to Kvasir.
+    # The password is asked once, before anything builds (both hosts share
+    # xin-password). nh only takes a remote sudo password from its own
+    # prompt (at the end), so Akmon is done by hand: evaluate, build on
+    # Akmon, switch over ssh with the password on sudo's stdin (as nh
+    # does). Kvasir gets it through nh's local askpass hook. nh args only
+    # go to Kvasir.
     askpass = pkgs.writeShellScript "deploy-askpass" ''printf '%s\n' "$TN_DEPLOY_PW"'';
     deploy = pkgs.writeShellApplication {
       name = "deploy";
