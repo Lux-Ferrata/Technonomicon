@@ -140,6 +140,9 @@
       systemd.services."notify-failure@" = {
         description = "Queue an alert about failed unit %i";
         serviceConfig.Type = "oneshot";
+        # a restart-looping unit triggers this every few seconds; the flusher
+        # batches, so systemd's start limit must not drop any of them
+        unitConfig.StartLimitIntervalSec = 0;
         scriptArgs = "%i";
         inherit path;
         script = ''

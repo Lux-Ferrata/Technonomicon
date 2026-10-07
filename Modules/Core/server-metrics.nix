@@ -324,12 +324,13 @@
           configFile = pkgs.writeText "blackbox.yml" (builtins.toJSON {
             modules = {
               # "the service answers": anything but a 5xx/timeout (login
-              # pages redirect, WebDAV/CalDAV ask for auth)
+              # pages redirect, WebDAV/CalDAV ask for auth, API-only services
+              # like LanguageTool say 400 at /)
               https = {
                 prober = "http";
                 timeout = "10s";
                 http = {
-                  valid_status_codes = [ 200 204 301 302 303 307 308 401 403 404 405 ];
+                  valid_status_codes = [ 200 204 301 302 303 307 308 400 401 403 404 405 ];
                   follow_redirects = false;
                   fail_if_not_ssl = true;
                   preferred_ip_protocol = "ip4";

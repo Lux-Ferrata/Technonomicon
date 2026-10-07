@@ -35,8 +35,10 @@
           domain    = "metrics.${config.tn.web.domain}";
           root_url  = "https://metrics.${config.tn.web.domain}/";
         };
-        # minted on first start (preStart below), never in the store
+        # minted on first start (tn-grafana-secrets below), never in the store
         security.secret_key = "$__file{${stateDir}/secret_key}";
+        # shared with the renderer (Grafana refuses the default token)
+        rendering.renderer_token = "$__file{${stateDir}/renderer_token}";
         "auth.anonymous" = { enabled = true; org_role = "Viewer"; };
         auth.disable_login_form = false;
         users.allow_sign_up = false;
@@ -55,11 +57,28 @@
         } ];
       };
     };
-    systemd.services.grafana.preStart = lib.mkBefore ''
-      if [ ! -s ${stateDir}/secret_key ]; then
-        (umask 077; head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n' > ${stateDir}/secret_key)
-      fi
-    '';
+    # Grafana's secret key and the Grafana<->renderer token, made once
+    systemd.services.tn-grafana-secrets = {
+      description = "Create Grafana's secret key and renderer token";
+      before   = [ "grafana.service" "grafana-image-renderer.service" ];
+      requiredBy = [ "grafana.service" "grafana-image-renderer.service" ];
+      serviceConfig = { Type = "oneshot"; RemainAfterExit = true; };
+      script = ''
+        set -eu
+        umask 077
+        mkdir -p ${stateDir}
+        rand() { head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n'; }
+        [ -s ${stateDir}/secret_key ] || rand > ${stateDir}/secret_key
+        if [ ! -s ${stateDir}/renderer_token ]; then
+          rand > ${stateDir}/renderer_token
+        fi
+        echo "AUTH_TOKEN=$(cat ${stateDir}/renderer_token)" > ${stateDir}/renderer.env
+        chown grafana:grafana ${stateDir} ${stateDir}/secret_key ${stateDir}/renderer_token
+        chmod 0700 ${stateDir}
+      '';
+    };
+    # read by systemd (root) before the renderer's DynamicUser exists
+    systemd.services.grafana-image-renderer.serviceConfig.EnvironmentFile = "${stateDir}/renderer.env";
 
     services.grafana-image-renderer = {
       enable           = true;
