@@ -115,6 +115,83 @@
         esac
       '';
     };
+    # name expr for severity summary (vmalert templates: {{ $labels.x }}, {{ $value }})
+    rule = alert: expr: for: severity: summary: {
+      inherit alert expr;
+      "for" = for;
+      labels.severity = severity;
+      annotations.summary = summary;
+    };
+    day = 86400;
+    alertRules = [
+      # storage
+      (rule "PoolNearlyFull" "tn_zpool_alloc_bytes / tn_zpool_size_bytes > 0.8" "15m" "digest"
+        "pool {{ $labels.pool }} is {{ $value | humanizePercentage }} full")
+      (rule "PoolFull" "tn_zpool_alloc_bytes / tn_zpool_size_bytes > 0.9" "5m" "urgent"
+        "pool {{ $labels.pool }} is {{ $value | humanizePercentage }} full")
+      (rule "PoolFillingUp" "predict_linear(tn_zpool_free_bytes[3d], ${toString (14 * day)}) < 0" "1h" "digest"
+        "pool {{ $labels.pool }} is on course to fill within 14 days")
+      (rule "PoolDegraded" "tn_zpool_healthy == 0" "1m" "urgent"
+        "pool {{ $labels.pool }} is {{ $labels.health }}")
+      (rule "SnapshotsStale" "time() - tn_zfs_newest_snapshot_timestamp_seconds > 3 * 3600" "10m" "digest"
+        "no new snapshot of {{ $labels.pool }} for {{ $value | humanizeDuration }}")
+      (rule "DiskFailing" "smartctl_device_smart_status == 0" "1m" "urgent"
+        "SMART says {{ $labels.device }} is failing")
+      (rule "DiskCriticalWarning" "smartctl_device_critical_warning > 0" "1m" "urgent"
+        "NVMe {{ $labels.device }} reports a critical warning ({{ $value }})")
+      (rule "DiskMediaErrors" "increase(smartctl_device_media_errors[1d]) > 0" "1m" "urgent"
+        "NVMe {{ $labels.device }} logged new media errors")
+      (rule "DiskSectorsGoingBad"
+        "increase(smartctl_device_attribute{attribute_name=~\"Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable\", attribute_value_type=\"raw\"}[1d]) > 0"
+        "1m" "urgent" "{{ $labels.device }}: {{ $labels.attribute_name }} went up")
+      (rule "DiskWornOut" "smartctl_device_percentage_used > 80" "1h" "digest"
+        "{{ $labels.device }} has used {{ $value }}% of its rated endurance")
+
+      # memory, CPU, heat
+      (rule "MemoryLow" "node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.10" "10m" "urgent"
+        "only {{ $value | humanizePercentage }} of RAM available")
+      (rule "MemoryPressure" "rate(node_pressure_memory_stalled_seconds_total[5m]) > 0.1" "15m" "digest"
+        "tasks stalled on memory {{ $value | humanizePercentage }} of the time")
+      (rule "OOMKill" "increase(node_vmstat_oom_kill[10m]) > 0" "0m" "urgent"
+        "the kernel OOM-killed a process")
+      (rule "CPUSaturated" "1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) > 0.9" "30m" "digest"
+        "CPU above 90% for 30 min")
+      (rule "Hot" "node_hwmon_temp_celsius > 85" "10m" "digest"
+        "{{ $labels.chip }} {{ $labels.sensor }} at {{ $value }} C")
+      (rule "VeryHot" "node_hwmon_temp_celsius > 95" "2m" "urgent"
+        "{{ $labels.chip }} {{ $labels.sensor }} at {{ $value }} C")
+      (rule "GPUHot" "nvidia_smi_temperature_gpu > 85" "5m" "urgent"
+        "GPU at {{ $value }} C")
+
+      # services
+      (rule "ProbeDown" "probe_success == 0" "5m" "urgent"
+        "{{ $labels.instance }} is not answering")
+      (rule "CertExpiring" "probe_ssl_earliest_cert_expiry - time() < ${toString (14 * day)}" "1h" "digest"
+        "the certificate for {{ $labels.instance }} expires in {{ $value | humanizeDuration }}")
+      (rule "Web5xx"
+        "sum by (vhost) (rate(nginx_http_response_count_total{status=~\"5..\"}[10m])) > 0.05"
+        "10m" "digest" "{{ $labels.vhost }} is returning 5xx ({{ $value | humanize }}/s)")
+      (rule "UnitRestartLoop" "increase(tn_unit_restarts_total[30m]) >= 3" "0m" "urgent"
+        "{{ $labels.unit }} restarted {{ $value }} times in 30 min")
+      (rule "ScrapeTargetDown" "up == 0" "10m" "digest"
+        "metrics from {{ $labels.job }} are missing (exporter down?)")
+      (rule "TextfileStale" "time() - node_textfile_mtime_seconds > 900" "5m" "digest"
+        "{{ $labels.file }} not refreshed for {{ $value | humanizeDuration }} (tn-metrics-collect)")
+
+      # scheduled work
+      (rule "JobStale"
+        "(time() - tn_job_last_success_timestamp_seconds) > on(unit) tn_job_max_age_seconds"
+        "10m" "digest" "{{ $labels.unit }} last succeeded {{ $value | humanizeDuration }} ago")
+      (rule "JobNeverSucceeded"
+        "tn_job_max_age_seconds unless on(unit) tn_job_last_success_timestamp_seconds"
+        "6h" "digest" "{{ $labels.unit }} has no successful run in the journal")
+      # Wednesday 09:00 Phoenix = 16:00 UTC; the job tags curated/<date> by ~04:00
+      (rule "WeeklyJobMissing"
+        "(time() - tn_weekly_last_curated_timestamp_seconds > 12 * 3600) and on() (day_of_week() == 3) and on() (hour() >= 16)"
+        "0m" "digest" "no curated/* tag today: the weekly job did not run or did not finish")
+      (rule "RebootPending" "tn_reboot_pending == 1" "48h" "digest"
+        "a kernel update has been waiting for a reboot for 2 days")
+    ];
   in {
     options.tn.metrics.jobs = lib.mkOption {
       type        = lib.types.attrsOf jobType;
@@ -196,6 +273,23 @@
             }
           ];
         };
+      };
+
+      # ── alert rules ─────────────────────────────────────────────────────
+      # vmalert evaluates them and writes ALERTS back into VictoriaMetrics; no
+      # Alertmanager: Tn-server-alerts polls 127.0.0.1:8880/api/v1/alerts and
+      # turns firing alerts into mail (severity=urgent) and Forgejo issues.
+      services.vmalert.instances.tn = {
+        enable = true;
+        settings = {
+          "datasource.url"     = "http://127.0.0.1:8428";
+          "remoteWrite.url"    = "http://127.0.0.1:8428";
+          "remoteRead.url"     = "http://127.0.0.1:8428";   # alert state survives restarts
+          "notifier.blackhole" = true;
+          "httpListenAddr"     = "127.0.0.1:8880";
+          "evaluationInterval" = "1m";
+        };
+        rules.groups = [ { name = "tn"; rules = alertRules; } ];
       };
 
       services.prometheus.exporters = {

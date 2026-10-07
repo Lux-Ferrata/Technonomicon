@@ -21,7 +21,7 @@ LABEL=akmon-health
 STATE=${TN_ISSUE_STATE:-/var/lib/tn-alerts}
 TOKEN_FILE=${TN_ISSUE_TOKEN:-/srv/forgejo/akmon-health-token}
 MAX_OPEN=15
-HOST=$(hostname)
+HOST=$(uname -n)
 TOKEN=
 
 mkdir -p "$STATE/fp"
@@ -72,7 +72,8 @@ close_issue() { # number fp why
 
 fenced() { # file -> markdown code block (empty when no file)
   [ -n "${1:-}" ] && [ -s "$1" ] || return 0
-  printf '```\n%s\n```\n' "$(head -c 20000 "$1")"
+  local fence='```'
+  printf '%s\n%s\n%s\n' "$fence" "$(head -c 20000 "$1")" "$fence"
 }
 
 report() {
@@ -82,7 +83,7 @@ report() {
   date +%s > "$f.seen"
   if ! ready; then event offline "$fp" - "$title"; return 0; fi
 
-  num=$(issue_table | awk -F'\t' -v fp="$fp" '$2 == fp { print $1; exit }')
+  num=$(issue_table | awk -F'\t' -v fp="$fp" '$2 == fp { print $1; exit }') || num=""
   if [ -n "$num" ]; then
     if [ -z "$(find "$f.commented" -mmin -360 2>/dev/null)" ]; then
       text="Still happening ($(date '+%a %d %b %H:%M %Z'))."$'\n\n'"$(fenced "$body")"
@@ -92,7 +93,7 @@ report() {
     return 0
   fi
 
-  nopen=$(open_issues | jq length)
+  nopen=$(open_issues | jq length) || nopen=0
   if [ "${nopen:-0}" -ge "$MAX_OPEN" ]; then event capped "$fp" - "$title"; return 0; fi
 
   text=$(printf 'Reported by %s (Tn-server-alerts), severity **%s**, %s.\n\nrepo: xin/Technonomicon\n\n%s\n\n<!-- fp:%s -->\n' \
