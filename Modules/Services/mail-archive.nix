@@ -136,12 +136,13 @@
           acl_driver = "vfile";
           "acl owner" = { rights = "lrws"; };
 
+          # substring search also finds Chinese words, which this build has
+          # no language support (segmentation) for
           "fts flatcurve" = { substring_search = true; };
           fts_autoindex = true;
           fts_decoder_driver   = "tika";
           fts_decoder_tika_url = "http://127.0.0.1:9998/";
           "language en" = { default = true; };
-          "language zh" = {};
           language_tokenizers = [ "generic" "email-address" ];
         };
       };
