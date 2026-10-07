@@ -31,6 +31,15 @@ The Google login is done; the token is on Akmon at
       (`Modules/Services/calendar-push.nix`). Google IDs: `calendar-push-login`,
       or ask Claude to look them up on Akmon.
 
+## Mail
+
+- [ ] School/work account: once the provider is known, add it to Thunderbird
+      (`Modules/Web/email.nix`) and to the archive (`tn.mailArchive.accounts`,
+      `Modules/Services/mail-archive.nix`). Microsoft 365 / Google schools
+      usually need OAuth2 (sasl-xoauth2 + oama) instead of a password.
+- [ ] Thunderbird calendars: File > New > Calendar > On the Network,
+      `https://cal.ironshark.org/` (Radicale) and Google.
+
 ## Client setup (manual, any time)
 
 - [ ] Phone: accept the Grimoire share in Syncthing-Fork, open it in Obsidian.

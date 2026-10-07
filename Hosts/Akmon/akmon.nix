@@ -47,6 +47,7 @@
       self.nixosModules.Tn-immich
       self.nixosModules.Tn-karakeep
       self.nixosModules.Tn-mail-archive
+      self.nixosModules.Tn-miniflux
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
