@@ -189,7 +189,8 @@
           "--model ${models.whisper-base}"
           "--language auto --convert --threads 4"
         ];
-        extra = { Nice = 10; CPUWeight = 20; };
+        # --convert writes its temp WAV into the working directory
+        extra = { Nice = 10; CPUWeight = 20; WorkingDirectory = "/tmp"; };
       })
     ];
     systemd.services.whisper-fallback-server.path = [ pkgs.ffmpeg-headless ];

@@ -110,6 +110,8 @@
           "--model ${models.whisper-turbo}"
           "--language auto --convert --threads 8"
         ];
+        # --convert writes its temp WAV into the working directory
+        extra = { WorkingDirectory = "/tmp"; };
       })
     ];
     systemd.services.whisper-server.path = [ pkgs.ffmpeg-headless ];
