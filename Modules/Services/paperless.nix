@@ -19,12 +19,17 @@
       database.createLocally = true;
       configureTika  = true;
       exporter.enable = true;   # 01:30, into ${cfg.dataDir}/export
+      # Set here, not in settings: there the module rebuilds tesseract (and
+      # so Paperless, test suite and all) with only those languages. The
+      # stock package already has every language and comes from the cache.
+      environmentFile = pkgs.writeText "paperless-ocr.env" ''
+        PAPERLESS_OCR_LANGUAGE=eng+chi_sim
+      '';
       settings = {
         PAPERLESS_URL          = "https://docs.ironshark.org";
         PAPERLESS_ADMIN_USER   = "xin";
         PAPERLESS_ADMIN_MAIL   = "xin@ironshark.org";
         PAPERLESS_TIME_ZONE    = config.time.timeZone;
-        PAPERLESS_OCR_LANGUAGE = "eng+chi_sim";
         # scans from `scan` arrive already OCR'd: keep their text layer
         PAPERLESS_OCR_MODE     = "skip";
         PAPERLESS_FILENAME_FORMAT = "{{ created_year }}/{{ correspondent }}/{{ title }}";

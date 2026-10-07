@@ -43,6 +43,7 @@
       self.nixosModules.Tn-radicale
       self.nixosModules.Tn-calendar-push
       self.nixosModules.Tn-webdav
+      self.nixosModules.Tn-paperless
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
