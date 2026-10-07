@@ -1,0 +1,81 @@
+;; Akmon's emergency console layout (Tn-console-kanata). defcfg comes from
+;; the module. A cut-down _kanata.kbd: same Colemak-DH, home-row mods and
+;; nav layer, so the password and a rescue shell type the way the hands
+;; expect, but no cmd actions and no Hyprland chords.
+;;
+;; Escape hatch: hold ` (grave) for a second to switch to plain QWERTY, and
+;; hold it again to come back. Kanata's own exit chord (hold Left Ctrl +
+;; Space + Esc) also works; systemd restarts kanata after a moment.
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt         spc            ralt rmet rctl del
+)
+
+(defalias
+  to-qwerty  (tap-hold 200 1000 grv (layer-switch qwerty))
+  to-colemak (tap-hold 200 1000 grv (layer-switch colemak))
+
+  spc-nav  (tap-hold 200 350 spc (layer-toggle nav))
+  bspc-nav (tap-hold 200 350 bspc (layer-toggle nav))
+
+  hrm-f    (tap-hold 200 250 f lsft)
+  hrm-p    (tap-hold 200 250 p lsft)
+  hrm-l    (tap-hold 200 250 l rsft)
+  hrm-u    (tap-hold 200 250 u rsft)
+
+  hrm-r    (tap-hold 200 250 r lalt)
+  hrm-s    (tap-hold 200 250 s lmet)
+  hrm-t    (tap-hold 200 250 t lctl)
+  hrm-n    (tap-hold 200 250 n rctl)
+  hrm-e    (tap-hold 200 250 e rmet)
+  hrm-i    (tap-hold 200 250 i ralt)
+
+  lxsft    (tap-hold 250 250 (one-shot 1500 lsft) lsft)
+  rxsft    (tap-hold 250 250 (one-shot 1500 rsft) rsft)
+  lxctl    (tap-hold 250 250 (one-shot 1500 lctl) lctl)
+  rxctl    (tap-hold 250 250 (one-shot 1500 rctl) rctl)
+  lxmet    (tap-hold 250 250 (one-shot 1500 lmet) lmet)
+  rxmet    (tap-hold 250 250 (one-shot 1500 rmet) rmet)
+  lxalt    (tap-hold 250 250 (one-shot 1500 lalt) lalt)
+  rxalt    (tap-hold 250 250 (one-shot 1500 ralt) ralt)
+  sret     (tap-hold 250 250 ret rmet)
+  sdel     (tap-hold 250 250 del rmet)
+  nesc     (tap-hold 250 250 esc (layer-toggle num))
+)
+
+(deflayer colemak
+  @to-qwerty 1 2   3      4      5    6    7      8      9      0    -    =  @bspc-nav
+  tab    q    w    @hrm-f @hrm-p b    j    @hrm-l @hrm-u y      z    [    ]    \
+  @nesc  a    @hrm-r @hrm-s @hrm-t g    m    @hrm-n @hrm-e @hrm-i o    '    @sret
+  @lxsft ;    c    d      v      x    k    h      ,      .      /    @rxsft
+  @lxctl @lxmet @lxalt               @spc-nav               @rxalt @rxmet @rxctl @sdel
+)
+
+(deflayer nav
+  _  _  _      _     _       _  _  _      _      _        _    _    _    _
+  _  _  S-lft  pgup  S-rght  _  _  C-lft  up     C-rght   _    _    _    _
+  _  _  home   pgdn  end     _  _  lft    down   rght     _    _    _
+  _  _  _      _     _       _  _  _      _      _        _    _
+  _  _  _            _                    _      _        _    _
+)
+
+(deflayer num
+  _  _  _      _     _       _  _  _      _      _        _    _    _    _
+  _  _  _      _     _       _  0  7      8      9        _    _    _    _
+  _  _  _      _     _       _  0  4      5      6        _    _    _
+  _  _  _      _     _       _  0  1      2      3        _    _
+  _  _  _            _                    _      _        _    _
+)
+
+;; plain keyboard, nothing remapped except the way back
+(deflayer qwerty
+  @to-colemak 1 2  3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt         spc            ralt rmet rctl del
+)
