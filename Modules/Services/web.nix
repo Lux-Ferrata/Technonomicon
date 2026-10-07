@@ -59,6 +59,7 @@
           Type       = "oneshot";
           Restart    = "on-failure";
           RestartSec = 30;
+          TimeoutStartSec = "5min";
         };
         script = ''
           install -d -m 0750 -g nginx ${tsCerts}
@@ -66,7 +67,9 @@
                             --key-file  ${tsCerts}/${tsName}.key ${tsName}
           chgrp nginx ${tsCerts}/${tsName}.crt ${tsCerts}/${tsName}.key
           chmod 0640  ${tsCerts}/${tsName}.key
-          if systemctl is-active -q nginx; then systemctl reload nginx; fi
+          # --no-block: during a switch nginx waits for this unit (After=), so a
+          # blocking reload here would deadlock the deploy
+          if systemctl is-active -q nginx; then systemctl reload --no-block nginx; fi
         '';
       };
       systemd.timers.tailscale-cert = {
@@ -190,6 +193,7 @@
       };
       systemd.tmpfiles.rules = [
         "d /srv/postgresql         0750 postgres postgres -"
+        "d ${pg.dataDir}           0700 postgres postgres -"
         "d /srv/backup             0755 root     root     -"
         "d /srv/backup/postgresql  0700 postgres postgres -"
       ];
