@@ -31,6 +31,8 @@
       self.nixosModules.Tn-console-kanata
       self.nixosModules.Tn-server-usage
       self.nixosModules.Tn-server-mail
+      self.nixosModules.Tn-server-alerts
+      self.nixosModules.Tn-server-metrics
       self.nixosModules.Tn-build-host
       self.nixosModules.Tn-forgejo
       self.nixosModules.Tn-server-web
@@ -59,6 +61,14 @@
 
         tn.full_name     = "xin";
         tn.email_address = "git@ironshark.org";
+
+        # scheduled jobs whose last success Tn-server-metrics tracks (seconds)
+        tn.metrics.jobs = {
+          bitwarden-export.maxAge   = 26 * 3600;
+          paperless-exporter.maxAge = 26 * 3600;
+          mail-archive-sync.maxAge  = 3600;
+          overnight = { maxAge = 26 * 3600; user = true; };
+        };
 
         boot.loader.systemd-boot.enable = true;
         boot.loader.efi.canTouchEfiVariables = true;
