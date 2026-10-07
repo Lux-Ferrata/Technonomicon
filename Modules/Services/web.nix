@@ -83,6 +83,49 @@
         script = "${tailscale} serve reset";
       };
 
+      # ── DNS: every vhost gets its record ────────────────────────────────
+      # Ensures <name>.ironshark.org is an A record -> Akmon's tailnet IP,
+      # DNS only, for each tn.web.vhosts name. Creates or corrects exactly
+      # those records; never deletes and never touches anything else in the
+      # zone (mail, the apex, www are hand-managed).
+      systemd.services.cloudflare-dns-sync = let
+        names = lib.concatStringsSep " " (lib.attrNames config.tn.web.vhosts);
+      in {
+        description = "Ensure Cloudflare A records for Akmon's services";
+        after    = [ "network-online.target" ];
+        wants    = [ "network-online.target" ];
+        wantedBy = [ "multi-user.target" ];
+        restartTriggers = [ names ];   # re-run when a service is added
+        path = [ pkgs.curl pkgs.jq ];
+        serviceConfig = {
+          Type            = "oneshot";
+          RemainAfterExit = true;
+          Restart         = "on-failure";
+          RestartSec      = 60;
+          DynamicUser     = true;
+          LoadCredential  = "token:${config.sops.secrets.dns-api-token.path}";
+        };
+        script = ''
+          api=https://api.cloudflare.com/client/v4
+          auth="Authorization: Bearer $(tr -d '\n' < "$CREDENTIALS_DIRECTORY/token")"
+          cf() { curl -sSf -H "$auth" -H 'Content-Type: application/json' "$@"; }
+          zone=$(cf "$api/zones?name=${domain}" | jq -er '.result[0].id')
+          for n in ${names}; do
+            fqdn=$n.${domain}
+            rec=$(cf "$api/zones/$zone/dns_records?type=A&name=$fqdn" | jq -c '.result[0] // empty')
+            body=$(jq -nc --arg n "$fqdn" --arg ip ${tailnetIp} \
+              '{type:"A", name:$n, content:$ip, ttl:1, proxied:false, comment:"managed by Tn-server-web"}')
+            if [ -z "$rec" ]; then
+              cf -X POST "$api/zones/$zone/dns_records" -d "$body" >/dev/null
+              echo "created $fqdn"
+            elif [ "$(jq -r '"\(.content) \(.proxied)"' <<<"$rec")" != "${tailnetIp} false" ]; then
+              cf -X PATCH "$api/zones/$zone/dns_records/$(jq -r .id <<<"$rec")" -d "$body" >/dev/null
+              echo "corrected $fqdn"
+            fi
+          done
+        '';
+      };
+
       # ── nginx ───────────────────────────────────────────────────────────
       services.nginx = {
         enable = true;
