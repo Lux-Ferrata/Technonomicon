@@ -26,6 +26,8 @@
           port    = lib.mkOption { type = lib.types.port; };
           maxBody = lib.mkOption { type = lib.types.str; default = "100m"; };
           extraConfig = lib.mkOption { type = lib.types.lines; default = ""; };
+          # more nginx locations next to the proxied "/" (e.g. a static web UI)
+          locations   = lib.mkOption { type = lib.types.attrsOf lib.types.anything; default = {}; };
         };
       });
     };
@@ -142,10 +144,12 @@
         virtualHosts = lib.mapAttrs' (name: v: lib.nameValuePair "${name}.${domain}" {
           forceSSL    = true;
           useACMEHost = domain;
-          locations."/" = {
-            proxyPass       = "http://127.0.0.1:${toString v.port}";
-            proxyWebsockets = true;
-          };
+          locations = {
+            "/" = {
+              proxyPass       = "http://127.0.0.1:${toString v.port}";
+              proxyWebsockets = true;
+            };
+          } // v.locations;
           extraConfig = ''
             client_max_body_size ${v.maxBody};
             ${v.extraConfig}

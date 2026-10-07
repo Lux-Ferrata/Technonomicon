@@ -39,6 +39,10 @@
       self.nixosModules.Tn-overnight
       self.nixosModules.Tn-grimoire
       self.nixosModules.Tn-languagetool
+      self.nixosModules.Tn-vikunja
+      self.nixosModules.Tn-radicale
+      self.nixosModules.Tn-calendar-push
+      self.nixosModules.Tn-webdav
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";

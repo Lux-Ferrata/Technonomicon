@@ -30,9 +30,9 @@
         path = "$tmp/cals/"
         fileext = ".ics"
         EOF
-        yes | vdirsyncer -c "$tmp/config" discover list >/dev/null
+        vdirsyncer -c "$tmp/config" discover list < <(yes) >/dev/null
         echo "Google calendar IDs (for tn.calendarPush):"
-        ls "$tmp/cals" | sed 's/^/  /'
+        for d in "$tmp"/cals/*/; do d=''${d%/}; echo "  ''${d##*/}"; done
         scp -q "$tmp/token" akmon:/srv/xin/.calendar-push/google-token
         echo "token copied to Akmon"
       '';
