@@ -39,7 +39,8 @@
           settings = {
             global = {
               "server string"   = "Akmon";
-              interfaces        = "lo tailscale0";
+              # by address: matching "tailscale0" by name left smbd on lo only
+              interfaces        = "lo 100.122.244.58";
               "bind interfaces only" = "yes";
               "hosts allow"     = "100.64.0.0/10 fd7a:115c:a1e0::/48 127.0.0.1 ::1";
               "hosts deny"      = "0.0.0.0/0";
@@ -58,6 +59,10 @@
           }) cfg.shares;
         };
         networking.firewall.interfaces.tailscale0.allowedTCPPorts = [ 445 ];
+        systemd.services.samba-smbd = {
+          after = [ "tailscaled.service" "tailscaled-autoconnect.service" ];
+          wants = [ "tailscaled.service" ];
+        };
 
         # xin's Samba password, from sops, set on every boot/deploy
         sops.secrets.samba-password = {};
