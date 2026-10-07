@@ -303,7 +303,12 @@
           extraFlags    = [ "--collector.textfile.directory=${textfile}" ];
         };
         systemd  = { enable = true; listenAddress = "127.0.0.1"; };
-        smartctl = { enable = true; listenAddress = "127.0.0.1"; };
+        # devices listed: with autoscan, 0.14 adds each disk again on every
+        # rescan and then fails every scrape ("collected before")
+        smartctl = {
+          enable = true; listenAddress = "127.0.0.1";
+          devices = [ "/dev/nvme0" "/dev/nvme1" "/dev/nvme2" ];
+        };
         nvidia-gpu = lib.mkIf config.hardware.nvidia.enabled {
           enable = true; listenAddress = "127.0.0.1";
         };

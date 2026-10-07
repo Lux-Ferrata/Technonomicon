@@ -159,6 +159,8 @@
         serviceConfig.Type = "oneshot";
         inherit path;
         script = ''
+          # own temp file: these jobs can run at the same moment
+          body=$(mktemp -p ${dir} body.XXXXXX); trap 'rm -f "$body"' EXIT
           q=${dir}/queue
           while sleep 30; do
             [ -s "$q" ] || exit 0
@@ -193,8 +195,8 @@
               { systemctl status --full --no-pager "$u" || true
                 echo
                 journalctl -u "$u" --since "@$((first - 120))" -n 60 --no-pager || true
-              } > ${dir}/body 2>&1
-              ${issue} report "unit:$u" urgent "$u failed" ${dir}/body || true
+              } > "$body" 2>&1
+              ${issue} report "unit:$u" urgent "$u failed" "$body" || true
             done
             [ $((''${#failed[@]} + ''${#recovered[@]})) -gt 0 ] || continue
 
@@ -246,6 +248,8 @@
         serviceConfig.Type = "oneshot";
         inherit path;
         script = ''
+          # own temp file: these jobs can run at the same moment
+          body=$(mktemp -p ${dir} body.XXXXXX); trap 'rm -f "$body"' EXIT
           ${scanErrors} -10min 30 | while IFS=$'\t' read -r n unit key msg; do
             stamp=${dir}/burst-$(printf '%s\t%s' "$unit" "$key" | md5sum | cut -c1-16)
             if [ -n "$(find "$stamp" -mmin -360 2>/dev/null)" ]; then
@@ -263,8 +267,8 @@
               systemctl status --full --no-pager "$unit" 2>/dev/null | head -n 15
               echo
               journalctl -u "$unit" -n 30 --no-pager 2>/dev/null
-            } 2>&1 | tee ${dir}/body | ${mail} "''${unit%.service}: same error x$n in 10 min"
-            ${issue} report "burst:''${stamp##*/burst-}" urgent "''${unit%.service} logs the same error over and over" ${dir}/body || true
+            } 2>&1 | tee "$body" | ${mail} "''${unit%.service}: same error x$n in 10 min"
+            ${issue} report "burst:''${stamp##*/burst-}" urgent "''${unit%.service} logs the same error over and over" "$body" || true
           done
         '';
       };
@@ -281,6 +285,8 @@
         serviceConfig.Type = "oneshot";
         path = path ++ [ pkgs.diffutils ];
         script = ''
+          # own temp file: these jobs can run at the same moment
+          body=$(mktemp -p ${dir} body.XXXXXX); trap 'rm -f "$body"' EXIT
           alerts=$(curl -sf -m 10 http://127.0.0.1:8880/api/v1/alerts) || exit 0
           printf '%s' "$alerts" | jq -c '.data.alerts[] | select(.state == "firing")
             | . + { lk: ([.labels | to_entries[] | select(.key != "severity" and .key != "alertstate")
@@ -294,16 +300,16 @@
             sev=$(jq -r '.labels.severity // "digest"' <<<"$a")
             summary=$(jq -r '.annotations.summary // .name' <<<"$a")
             jq -r '"alert: \(.name)\nsince: \(.activeAt)\nvalue: \(.value)\nlabels: \(.labels | to_entries | map("\(.key)=\(.value)") | join(" "))\nexpr:  \(.expression)"' \
-              <<<"$a" > ${dir}/body
+              <<<"$a" > "$body"
             if [ "$sev" = urgent ]; then
               stamp=${dir}/rule-$(printf '%s' "$fp" | md5sum | cut -c1-16)
               if [ -z "$(find "$stamp" -mmin -360 2>/dev/null)" ]; then
                 touch "$stamp"
-                { cat ${dir}/body; echo; echo "Graphs and history: ask Claude, or https://metrics.${config.tn.web.domain or "ironshark.org"}/"; } \
+                { cat "$body"; echo; echo "Graphs and history: ask Claude, or https://metrics.${config.tn.web.domain or "ironshark.org"}/"; } \
                   | ${mail} "$summary"
               fi
             fi
-            ${issue} report "$fp" "$sev" "$summary" ${dir}/body || true
+            ${issue} report "$fp" "$sev" "$summary" "$body" || true
           done < ${dir}/rules.now
 
           # alerts that stopped firing
@@ -337,6 +343,8 @@
         serviceConfig.Type = "oneshot";
         inherit path;
         script = ''
+          # own temp file: these jobs can run at the same moment
+          body=$(mktemp -p ${dir} body.XXXXXX); trap 'rm -f "$body"' EXIT
           hist=${dir}/history
           [ -f "$hist" ] && mv "$hist" "$hist.daily"
           errors=$(${scanErrors} -24h 1)
@@ -356,9 +364,9 @@
               n=$(cut -f1 <<<"$line"); msg=$(cut -f4 <<<"$line")
               { echo "$n times in the last 24 h (and yesterday too). Latest:"; echo; echo "$msg"; echo
                 journalctl -u "$unit" --since -24h --no-pager 2>/dev/null | grep -F -- "''${msg:0:60}" | tail -n 5 || true
-              } > ${dir}/body
+              } > "$body"
               ${issue} report "err:$(printf '%s\t%s' "$unit" "$key" | md5sum | cut -c1-16)" digest \
-                "''${unit%.service}: ''${msg:0:90}" ${dir}/body || true
+                "''${unit%.service}: ''${msg:0:90}" "$body" || true
             done
           fi
           mv ${dir}/errkeys.today ${dir}/errkeys.prev
