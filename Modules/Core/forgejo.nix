@@ -100,6 +100,28 @@
     users.groups.ci-secrets = {};
     sops.secrets.claude-oauth-token = { group = "ci-secrets"; mode = "0440"; };
 
+    # the weekly job mails its own result, but a dead runner or a job that
+    # never got scheduled mails nothing: check for this week's curated tag
+    # (failure -> notify-failure -> Tn-server-alerts)
+    systemd.services.tn-check-weekly-ran = {
+      description = "Check that this week's weekly CI job tagged curated/<date>";
+      serviceConfig.Type = "oneshot";
+      path = [ pkgs.gitMinimal ];
+      script = ''
+        tag="curated/$(date +%F)"
+        if ! git -c safe.directory='*' -C ${cfg.repositoryRoot}/xin/technonomicon.git \
+               rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+          echo "no $tag yet: the weekly job did not run, did not finish, or failed"
+          echo "(a failed run mails its own report; no report means it never ran)"
+          exit 1
+        fi
+      '';
+    };
+    systemd.timers.tn-check-weekly-ran = {
+      wantedBy = [ "timers.target" ];
+      timerConfig.OnCalendar = "Wed 09:00";
+    };
+
     systemd.services."gitea-runner-akmon" = {
       after = [ "forgejo.service" ];
       wants = [ "forgejo.service" ];

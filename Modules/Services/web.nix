@@ -18,6 +18,10 @@
     tailscale = lib.getExe config.services.tailscale.package;
     pg       = config.services.postgresql;
   in {
+    # for other modules (e.g. Tn-server-metrics probes every vhost)
+    options.tn.web.domain    = lib.mkOption { type = lib.types.str; default = domain;    readOnly = true; };
+    options.tn.web.tailnetIp = lib.mkOption { type = lib.types.str; default = tailnetIp; readOnly = true; };
+
     # names that need a DNS record but no nginx vhost (e.g. mail. for IMAP)
     options.tn.web.extraNames = lib.mkOption {
       type    = lib.types.listOf lib.types.str;
@@ -146,6 +150,13 @@
         recommendedTlsSettings   = true;
         recommendedGzipSettings  = true;
         recommendedOptimisation  = true;
+        # the usual log, plus a compact one per request for Tn-server-metrics'
+        # nginxlog exporter (status + latency per vhost); logrotate covers *.log
+        commonHttpConfig = ''
+          log_format tnstats '$host $status $request_time "$request_method" $body_bytes_sent';
+          access_log /var/log/nginx/access.log combined;
+          access_log /var/log/nginx/stats.log tnstats;
+        '';
 
         virtualHosts = lib.mapAttrs' (name: v: lib.nameValuePair "${name}.${domain}" {
           forceSSL    = true;
@@ -200,7 +211,7 @@
         backupAll   = true;
         location    = "/srv/backup/postgresql";
         compression = "zstd";
-        startAt     = "*-*-* 02:15:00";   # clear of overnight (00:10), weekly (Wed 03:00), upgrade (06:00)
+        startAt     = "*-*-* 02:15:00";   # clear of overnight (00:10), weekly (Wed 03:00), upgrade (05:30)
       };
       systemd.tmpfiles.rules = [
         "d /srv/postgresql         0750 postgres postgres -"
