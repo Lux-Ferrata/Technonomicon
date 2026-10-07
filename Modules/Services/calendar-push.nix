@@ -21,7 +21,6 @@
     sec   = config.sops.secrets;
     vdir  = lib.getExe pkgs.vdirsyncer;
 
-    cmd = path: ''{ fetch = ["command", "cat", "${path}"] }'';   # unused when inline
     conf = pkgs.writeText "calendar-push.conf" ''
       [general]
       status_path = "${state}/status/"
