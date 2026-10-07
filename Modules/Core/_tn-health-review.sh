@@ -89,7 +89,7 @@ Write exactly two files:
 chown -R tn-health:tn-health "$WORK"
 CLAUDE_CODE_OAUTH_TOKEN=$(cat /run/secrets/claude-oauth-token)
 export CLAUDE_CODE_OAUTH_TOKEN
-cd "$WORK"
+cd "$WORK" || exit 1
 setpriv --reuid=tn-health --regid=tn-health --init-groups --reset-env -- \
   env HOME="$STATE" PATH="$PATH" CLAUDE_CODE_OAUTH_TOKEN="$CLAUDE_CODE_OAUTH_TOKEN" \
   claude -p "$prompt" --output-format text --add-dir "$WORK" \

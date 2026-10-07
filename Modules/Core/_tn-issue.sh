@@ -6,6 +6,9 @@
 #                       failed, rule:* once vmalert stops firing (the poller calls
 #                       resolve), burst:* and err:* once not seen for 48 h
 #   tn-issue list       open health issues: number <TAB> fingerprint <TAB> title
+#   tn-issue show NUM            an issue's title, body and comments as markdown
+#   tn-issue comment NUM FILE    comment on an open health issue (Claude's review)
+#   tn-issue label NUM NAME      add a label (e.g. overnight) to an open health issue
 #
 # One issue per fingerprint, found again through the hidden <!-- fp:... -->
 # marker in its body. Issues go to the overnight agents' queue repo with label
@@ -138,10 +141,39 @@ sweep() {
   done < <(issue_table)
 }
 
+# only ever touch issues this tool opened (open, labelled akmon-health)
+is_health_issue() { issue_table | awk -F'\t' -v n="$1" '$1 == n { f = 1 } END { exit !f }'; }
+
+add_comment() { # num file
+  ready || return 0
+  is_health_issue "$1" || { echo "#$1 is not an open health issue" >&2; return 1; }
+  comment "$1" "$(head -c 20000 "$2")"
+  event comment - "$1" ""
+}
+
+add_label() { # num name
+  ready || return 0
+  is_health_issue "$1" || { echo "#$1 is not an open health issue" >&2; return 1; }
+  local id
+  id=$(api GET "/repos/$REPO/labels?limit=100" | jq -r --arg n "$2" '.[] | select(.name == $n) | .id')
+  [ -n "$id" ] || { echo "no label $2 in $REPO" >&2; return 1; }
+  api POST "/repos/$REPO/issues/$1/labels" "{\"labels\":[$id]}" >/dev/null
+  event label - "$1" "$2"
+}
+
+show_issue() { # num
+  ready || return 0
+  api GET "/repos/$REPO/issues/$1" | jq -r '"# #\(.number) \(.title)\n\n\(.body)"'
+  api GET "/repos/$REPO/issues/$1/comments" | jq -r '.[] | "\n---\n\(.user.login), \(.created_at):\n\n\(.body)"'
+}
+
 case "${1:-}" in
   report)  shift; report "$@" ;;
   resolve) shift; resolve "$1" ;;
   sweep)   sweep ;;
   list)    ready && issue_table ;;
-  *)       echo "usage: tn-issue report FP SEVERITY TITLE [BODY-FILE] | resolve FP | sweep | list" >&2; exit 2 ;;
+  show)    show_issue "$2" ;;
+  comment) add_comment "$2" "$3" ;;
+  label)   add_label "$2" "$3" ;;
+  *)       echo "usage: tn-issue report FP SEVERITY TITLE [BODY-FILE] | resolve FP | sweep | list | comment NUM FILE | label NUM NAME" >&2; exit 2 ;;
 esac

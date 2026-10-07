@@ -102,6 +102,13 @@
     alertUnits = [ "notify-failure@" "tn-alerts-flush" "tn-alerts-burst" "tn-alerts-daily"
                    "tn-alerts-rules" "tn-alerts-sweep" ];
   in {
+    options.tn.alerts.issuePackage = lib.mkOption {
+      type     = lib.types.package;
+      default  = tn-issue;
+      readOnly = true;
+      description = "tn-issue, for other modules (Tn-server-review).";
+    };
+
     options.tn.alerts.reportCommand = lib.mkOption {
       type    = lib.types.nullOr lib.types.str;
       default = null;

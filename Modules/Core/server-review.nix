@@ -12,7 +12,7 @@
       runtimeInputs = with pkgs; [
         coreutils gawk gnugrep gnused jq curl util-linux procps findutils
         config.systemd.package config.boot.zfs.package claude-code
-        "/run/current-system/sw"         # tn-issue (Tn-server-alerts)
+        config.tn.alerts.issuePackage
       ];
       text = builtins.readFile ./_tn-health-review.sh;
     };
