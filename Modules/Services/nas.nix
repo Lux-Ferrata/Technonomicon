@@ -39,9 +39,9 @@
           settings = {
             global = {
               "server string"   = "Akmon";
-              # by address: matching "tailscale0" by name left smbd on lo only
-              interfaces        = "lo 100.122.244.58";
-              "bind interfaces only" = "yes";
+              # smbd skips point-to-point interfaces like tailscale0 when
+              # binding, so it listens everywhere; the firewall (445 on
+              # tailscale0 only) and "hosts allow" keep it tailnet-only
               "hosts allow"     = "100.64.0.0/10 fd7a:115c:a1e0::/48 127.0.0.1 ::1";
               "hosts deny"      = "0.0.0.0/0";
               security          = "user";
