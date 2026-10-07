@@ -102,6 +102,12 @@
     alertUnits = [ "notify-failure@" "tn-alerts-flush" "tn-alerts-burst" "tn-alerts-daily"
                    "tn-alerts-rules" "tn-alerts-sweep" ];
   in {
+    options.tn.alerts.reportCommand = lib.mkOption {
+      type    = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "tn-report (Tn-server-reports): the daily digest becomes a chart email.";
+    };
+
     options.tn.alerts.ignore = lib.mkOption {
       type    = lib.types.listOf lib.types.str;
       default = [];
@@ -347,7 +353,11 @@
           fi
           mv ${dir}/errkeys.today ${dir}/errkeys.prev
 
-          [ -z "$errors$failednow$firing$events" ] && [ ! -s "$hist.daily" ] && { rm -f "$hist.daily"; exit 0; }
+          # with the chart report this goes out every day (silence = Akmon down);
+          # the plain-text fallback keeps quiet days quiet
+          ${lib.optionalString (cfg.reportCommand == null) ''
+            [ -z "$errors$failednow$firing$events" ] && [ ! -s "$hist.daily" ] && { rm -f "$hist.daily"; exit 0; }
+          ''}
 
           nerr=$(printf '%s' "$errors" | grep -c . || true)
           {
@@ -382,7 +392,16 @@
             if [ "$nerr" -gt 40 ]; then echo "  ... and $((nerr - 40)) more"; fi
             echo
             echo "Known noise is filtered by tn.alerts.ignore (Modules/Core/server-alerts.nix)."
-          } 2>&1 | ${mail} "daily: $( [ -n "$failednow" ] && echo "$(echo "$failednow" | wc -l) failed, " )$nerr distinct errors"
+          } > ${dir}/daily.txt 2>&1
+          subject="daily: $( [ -n "$failednow" ] && echo "$(echo "$failednow" | wc -l) failed, " )$nerr distinct errors"
+          ${if cfg.reportCommand == null then ''
+            ${mail} "$subject" < ${dir}/daily.txt
+          '' else ''
+            nopen=$(printf '%s' "$openissues" | grep -c . || true)
+            ${cfg.reportCommand} daily --text ${dir}/daily.txt --review /var/lib/tn-health/review.md \
+              --open-issues "$nopen" \
+              || ${mail} "$subject (charts failed)" < ${dir}/daily.txt
+          ''}
           rm -f "$hist.daily"
         '';
       };

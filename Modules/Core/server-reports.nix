@@ -20,7 +20,7 @@
 
     tn-report = pkgs.writers.writePython3Bin "tn-report" {
       libraries   = [ pkgs.python3Packages.weasyprint ];
-      flakeIgnore = [ "E501" ];
+      flakeIgnore = [ "E501" "W503" ];
     } (builtins.readFile ./_tn-report.py);
   in {
     environment.systemPackages = [ tn-report ];

@@ -16,6 +16,7 @@ import datetime
 import html
 import json
 import os
+import re
 import subprocess
 import sys
 import urllib.parse
@@ -148,7 +149,6 @@ class Report:
 
 def _plain(cell):
     """Table cell (maybe holding a status chip) -> its text."""
-    import re
     return html.unescape(re.sub(r"<[^>]+>", "", str(cell)))
 
 
@@ -195,10 +195,10 @@ def load_table(rep, period):
     ]
     rows = []
     for name, expr, fmt in rows_def:
-        vals = [scalar(f"{fn}(({expr})[{period}:5m])") for fn in
-                ("avg_over_time", "quantile_over_time(0.95, ", "max_over_time")]
-        # quantile_over_time takes the phi first: patch the call shape
-        vals[1] = scalar(f"quantile_over_time(0.95, ({expr})[{period}:5m])")
+        window = f"({expr})[{period}:5m]"
+        vals = [scalar(f"avg_over_time({window})"),
+                scalar(f"quantile_over_time(0.95, {window})"),
+                scalar(f"max_over_time({window})")]
         if all(v is None for v in vals):
             continue
         rows.append([esc(name)] + [esc(fmt(v)) if v is not None else "n/a" for v in vals])
@@ -226,9 +226,9 @@ def availability(rep, period, only_problems):
 
 
 def pools(rep, period):
-    size = {l["pool"]: v for l, v in query("tn_zpool_size_bytes")}
-    alloc = {l["pool"]: v for l, v in query("tn_zpool_alloc_bytes")}
-    growth = {l["pool"]: v for l, v in query(f"tn_zpool_alloc_bytes - tn_zpool_alloc_bytes offset {period}")}
+    size = {lab["pool"]: v for lab, v in query("tn_zpool_size_bytes")}
+    alloc = {lab["pool"]: v for lab, v in query("tn_zpool_alloc_bytes")}
+    growth = {lab["pool"]: v for lab, v in query(f"tn_zpool_alloc_bytes - tn_zpool_alloc_bytes offset {period}")}
     if not size:
         return
     days = 7 if period == "7d" else 1
@@ -236,11 +236,12 @@ def pools(rep, period):
     for p in sorted(size):
         used = alloc.get(p, 0) / size[p]
         g = growth.get(p)
-        full = "n/a"
-        if g and g > 0:
-            full = ago((size[p] - alloc.get(p, 0)) / (g / days) * 86400) if g > 0 else "never"
-        elif g is not None:
+        if g is None:
+            full = "n/a"
+        elif g <= 0:
             full = "not growing"
+        else:
+            full = ago((size[p] - alloc.get(p, 0)) / (g / days) * 86400)
         level = "good" if used < 0.8 else "warning" if used < 0.9 else "critical"
         rows.append([esc(p), chip(level, f"{100 * used:.0f}%"), esc(gib(alloc.get(p, 0))),
                      esc(("+" if (g or 0) >= 0 else "") + gib(g or 0)), esc(full)])
@@ -249,8 +250,8 @@ def pools(rep, period):
 
 
 def jobs(rep, only_problems):
-    last = {l["unit"]: v for l, v in query("tn_job_last_success_timestamp_seconds")}
-    limit = {l["unit"]: v for l, v in query("tn_job_max_age_seconds")}
+    last = {lab["unit"]: v for lab, v in query("tn_job_last_success_timestamp_seconds")}
+    limit = {lab["unit"]: v for lab, v in query("tn_job_max_age_seconds")}
     now = datetime.datetime.now().timestamp()
     rows = []
     for unit in sorted(limit):
@@ -270,11 +271,11 @@ def jobs(rep, only_problems):
 
 def top_services(rep, period, n):
     mem = query(f"topk({n}, avg_over_time(tn_unit_memory_bytes[{period}]))")
-    cpu = {l["unit"]: v for l, v in query(f"rate(tn_unit_cpu_seconds_total[{period}])")}
+    cpu = {lab["unit"]: v for lab, v in query(f"rate(tn_unit_cpu_seconds_total[{period}])")}
     if not mem:
         return
-    rows = [[esc(l["unit"].removesuffix(".service")), esc(gib(v)), esc(f"{100 * cpu.get(l['unit'], 0):.1f}%")]
-            for l, v in sorted(mem, key=lambda r: -r[1])]
+    rows = [[esc(lab["unit"].removesuffix(".service")), esc(gib(v)), esc(f"{100 * cpu.get(lab['unit'], 0):.1f}%")]
+            for lab, v in sorted(mem, key=lambda r: -r[1])]
     rep.heading(f"Biggest services, last {period} (average)")
     rep.table(["service", "memory", "CPU (of one core)"], rows, right=(1, 2))
 
@@ -355,7 +356,7 @@ def main():
     msg["Subject"] = args.subject or f"[{HOST}] {title.split(', ')[0]}: {STATUS[level][2]}"
     msg.set_content("\n".join(rep.text) + f"\n\nLive dashboard: {PUBLIC}/d/{DASH}\n")
     msg.add_alternative(page, subtype="html")
-    html_part = msg.get_payload()[1]
+    html_part = msg.get_body(preferencelist=("html",))
     for cid, png in rep.images:
         html_part.add_related(png, maintype="image", subtype="png", cid=cid)
     pdf = None
