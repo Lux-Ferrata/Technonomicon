@@ -61,7 +61,7 @@
             -p "$(tr -d '\n' < "$CREDENTIALS_DIRECTORY/password")"
         fi
         # with the mailer on, new accounts wait for an email confirmation
-        if ! row | grep -q Active; then
+        if [ -n "$(row)" ] && ! row | grep -q Active; then
           vikunja user change-status --enable ${user}
         fi
       '';
