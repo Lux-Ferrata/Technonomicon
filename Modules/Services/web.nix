@@ -8,6 +8,7 @@
   #
   # A service module only declares its name and port:
   #   tn.web.vhosts.docs = { port = 28981; };   ->  https://docs.ironshark.org
+  # and its DNS record is created on the next deploy (cloudflare-dns-sync).
   flake.nixosModules.Tn-server-web = { config, lib, pkgs, ... }:
   let
     domain   = "ironshark.org";
