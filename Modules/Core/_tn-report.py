@@ -62,7 +62,7 @@ def scalar(expr, default=None):
 def render(panel, period, width=1000, height=300):
     params = {"orgId": 1, "panelId": panel, "from": f"now-{period}", "to": "now",
               "width": width, "height": height, "theme": "light",
-              "tz": "America/Phoenix"}
+              "tz": "America/Phoenix", "hideLogo": "true"}
     url = f"{GRAFANA}/render/d-solo/{DASH}/x?" + urllib.parse.urlencode(params)
     try:
         with urllib.request.urlopen(url, timeout=120) as r:
@@ -142,7 +142,7 @@ class Report:
         cid = make_msgid(domain=HOST)
         self.images.append((cid, png))
         self.html.append(f'<img src="cid:{cid[1:-1]}" alt="{esc(title)}" width="100%" '
-                         f'style="max-width:1000px;display:block;margin:6px 0 2px;border:1px solid {HAIR};'
+                         f'style="width:100%;max-width:1000px;height:auto;display:block;margin:6px 0 2px;border:1px solid {HAIR};'
                          f'border-radius:6px">')
         self.text.append(f"[chart: {title}]")
 
@@ -207,13 +207,24 @@ def load_table(rep, period):
         rep.table(["", "mean", "p95", "max"], rows, right=(1, 2, 3))
 
 
+def service_name(instance):
+    """Probe target -> the name a person would use."""
+    m = re.match(r"https://([^.]+)\.", instance)
+    if m:
+        return m.group(1)
+    if "/api/actions/" in instance:
+        return "forgejo-actions"
+    port = instance.rsplit(":", 1)[-1]
+    return {"22": "ssh", "445": "smb", "993": "imap"}.get(port, instance)
+
+
 def availability(rep, period, only_problems):
     res = query(f'avg_over_time(probe_success[{period}])')
     if not res:
         return
     rows = []
     for labels, v in sorted(res, key=lambda r: r[1]):
-        name = labels.get("instance", "?").replace("https://", "").rstrip("/")
+        name = service_name(labels.get("instance", "?"))
         if only_problems and v >= 0.9999:
             continue
         level = "good" if v >= 0.999 else "warning" if v >= 0.99 else "critical"

@@ -82,7 +82,9 @@ in {
       gridPos = { x = 0; y = 24; w = 24; h = 12; };
       targets = [
         (target "A" ''label_replace(probe_success{job="probe-https"}, "svc", "$1", "instance", "https://([^.]+)\\..*")'' "{{svc}}")
-        (target "B" ''label_replace(probe_success{job=~"probe-(tcp|tls)"}, "svc", "$1", "instance", "(.*)")'' "{{svc}}")
+        (target "B" ''probe_success{job="probe-tcp", instance=~".*:22"}'' "ssh")
+        (target "C" ''probe_success{job="probe-tcp", instance=~".*:445"}'' "smb")
+        (target "D" ''probe_success{job="probe-tls"}'' "imap")
       ];
       options = {
         showValue = "never";
