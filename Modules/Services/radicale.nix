@@ -19,7 +19,7 @@
         url  = "https://www.inf-it.com/InfCloud_0.13.1.zip";
         hash = "sha256-n6le3S3MK4ZKELUDq5IgiV6ijUxVQasCEX3hUR1UZNQ=";
       };
-      nativeBuildInputs = [ pkgs.unzip ];
+      nativeBuildInputs = [ pkgs.unzip pkgs.perl ];
       unpackPhase = "unzip -q $src";
       installPhase = ''
         cp -r infcloud $out
