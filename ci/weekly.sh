@@ -31,14 +31,36 @@ log()   { STAGE=$*; printf '\n==== %s ====\n' "$*"; }
 note()  { printf -- '- %s\n' "$*" >> "$WORK/notes"; }
 push()  { if [ "$MODE" = live ]; then git push "$@"; else echo "[dry-run] git push $*"; fi; }
 
-send_mail() { # subject body-file
+send_mail() { # subject body-file [monospace-file]
+  # multipart: plain text, plus HTML so the optional table (column-aligned
+  # with spaces) shows in a monospace block instead of Gmail's proportional font
+  local b="tn-$$-$RANDOM"
+  esc() { sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g' "$1"; }
   {
     echo "To: $MAIL_TO"
     echo "From: $MAIL_FROM"
     echo "Subject: $1"
+    echo "MIME-Version: 1.0"
+    echo "Content-Type: multipart/alternative; boundary=\"$b\""
+    echo
+    echo "--$b"
     echo "Content-Type: text/plain; charset=utf-8"
     echo
     cat "$2"
+    [ -n "${3:-}" ] && { echo; echo "----"; cat "$3"; }
+    echo
+    echo "--$b"
+    echo "Content-Type: text/html; charset=utf-8"
+    echo
+    echo '<div style="font-family:sans-serif;font-size:14px;line-height:1.45;white-space:pre-wrap;max-width:46em">'
+    esc "$2"
+    echo '</div>'
+    if [ -n "${3:-}" ]; then
+      echo '<pre style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.35;background:#f4f4f4;color:#222;padding:10px 12px;border-radius:6px;overflow-x:auto">'
+      esc "$3"
+      echo '</pre>'
+    fi
+    echo "--$b--"
   } | "$SENDMAIL" -t
 }
 
@@ -319,9 +341,8 @@ if [ ! -s "$WORK/summary.txt" ]; then
   { echo "(Claude could not write the summary; raw notes follow)"; cat "$WORK/notes"
     echo; cat "$WORK/curated.txt" 2>/dev/null; } > "$WORK/summary.txt"
 fi
-{ echo; echo "----"; cat "$WORK/usage.txt"; } >> "$WORK/summary.txt"
 subject="[Technonomicon] weekly $TODAY: $(wc -l < "$WORK/curated.txt" 2>/dev/null || echo 0) commits"
 [ $upgraded -eq 1 ] && subject="$subject + flake update"
 [ "$MODE" = live ] || subject="$subject (DRY RUN)"
-send_mail "$subject" "$WORK/summary.txt"
+send_mail "$subject" "$WORK/summary.txt" "$WORK/usage.txt"
 echo "done"

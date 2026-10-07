@@ -31,6 +31,7 @@
       self.nixosModules.Tn-console-kanata
       self.nixosModules.Tn-server-usage
       self.nixosModules.Tn-server-mail
+      self.nixosModules.Tn-server-alerts
       self.nixosModules.Tn-build-host
       self.nixosModules.Tn-forgejo
       self.nixosModules.Tn-server-web

@@ -15,7 +15,7 @@
     rebootWindow = { lower = "05:00"; upper = "07:00"; };
   };
 
-  # failures mail via the global notify-failure drop-in (Tn-server-mail)
+  # failures mail via the global notify-failure drop-in (Tn-server-alerts)
   systemd.services.nixos-upgrade = {
     after = [ "forgejo.service" ];
     wants = [ "forgejo.service" ];

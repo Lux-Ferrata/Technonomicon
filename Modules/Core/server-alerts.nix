@@ -63,17 +63,33 @@
         | jq -rs --argjson min "$2" -f ${errorGroups}
     '';
 
-    # mail SUBJECT, body on stdin
+    # mail SUBJECT, body on stdin; plain text plus an HTML copy in a
+    # monospace block (Gmail shows plain text in a proportional font, which
+    # wrecks the columns)
     mail = pkgs.writeShellScript "tn-alerts-mail" ''
+      body=$(cat)
+      b="tn-$$-$RANDOM"
       { echo "To: ${to}"
         echo "From: ${host} <${from}>"
         echo "Subject: [${host}] $1"
+        echo "MIME-Version: 1.0"
+        echo "Content-Type: multipart/alternative; boundary=\"$b\""
         echo
-        cat
+        echo "--$b"
+        echo "Content-Type: text/plain; charset=utf-8"
+        echo
+        printf '%s\n' "$body"
+        echo "--$b"
+        echo "Content-Type: text/html; charset=utf-8"
+        echo
+        echo '<pre style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.35;white-space:pre-wrap">'
+        printf '%s\n' "$body" | ${pkgs.gnused}/bin/sed -e 's/&/\&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+        echo '</pre>'
+        echo "--$b--"
       } | /run/wrappers/bin/sendmail -t
     '';
 
-    path = with pkgs; [ config.systemd.package coreutils gnugrep gawk jq findutils ];
+    path = with pkgs; [ config.systemd.package coreutils gnugrep gnused gawk jq findutils ];
 
     # our own units: a broken mail setup must not trigger more mail
     alertUnits = [ "notify-failure@" "tn-alerts-flush" "tn-alerts-burst" "tn-alerts-daily" ];
@@ -91,6 +107,8 @@
       tn.alerts.ignore = [
         # every NixOS dbus reload; harmless
         "Ignoring duplicate name '[^']*' in service file"
+        # karakeep's headless Chromium has no dbus/GPU/Google account; harmless
+        "^karakeep-browser\\.service\t.*:ERROR:(dbus/|google_apis/|services/on_device_model/)"
       ];
 
       systemd.tmpfiles.rules = [ "d ${dir} 0700 root root -" ];
@@ -148,7 +166,7 @@
 
             if [ ''${#failed[@]} -gt 0 ]; then
               subject="''${#failed[@]} failed: ''${failed[*]}"
-              [ ''${#recovered[@]} -gt 0 ] && subject="$subject (+''${#recovered[@]} recovered)"
+              if [ ''${#recovered[@]} -gt 0 ]; then subject="$subject (+''${#recovered[@]} recovered)"; fi
             else
               subject="''${recovered[*]} failed, since recovered"
             fi
@@ -249,7 +267,7 @@
               [ -n "$n" ] || continue
               printf '%6d  %s\n        %s\n' "$n" "''${unit%.service}" "$msg"
             done
-            [ "$nerr" -gt 40 ] && echo "  ... and $((nerr - 40)) more"
+            if [ "$nerr" -gt 40 ]; then echo "  ... and $((nerr - 40)) more"; fi
             echo
             echo "Known noise is filtered by tn.alerts.ignore (Modules/Core/server-alerts.nix)."
           } 2>&1 | ${mail} "daily: $( [ -n "$failednow" ] && echo "$(echo "$failednow" | wc -l) failed, " )$nerr distinct errors"

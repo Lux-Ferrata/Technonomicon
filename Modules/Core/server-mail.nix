@@ -1,7 +1,7 @@
 { inputs, ... }: {
   # Outgoing mail for headless hosts: msmtp relays through Gmail (Workspace)
-  # with an app password from sops. Failed units, ZFS events and SMART
-  # warnings all end up in xin's inbox.
+  # with an app password from sops. ZFS events and SMART warnings mail
+  # directly; failed units and journal errors go through Tn-server-alerts.
   flake.nixosModules.Tn-server-mail = { config, pkgs, ... }:
   let
     from = "homelab@ironshark.org";      # alias on the xin@ Workspace account
@@ -35,51 +35,6 @@
       root: ${to}
       default: ${to}
     '';
-
-    # ---- any failed system service -> email ------------------------------
-    systemd.services."notify-failure@" = {
-      description = "Email about failed unit %i";
-      serviceConfig.Type = "oneshot";
-      scriptArgs = "%i";
-      path = [ config.systemd.package ];
-      script = ''
-        unit="$1"
-        # a unit in a restart loop fails every few seconds: one mail per
-        # unit per 30 minutes is plenty
-        stamp="/run/notify-failure/$unit"
-        mkdir -p /run/notify-failure
-        if [ -n "$(find "$stamp" -mmin -30 2>/dev/null)" ]; then
-          echo "already mailed about $unit in the last 30 min"; exit 0
-        fi
-        touch "$stamp"
-        {
-          echo "To: ${to}"
-          echo "From: ${host} <${from}>"
-          echo "Subject: [${host}] $unit failed"
-          echo
-          systemctl status --full --no-pager "$unit" || true
-          echo
-          journalctl -u "$unit" -n 60 --no-pager || true
-        } 2>&1 | /run/wrappers/bin/sendmail -t
-      '';
-    };
-
-    # top-level drop-in: every service gets OnFailure=notify-failure@...;
-    # the unit-specific drop-in clears it again for the notifier itself so a
-    # broken mail setup can't loop
-    systemd.packages = [
-      (pkgs.runCommand "notify-failure-dropins" {} ''
-        mkdir -p $out/etc/systemd/system/service.d $out/etc/systemd/system/notify-failure@.service.d
-        cat > $out/etc/systemd/system/service.d/90-notify-failure.conf <<EOF
-        [Unit]
-        OnFailure=notify-failure@%n.service
-        EOF
-        cat > $out/etc/systemd/system/notify-failure@.service.d/90-no-loop.conf <<EOF
-        [Unit]
-        OnFailure=
-        EOF
-      '')
-    ];
 
     # ---- ZFS: pool faults, resilvers, scrub results -----------------------
     services.zfs.zed = {
