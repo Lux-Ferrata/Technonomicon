@@ -69,6 +69,7 @@
       hunspell
       hunspellDicts.en_US
       harper # provides harper-ls: offline grammar + spell LSP
+      ltex-ls-plus # LTeX+ server; grammar from Akmon's LanguageTool (Tn-languagetool)
       # Haskell
       ghc cabal-install haskell-language-server haskellPackages.hoogle
       # Nix

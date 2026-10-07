@@ -19,6 +19,9 @@
       jeanp413.open-remote-ssh
       # Code completion (and later chat/edit) from local llama.cpp models
       ggml-org.llama-vscode
+      # Grammar/style in LaTeX, Markdown and Typst, against Akmon's
+      # LanguageTool (MPL-2.0)
+      ltex-plus.vscode-ltex-plus
     ]) ++ [
       # Harpoon-style pinned files (MIT). Published only to the MS
       # marketplace, so it comes from that index rather than Open VSX --
@@ -242,6 +245,15 @@
           "latex-workshop.latex.outDir"            = "%DIR%/build";
           "latex-workshop.linting.chktex.enabled"  = true;
           "latex-workshop.view.pdf.viewer"         = "tab";
+
+          # LTeX+: the nixpkgs server (on PATH on both hosts, Tn-devtools)
+          # rather than a download, checking against Akmon's LanguageTool
+          # (English n-grams + zh-CN; tailnet only, so no grammar offline).
+          # `auto` lets the server tell English from Mandarin; a file can pin
+          # it with a `% LTeX: language=zh-CN` comment.
+          "ltex.ltex-ls.path"                = "${pkgs.ltex-ls-plus}";
+          "ltex.languageToolHttpServerUri"   = "https://lt.ironshark.org/";
+          "ltex.language"                    = "auto";
 
           # Quarto has no packaged extension; .qmd is markdown plus fenced
           # cells, so this gets highlighting without one.

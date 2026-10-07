@@ -38,6 +38,7 @@
       self.nixosModules.Tn-devtools
       self.nixosModules.Tn-overnight
       self.nixosModules.Tn-grimoire
+      self.nixosModules.Tn-languagetool
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
