@@ -96,18 +96,10 @@
 
         networking.hostName = "Kvasir";
 
+        # Vikunja desktop app; the server is Akmon's (Tn-vikunja), so set the
+        # app's server URL to https://tasks.ironshark.org. The old local
+        # server's data stays in /var/lib/private/vikunja until removed by hand.
         environment.systemPackages = [ pkgs.vikunja-desktop ];
-
-        # Local-only Vikunja server for the desktop app (Custom server URL →
-        # http://localhost:3456). SQLite + attachments live in
-        # /var/lib/private/vikunja (DynamicUser).
-        services.vikunja = {
-          enable           = true;
-          address          = "127.0.0.1";
-          port             = 3456;
-          frontendScheme   = "http";
-          frontendHostname = "localhost:3456";
-        };
 
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 
