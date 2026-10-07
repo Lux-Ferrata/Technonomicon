@@ -59,9 +59,8 @@
         fi
         # with the mailer on, new accounts wait for an email confirmation
         if ! row | grep -q Active; then
-          vikunja user change-status --enable "$(row | grep -oE '[0-9]+' | head -1)"
+          vikunja user change-status --enable ${user}
         fi
-        vikunja user set-admin ${user} >/dev/null
       '';
     };
 
