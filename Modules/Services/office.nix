@@ -77,6 +77,7 @@
         ssl = { enable = false; termination = true; };   # nginx does TLS
         net = {
           listen = "loopback";
+          proto  = "IPv4";      # loopback alone means [::1] only; nginx proxies to 127.0.0.1
           post_allow.host = [ "127\\.0\\.0\\.1" "::1" ];
         };
       };
