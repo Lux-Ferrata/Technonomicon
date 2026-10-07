@@ -10,7 +10,7 @@
     review = pkgs.writeShellApplication {
       name = "tn-health-review";
       runtimeInputs = with pkgs; [
-        coreutils gawk gnugrep gnused jq curl util-linux procps findutils
+        bash coreutils gawk gnugrep gnused jq curl util-linux procps findutils
         config.systemd.package config.boot.zfs.package claude-code
         config.tn.alerts.issuePackage
       ];
