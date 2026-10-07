@@ -1,5 +1,5 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-web-apps = { pkgs, config, ... }:
+  flake.nixosModules.Tn-web-apps = { pkgs, config, lib, ... }:
     let
       icon = name: url: sha256: pkgs.fetchurl { inherit name url sha256; };
       icons = {
@@ -28,6 +28,39 @@
         blog         = icon "blog.svg"          "https://api.iconify.design/mdi:post-outline.svg?width=128&height=128"               "0vfzawg165h3gdi5dkpzpwq551nj8y4l0ywsmj9mnbh1m719jwpi";
         desmos       = icon "desmos.svg"        "https://api.iconify.design/mdi:function-variant.svg?width=128&height=128"           "0njbnvs1p61vzr6k7v2vpdlf8yj76wy0yb0cf6zk664kbgdhbr6n";
         youtubeMusic = icon "youtube-music.svg" "https://api.iconify.design/simple-icons:youtubemusic.svg?width=128&height=128"    "0cyf745q476fxyly70cwy79rqvl3py0adxyarrwh16gb2gma9s2p";
+        # Akmon's services (*.ironshark.org)
+        immich         = icon "immich.svg"         "https://api.iconify.design/simple-icons:immich.svg?width=128&height=128"         "16j709sr80m32i2ga4sqn31bcks9hj5v1r3ryrwrlbkh85337xwh";
+        jellyfin       = icon "jellyfin.svg"       "https://api.iconify.design/simple-icons:jellyfin.svg?width=128&height=128"       "0kj3pzgk1rvbkq22bfc8ip3l64f5m38bbg5kf8rxqv6jdl9b0avs";
+        audiobookshelf = icon "audiobookshelf.svg" "https://api.iconify.design/simple-icons:audiobookshelf.svg?width=128&height=128" "0pdvwcm9dvaxb58sx24wnd2yrww96jmwkzqi8a6qkfxr9421pxgg";
+        paperless      = icon "paperlessngx.svg"   "https://api.iconify.design/simple-icons:paperlessngx.svg?width=128&height=128"   "1cq562jx9mgmwgwn8pjcgghfzaiwsnlg6zkm555w563hj2f4ypzn";
+        karakeep       = icon "bookmark-multiple.svg" "https://api.iconify.design/mdi:bookmark-multiple.svg?width=128&height=128"    "1xrk047csv8c5c9s4wc20r0scjgfgq2a13y64lk3jw42db1amnhq";
+        miniflux       = icon "rss-box.svg"        "https://api.iconify.design/mdi:rss-box.svg?width=128&height=128"                 "1f398pgnqgkpslbyln4kcr6cjijhr9vp4v31m7knilqdv76cjrv7";
+        forgejo        = icon "forgejo.svg"        "https://api.iconify.design/simple-icons:forgejo.svg?width=128&height=128"        "05m1r0141x3jirr5kgfyg2p1llpr2pla1rb713sx6z1dnb0f8qnf";
+        cockpit        = icon "server.svg"         "https://api.iconify.design/mdi:server.svg?width=128&height=128"                  "1sapccdf29dzx76603ppz597p33jzh7bm9zyyrza0rdynl7pnqyb";
+        qbittorrent    = icon "qbittorrent.svg"    "https://api.iconify.design/simple-icons:qbittorrent.svg?width=128&height=128"    "0wy7ypqfx436zhf7szgwy0dk1wzy5lg863npzpgkfl7qnh2s1pg8";
+        pinchflat      = icon "television-classic.svg" "https://api.iconify.design/mdi:television-classic.svg?width=128&height=128"  "0kx4dssja7j4h9chndw2305ncj2v5yvzf09626f4s42q9bcy0a8c";
+        radicale       = icon "calendar-sync.svg"  "https://api.iconify.design/mdi:calendar-sync.svg?width=128&height=128"           "1lvjm5wnynv67rdrx06aav4imhxwl8ilvzz72p6rq9y902dp2x58";
+        opencloud      = icon "file-document-multiple.svg" "https://api.iconify.design/mdi:file-document-multiple.svg?width=128&height=128" "0cwkxdrmfh30zzf0240y8k2hppkszc60c377rdsf5yxykbaj9y53";
+        vaultwarden    = icon "vaultwarden.svg"    "https://api.iconify.design/simple-icons:vaultwarden.svg?width=128&height=128"    "19fanbkz33wm9ayk36ai5xms9skwbqhijhms3danhrj5jxvmf4la";
+      };
+
+      # read-only copy of Vikunja for offline use (_tasks-offline.py)
+      tasks-offline = pkgs.writers.writePython3Bin "tasks-offline" {
+        flakeIgnore = [ "E501" "W503" ];
+      } (builtins.readFile ./_tasks-offline.py);
+
+      # one launcher entry per Akmon service with a web UI (tailnet-only).
+      # Not here on purpose: tasks. (the Vikunja desktop app is the entry),
+      # vault. (the Vaultwarden entry below), dav./lt./wopi./collabora. (no UI
+      # of their own), metrics. (Grafana only draws the report charts).
+      akmon = id: title: sub: path: ico: keywords: pkgs.makeDesktopItem {
+        name = "akmon-${id}";
+        desktopName = title;
+        exec = "${pkgs.brave}/bin/brave --app=https://${sub}.ironshark.org${path} --start-maximized";
+        icon = "${ico}";
+        terminal = false;
+        inherit keywords;
+        categories = [ "Application" "Network" ];
       };
     in {
 
@@ -147,11 +180,11 @@
 
       (pkgs.makeDesktopItem {
         name = "syncthing";
-        desktopName = "Syncthing";
+        desktopName = "Syncthing (Kvasir)";
         exec = "${pkgs.brave}/bin/brave --app=http://localhost:8385/ --start-maximized";
         icon = "${icons.syncthing}";
         terminal = false;
-        keywords = [ "syncthing" "sync" "files" "backup" ];
+        keywords = [ "syncthing" "sync" "files" "backup" "kvasir" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -167,11 +200,11 @@
 
       (pkgs.makeDesktopItem {
         name = "bitwarden-vault";
-        desktopName = "Bitwarden Vault";
-        exec = "${pkgs.brave}/bin/brave --app=https://vault.bitwarden.com --start-maximized";
-        icon = "${icons.bitwarden}";
+        desktopName = "Vaultwarden";
+        exec = "${pkgs.brave}/bin/brave --app=https://vault.ironshark.org --start-maximized";
+        icon = "${icons.vaultwarden}";
         terminal = false;
-        keywords = [ "bitwarden" "vault" "password" "passwords" "credentials" ];
+        keywords = [ "vaultwarden" "bitwarden" "vault" "password" "passwords" "credentials" ];
         categories = [ "Application" "Network" ];
       })
 
@@ -294,6 +327,59 @@
         keywords = [ "blog" "lux-ferrata" "website" "posts" ];
         categories = [ "Application" "Network" ];
       })
+
+      (akmon "office"     "Office"            "office"     "/" icons.opencloud      [ "office" "opencloud" "documents" "files" "word" "spreadsheet" "collabora" ])
+      (akmon "photos"     "Photos"            "photos"     "/" icons.immich         [ "photos" "immich" "pictures" "images" "gallery" ])
+      (akmon "media"      "Jellyfin"          "media"      "/" icons.jellyfin       [ "jellyfin" "media" "movies" "tv" "shows" ])
+      (akmon "audiobooks" "Audiobooks"        "audiobooks" "/" icons.audiobookshelf [ "audiobooks" "audiobookshelf" "podcasts" "books" ])
+      (akmon "docs"       "Paperless"         "docs"       "/" icons.paperless      [ "paperless" "documents" "scans" "receipts" ])
+      (akmon "keep"       "Karakeep"          "keep"       "/" icons.karakeep       [ "karakeep" "bookmarks" "read" "later" ])
+      (akmon "rss"        "Miniflux"          "rss"        "/" icons.miniflux       [ "miniflux" "rss" "feeds" "news" "reader" ])
+      (akmon "git"        "Forgejo"           "git"        "/" icons.forgejo        [ "forgejo" "git" "repos" "issues" "forge" ])
+      (akmon "admin"      "Cockpit"           "admin"      "/" icons.cockpit        [ "cockpit" "admin" "server" "akmon" "vms" "containers" ])
+      (akmon "torrent"    "qBittorrent"       "torrent"    "/" icons.qbittorrent    [ "qbittorrent" "torrent" "downloads" ])
+      # no "youtube" keyword, so searching "youtube" still finds only YouTube
+      (akmon "yt"         "Pinchflat"         "yt"         "/" icons.pinchflat      [ "pinchflat" "channels" "downloads" "videos" ])
+      (akmon "cal"        "Radicale Calendar" "cal"        "/infcloud/" icons.radicale [ "radicale" "infcloud" "caldav" "calendars" ])
+      (akmon "sync"       "Syncthing (Akmon)" "sync"       "/" icons.syncthing      [ "syncthing" "sync" "akmon" "server" ])
+
+      (pkgs.makeDesktopItem {
+        name = "tasks-offline";
+        desktopName = "Tasks (offline copy)";
+        exec = "${pkgs.brave}/bin/brave --app=file:///home/xin/.local/share/tasks-offline/index.html";
+        icon = "${icons.radicale}";
+        terminal = false;
+        keywords = [ "tasks" "todo" "offline" "vikunja" ];
+        categories = [ "Application" "Office" ];
+      })
     ];
+
+    # ── Tasks offline: Vikunja stays the place to edit (desktop app); this
+    # keeps a read-only page of every open task, refreshed every 15 min while
+    # Akmon is reachable, for when it isn't
+    sops.secrets.vikunja-password = { owner = "xin"; mode = "0400"; };
+    home-manager.users.xin.systemd.user = {
+      services.tasks-offline = {
+        Unit.Description = "Save a read-only offline copy of Vikunja's tasks";
+        Service = {
+          Type = "oneshot";
+          Environment = "VIKUNJA_PASSWORD_FILE=${config.sops.secrets.vikunja-password.path}";
+          ExecStart   = "${tasks-offline}/bin/tasks-offline";
+        };
+      };
+      timers.tasks-offline = {
+        Unit.Description = "Refresh the offline copy of Vikunja's tasks";
+        Timer = { OnCalendar = "*:0/15"; OnStartupSec = "1min"; Persistent = true; };
+        Install.WantedBy = [ "timers.target" ];
+      };
+    };
+
+    # the syncthing package's own "Syncthing Web UI" entry would be a second
+    # Syncthing in the launcher; a same-named user entry hides it
+    home-manager.users.xin.xdg.desktopEntries.syncthing-ui = {
+      name     = "Syncthing Web UI";
+      exec     = "syncthing browser";
+      noDisplay = true;
+    };
   };
 }
