@@ -49,4 +49,3 @@ The Google login is done; the token is on Akmon at
       library grows enough for it to matter.
 - [ ] Karakeep: turn off sign-ups once the account exists (`DISABLE_SIGNUPS`).
 - [ ] Hydrus, if exact tag-based image search turns out to be missing.
-- [ ] Push the `working` branch to Forgejo.

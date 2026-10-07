@@ -22,7 +22,7 @@
           client_id "$(get google-oauth-client-id)" \
           client_secret "$(get google-oauth-client-secret)" \
           scope drive
-        rclone lsd gdrive: --max-depth 1 | head -5
+        rclone about gdrive:   # proves the login works
         systemctl --user restart gdrive-mount
         echo "gdrive-login: done -- ~/GDrive is mounted"
       '';
@@ -30,7 +30,7 @@
   in {
     environment.systemPackages = [ pkgs.rclone gdriveLogin ];
 
-    home-manager.users.xin = { config, ... }: {
+    home-manager.users.xin = {
       systemd.user.services.gdrive-mount = {
         Unit = {
           Description = "Google Drive at ~/GDrive (rclone)";
@@ -38,6 +38,8 @@
         };
         Service = {
           Type = "notify";
+          # rclone calls the setuid fusermount3 wrapper
+          Environment = "PATH=/run/wrappers/bin";
           ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %h/GDrive";
           ExecStart = lib.concatStringsSep " " [
             rclone "mount" "gdrive:" "%h/GDrive"

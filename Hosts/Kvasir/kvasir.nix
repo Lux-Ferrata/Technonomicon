@@ -42,6 +42,7 @@
       self.nixosModules.Tn-network
       self.nixosModules.Tn-communication
       self.nixosModules.Tn-email
+      self.nixosModules.Tn-gdrive
       self.nixosModules.Tn-sound
       self.nixosModules.Tn-shell
       self.nixosModules.Tn-pdf
