@@ -78,7 +78,7 @@
         "d ${root}        0750 ${user} ${user} -"
         "d ${root}/.inbox 0750 ${user} ${user} -"   # Dovecot needs an INBOX; the archive's is empty
         "d ${index}       0750 ${user} ${user} -"
-      ];
+      ] ++ map (n: "d ${root}/${n} 0750 ${user} ${user} -") (lib.attrNames cfg.accounts);   # mbsync won't create its store
 
       systemd.services.mail-archive-sync = {
         description = "Pull mail into the archive";
