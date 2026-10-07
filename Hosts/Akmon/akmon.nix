@@ -33,6 +33,7 @@
       self.nixosModules.Tn-server-mail
       self.nixosModules.Tn-build-host
       self.nixosModules.Tn-forgejo
+      self.nixosModules.Tn-server-web
       self.nixosModules.Tn-dev-host
       self.nixosModules.Tn-devtools
       self.nixosModules.Tn-overnight

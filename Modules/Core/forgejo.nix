@@ -1,6 +1,6 @@
 { inputs, ... }: {
   # Forgejo: primary git host + Actions CI, tailnet-only.
-  #   web:  https://<host>.<tailnet>.ts.net  (tailscale serve -> 127.0.0.1:3000)
+  #   web:  https://<host>.<tailnet>.ts.net  (nginx -> 127.0.0.1:3000, Tn-server-web)
   #   ssh:  forgejo@<host>:<owner>/<repo>.git (through the system sshd)
   # Data lives on the fast pool (/srv/forgejo); the admin account is created
   # from sops on first start.
@@ -101,22 +101,6 @@
       after = [ "forgejo.service" ];
       wants = [ "forgejo.service" ];
       serviceConfig.SupplementaryGroups = [ "ci-secrets" "mail-senders" ];
-    };
-
-    # HTTPS on the tailnet name; tailscaled persists the serve config, this
-    # just (re)asserts it on every boot
-    systemd.services.tailscale-serve-forgejo = {
-      description = "Expose Forgejo on the tailnet over HTTPS";
-      after       = [ "tailscaled.service" "tailscaled-autoconnect.service" "forgejo.service" ];
-      wants       = [ "tailscaled.service" ];
-      wantedBy    = [ "multi-user.target" ];
-      serviceConfig = {
-        Type            = "oneshot";
-        RemainAfterExit = true;
-        Restart         = "on-failure";
-        RestartSec      = 15;
-      };
-      script = "${lib.getExe config.services.tailscale.package} serve --bg --https=443 http://127.0.0.1:3000";
     };
   };
 }

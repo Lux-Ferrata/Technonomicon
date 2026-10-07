@@ -64,7 +64,7 @@
                             --key-file  ${tsCerts}/${tsName}.key ${tsName}
           chgrp nginx ${tsCerts}/${tsName}.crt ${tsCerts}/${tsName}.key
           chmod 0640  ${tsCerts}/${tsName}.key
-          ! systemctl is-active -q nginx || systemctl reload nginx
+          if systemctl is-active -q nginx; then systemctl reload nginx; fi
         '';
       };
       systemd.timers.tailscale-cert = {
