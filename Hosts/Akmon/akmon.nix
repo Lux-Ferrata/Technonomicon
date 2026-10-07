@@ -49,6 +49,7 @@
       self.nixosModules.Tn-mail-archive
       self.nixosModules.Tn-miniflux
       self.nixosModules.Tn-vaultwarden
+      self.nixosModules.Tn-media
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
