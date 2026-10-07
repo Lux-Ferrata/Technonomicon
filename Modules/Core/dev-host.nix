@@ -15,9 +15,9 @@
     # Lend the GPU to a job: both llama servers stop (and can't be woken)
     # while CMD runs, then go back to sleeping-until-asked. xin may do this
     # without sudo (polkit rule below).
-    llamaUnits = [ "llama-fim.socket" "llama-chat.socket"
-                   "llama-fim.service" "llama-chat.service"
-                   "llama-fim-server.service" "llama-chat-server.service" ];
+    llamaUnits = [ "llama-fim.socket" "llama-chat.socket" "whisper.socket"
+                   "llama-fim.service" "llama-chat.service" "whisper.service"
+                   "llama-fim-server.service" "llama-chat-server.service" "whisper-server.service" ];
     gpuLend = pkgs.writeShellApplication {
       name = "gpu-lend";
       runtimeInputs = [ pkgs.coreutils config.hardware.nvidia.package.bin ];
@@ -30,8 +30,8 @@
         systemctl stop ${lib.concatStringsSep " " llamaUnits}
         restore() {
           # night mode (00:00-05:45, Tn-overnight) keeps completion off
-          if [ "$(date +%H%M)" -lt 0545 ]; then systemctl start llama-chat.socket
-          else systemctl start llama-fim.socket llama-chat.socket; fi
+          if [ "$(date +%H%M)" -lt 0545 ]; then systemctl start llama-chat.socket whisper.socket
+          else systemctl start llama-fim.socket llama-chat.socket whisper.socket; fi
         }
         trap restore EXIT
         echo "gpu-lend: llama models stopped; $(nvidia-smi --query-gpu=memory.used --format=csv,noheader) of VRAM still in use" >&2
@@ -91,7 +91,28 @@
           "--cache-reuse 256"
         ];
       })
+
+      # ── Speech to text (Whisper), on the GPU, on demand ──────────────
+      # `stt` (here and on Kvasir) posts audio to :8020; the first request
+      # wakes the server (~1 GB of VRAM), 10 idle minutes put it to sleep.
+      # --convert: any audio/video format in, via ffmpeg.
+      (import ./_llama-ondemand.nix {
+        inherit pkgs lib;
+        name        = "whisper";
+        description = "whisper.cpp speech-to-text server (large-v3-turbo)";
+        listen      = "0.0.0.0";           # firewall: tailscale0 only
+        port        = 8020;
+        backendPort = 18020;
+        idle        = "10min";
+        healthPath  = "/";
+        args = [
+          "${pkgs.whisper-cpp.override { cudaSupport = true; }}/bin/whisper-server"
+          "--model ${models.whisper-turbo}"
+          "--language auto --convert --threads 8"
+        ];
+      })
     ];
+    systemd.services.whisper-server.path = [ pkgs.ffmpeg-headless ];
 
     security.polkit.extraConfig = ''
       polkit.addRule(function(action, subject) {
@@ -108,6 +129,8 @@
     # socket-activated user daemon, with linger so it survives the last logout
     environment.systemPackages = [
       gpuLend
+      (pkgs.callPackage ./_stt.nix { })
+      (pkgs.callPackage ./_tts.nix { })
       pkgs.shpool
       # Akmon has no editor of its own: inside a VSCodium remote terminal,
       # open in that window; anywhere else (`ak`), point back to Kvasir
@@ -231,7 +254,7 @@
       after    = [ "srv-xin.service" ];
     };
     networking.firewall.interfaces.tailscale0 = {
-      allowedTCPPorts = [ 22000 8011 8012 ];
+      allowedTCPPorts = [ 22000 8011 8012 8020 ];
       allowedUDPPorts = [ 22000 ];
     };
   };

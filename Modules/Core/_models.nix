@@ -42,4 +42,20 @@ in {
     file   = "qwen2.5-coder-3b-instruct-q8_0.gguf";
     sha256 = "691c4400ab952b4196f667e01e521a48fe9571f0cb8e4a7f2cd084d07fd99d71";
   };
+
+  # Speech to text (whisper.cpp). Multilingual, Mandarin included.
+  # Akmon's GPU server: large-v3-turbo, 8-bit (~1 GB of VRAM)
+  whisper-turbo = hf {
+    repo   = "ggerganov/whisper.cpp";
+    rev    = "5359861c739e955e79d9a303bcbc70fb988958b1";
+    file   = "ggml-large-v3-turbo-q8_0.bin";
+    sha256 = "317eb69c11673c9de1e1f0d459b253999804ec71ac4c23c17ecf5fbe24e259a1";
+  };
+  # Kvasir's offline fallback, on CPU
+  whisper-base = hf {
+    repo   = "ggerganov/whisper.cpp";
+    rev    = "5359861c739e955e79d9a303bcbc70fb988958b1";
+    file   = "ggml-base.bin";
+    sha256 = "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe";
+  };
 }

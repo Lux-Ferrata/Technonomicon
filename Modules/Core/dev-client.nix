@@ -173,7 +173,26 @@
         ];
         extra = { Nice = 10; CPUWeight = 20; };
       })
+
+      # Speech-to-text stand-in (whisper.cpp base, CPU) for `stt` while
+      # Akmon is away; same wake-on-request pattern.
+      (import ./_llama-ondemand.nix {
+        inherit pkgs lib;
+        name        = "whisper-fallback";
+        description = "Offline speech-to-text (whisper.cpp base, CPU)";
+        port        = 8021;
+        backendPort = 8022;
+        idle        = "10min";
+        healthPath  = "/";
+        args = [
+          "${pkgs.whisper-cpp}/bin/whisper-server"
+          "--model ${models.whisper-base}"
+          "--language auto --convert --threads 4"
+        ];
+        extra = { Nice = 10; CPUWeight = 20; };
+      })
     ];
+    systemd.services.whisper-fallback-server.path = [ pkgs.ffmpeg-headless ];
 
 
     # Declarative now: folders/devices not in _sync.nix get dropped from
@@ -197,7 +216,7 @@
 
     # ── Local LLM endpoints: Akmon's GPU when reachable, this CPU if not ──
     # The editor and aider only ever talk to 127.0.0.1 -- 8012 completion
-    # (FIM), 8011 chat -- and nginx sends each to Akmon (Tn-dev-host) or,
+    # (FIM), 8011 chat, 8020 speech-to-text -- and nginx sends each to Akmon (Tn-dev-host) or,
     # when that can't be reached, to the local stand-in. No setting ever
     # changes between online and offline.
     services.nginx = {
@@ -219,7 +238,7 @@
             }
           }
         '';
-      in route "fim" 8012 8013 + route "chat" 8011 8014;
+      in route "fim" 8012 8013 + route "chat" 8011 8014 + route "stt" 8020 8021;
     };
 
     # FIM stand-in: small, always up (completion has to be instant)
@@ -244,7 +263,10 @@
     };
 
     home-manager.users.xin = {
-      home.packages = [ akmonReady deploy grimoireCmds grimoireGit ];
+      home.packages = [ akmonReady deploy grimoireCmds grimoireGit
+        (pkgs.callPackage ./_stt.nix { })   # speech to text, Akmon's GPU or local CPU
+        (pkgs.callPackage ./_tts.nix { })   # text to speech, local (Kokoro)
+      ];
       xdg.configFile."fish/completions/deploy.fish".text = ''
         complete -c deploy -f -n __fish_use_subcommand -a akmon  -d "build + switch on Akmon"
         complete -c deploy -f -n __fish_use_subcommand -a kvasir -d "switch this laptop"

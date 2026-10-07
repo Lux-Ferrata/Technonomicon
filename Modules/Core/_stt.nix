@@ -1,10 +1,10 @@
 # `stt`: speech to text through the Whisper server at 127.0.0.1:8020 --
 # on Akmon its own GPU server, on Kvasir a proxy that prefers Akmon and
 # falls back to a small local CPU model (Tn-dev-client).
-{ writeShellApplication, curl, pipewire, coreutils, wl-clipboard }:
+{ writeShellApplication, curl, pipewire, coreutils, gnused, wl-clipboard }:
 writeShellApplication {
   name = "stt";
-  runtimeInputs = [ curl pipewire coreutils wl-clipboard ];
+  runtimeInputs = [ curl pipewire coreutils gnused wl-clipboard ];
   text = ''
     usage() {
       cat <<'EOF'

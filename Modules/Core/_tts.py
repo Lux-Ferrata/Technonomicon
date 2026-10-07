@@ -52,6 +52,10 @@ def main():
         ap.error(f"unknown voice {voice} (tts --voices)")
 
     # heavy imports only once there is something to say
+    if lang == "z":
+        import logging
+        import jieba
+        jieba.setLogLevel(logging.WARNING)   # its dictionary-loading chatter
     import numpy as np
     import soundfile as sf
     from kokoro import KModel, KPipeline

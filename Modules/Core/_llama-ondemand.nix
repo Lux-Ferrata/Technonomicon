@@ -5,8 +5,9 @@
 # RAM/VRAM. Returns NixOS config to merge in.
 # `listen` is where clients connect (0.0.0.0 to serve the tailnet, with the
 # firewall deciding who); the server itself only ever binds localhost.
+# `healthPath` is polled until the server answers (llama-server: /health).
 { pkgs, lib, name, description, port, backendPort, args
-, listen ? "127.0.0.1", idle ? "30min", extra ? { } }:
+, listen ? "127.0.0.1", idle ? "30min", extra ? { }, healthPath ? "/health" }:
 let
   host = "127.0.0.1";
 in {
@@ -33,7 +34,7 @@ in {
       # to a server that's still loading
       ExecStartPost = pkgs.writeShellScript "${name}-wait" ''
         for _ in $(seq 240); do
-          ${pkgs.curl}/bin/curl -sf http://${host}:${toString backendPort}/health >/dev/null && exit 0
+          ${pkgs.curl}/bin/curl -sf http://${host}:${toString backendPort}${healthPath} >/dev/null && exit 0
           sleep 0.5
         done
         exit 1
