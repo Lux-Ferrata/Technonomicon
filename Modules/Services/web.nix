@@ -13,6 +13,7 @@
     domain   = "ironshark.org";
     tsName   = "akmon.tail607809.ts.net";
     tsCerts  = "/var/lib/tailscale-cert";
+    tailnetIp = "100.122.244.58";   # Akmon; stable while /var/lib/tailscale persists
     tailscale = lib.getExe config.services.tailscale.package;
     pg       = config.services.postgresql;
   in {
