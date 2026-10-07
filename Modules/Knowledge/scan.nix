@@ -1,6 +1,33 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-scan = { pkgs, lib, ... }:
+  flake.nixosModules.Tn-scan = { config, pkgs, lib, ... }:
     let
+      # Upload to Paperless on Akmon (https://docs.ironshark.org, Tn-paperless)
+      # through its REST API; Paperless titles, tags and files it from there.
+      paperless-add = pkgs.writeShellApplication {
+        name = "paperless-add";
+        runtimeInputs = with pkgs; [ curl coreutils ];
+        text = ''
+          if [ $# -eq 0 ] || [ "$1" = -h ] || [ "$1" = --help ]; then
+            echo "Usage: paperless-add FILE...   (PDF, image, Office doc, .eml)"
+            exit 0
+          fi
+          pw=$(cat ${config.sops.secrets.paperless-admin-password.path})
+          rc=0
+          for f in "$@"; do
+            [ -f "$f" ] || { echo "paperless-add: no such file: $f" >&2; rc=1; continue; }
+            # the login goes in on stdin, not on the command line
+            if curl -fsS --max-time 600 -K - -o /dev/null \
+                 -F "document=@$f" https://docs.ironshark.org/api/documents/post_document/ \
+                 <<<"user = \"xin:$pw\""; then
+              echo "paperless-add: sent $f"
+            else
+              echo "paperless-add: could not send $f (is Akmon reachable?)" >&2; rc=1
+            fi
+          done
+          exit "$rc"
+        '';
+      };
+
       # sane-airscan ships an airscan.conf that is entirely commented out.
       # mkSaneConfig symlinks each backend's config into one tree and lets
       # later paths overwrite earlier ones, so listing this derivation after
@@ -29,6 +56,7 @@
       scan = pkgs.writeShellApplication {
         name = "scan";
         runtimeInputs = with pkgs; [
+          paperless-add
           sane-backends
           img2pdf
           ocrmypdf
@@ -53,6 +81,7 @@
           clean=0
           keep_images=0
           name=""
+          paperless="''${SCAN_PAPERLESS:-0}"
 
           usage() {
             cat <<'EOF'
@@ -68,6 +97,9 @@
             -c, --color            shorthand for --mode color
             -C, --clean            run unpaper over the pages before OCR
             -N, --no-ocr           skip OCR, leave a plain image PDF
+            -P, --paperless        send it to Paperless (docs.ironshark.org);
+                                   the local copy is kept only if that fails
+                                   (also: SCAN_PAPERLESS=1)
             -k, --keep-images      keep the raw PNGs next to the PDF
             -d, --device DEV       SANE device (default: first airscan device)
             -o, --output PATH      write to this exact path
@@ -93,6 +125,7 @@
               -c|--color)       mode="color" ;;
               -C|--clean)       clean=1 ;;
               -N|--no-ocr)      ocr=0 ;;
+              -P|--paperless)   paperless=1 ;;
               -k|--keep-images) keep_images=1 ;;
               -d|--device)      device="$2"; shift ;;
               -o|--output)      output="$2"; shift ;;
@@ -182,6 +215,14 @@
           fi
 
           echo "scan: wrote $output"
+
+          if [ "$paperless" = 1 ]; then
+            if paperless-add "$output"; then
+              rm -f "$output"
+            else
+              echo "scan: kept $output; send it later with: paperless-add $output" >&2
+            fi
+          fi
         '';
       };
 
@@ -210,6 +251,7 @@
             -c, --color            shorthand for --mode color
             -C, --clean            run unpaper over the pages before OCR
             -N, --no-ocr           skip OCR, leave a plain image PDF
+            -P, --paperless        send it to Paperless instead of keeping it
             -k, --keep-images      keep the raw PNGs next to the PDF
             -d, --device DEV       SANE device (default: first airscan device)
             -o, --output PATH      write to this exact path
@@ -225,6 +267,8 @@
       };
 
     in {
+      sops.secrets.paperless-admin-password = { owner = "xin"; };
+
       hardware.sane = {
         enable = true;
         extraBackends = [ pkgs.sane-airscan airscanConf ];
@@ -252,6 +296,7 @@
         qpdf          # split/merge/rotate scanned PDFs
         scan
         multi-scan    # `scan --adf` under its own name
+        paperless-add
       ];
     };
 }
