@@ -1,5 +1,5 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-web-apps = { pkgs, config, ... }:
+  flake.nixosModules.Tn-web-apps = { pkgs, config, lib, ... }:
     let
       icon = name: url: sha256: pkgs.fetchurl { inherit name url sha256; };
       icons = {
@@ -43,6 +43,11 @@
         opencloud      = icon "file-document-multiple.svg" "https://api.iconify.design/mdi:file-document-multiple.svg?width=128&height=128" "0cwkxdrmfh30zzf0240y8k2hppkszc60c377rdsf5yxykbaj9y53";
         vaultwarden    = icon "vaultwarden.svg"    "https://api.iconify.design/simple-icons:vaultwarden.svg?width=128&height=128"    "19fanbkz33wm9ayk36ai5xms9skwbqhijhms3danhrj5jxvmf4la";
       };
+
+      # read-only copy of Vikunja for offline use (_tasks-offline.py)
+      tasks-offline = pkgs.writers.writePython3Bin "tasks-offline" {
+        flakeIgnore = [ "E501" "W503" ];
+      } (builtins.readFile ./_tasks-offline.py);
 
       # one launcher entry per Akmon service with a web UI (tailnet-only).
       # Not here on purpose: tasks. (the Vikunja desktop app is the entry),
@@ -337,7 +342,37 @@
       (akmon "yt"         "Pinchflat"         "yt"         "/" icons.pinchflat      [ "pinchflat" "channels" "downloads" "videos" ])
       (akmon "cal"        "Radicale Calendar" "cal"        "/infcloud/" icons.radicale [ "radicale" "infcloud" "caldav" "calendars" ])
       (akmon "sync"       "Syncthing (Akmon)" "sync"       "/" icons.syncthing      [ "syncthing" "sync" "akmon" "server" ])
+
+      (pkgs.makeDesktopItem {
+        name = "tasks-offline";
+        desktopName = "Tasks (offline copy)";
+        exec = "${pkgs.brave}/bin/brave --app=file:///home/xin/.local/share/tasks-offline/index.html";
+        icon = "${icons.radicale}";
+        terminal = false;
+        keywords = [ "tasks" "todo" "offline" "vikunja" ];
+        categories = [ "Application" "Office" ];
+      })
     ];
+
+    # ── Tasks offline: Vikunja stays the place to edit (desktop app); this
+    # keeps a read-only page of every open task, refreshed every 15 min while
+    # Akmon is reachable, for when it isn't
+    sops.secrets.vikunja-password = { owner = "xin"; mode = "0400"; };
+    home-manager.users.xin.systemd.user = {
+      services.tasks-offline = {
+        Unit.Description = "Save a read-only offline copy of Vikunja's tasks";
+        Service = {
+          Type = "oneshot";
+          Environment = "VIKUNJA_PASSWORD_FILE=${config.sops.secrets.vikunja-password.path}";
+          ExecStart   = "${tasks-offline}/bin/tasks-offline";
+        };
+      };
+      timers.tasks-offline = {
+        Unit.Description = "Refresh the offline copy of Vikunja's tasks";
+        Timer = { OnCalendar = "*:0/15"; OnStartupSec = "1min"; Persistent = true; };
+        Install.WantedBy = [ "timers.target" ];
+      };
+    };
 
     # the syncthing package's own "Syncthing Web UI" entry would be a second
     # Syncthing in the launcher; a same-named user entry hides it

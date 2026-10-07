@@ -87,23 +87,6 @@
           };
         };
       };
-      # ── Tasks offline: Vikunja's projects as cached CalDAV calendars ─────
-      # Thunderbird keeps a local copy (cache.enabled), so tasks stay readable
-      # and editable without Akmon; edits go up when it's reachable again.
-      # Vikunja (Tn-vikunja) stays the source of truth; the desktop app is the
-      # online view with kanban. Thunderbird asks for the Vikunja password
-      # (sops vikunja-password) once. The project list is shared with Akmon
-      # (Modules/Services/_vikunja-projects.nix), which notices new projects.
-      accounts.calendar.basePath = ".local/share/hm-calendars";   # unused: Thunderbird stores its own cache
-      accounts.calendar.accounts = lib.mapAttrs' (title: id: lib.nameValuePair "Tasks: ${title}" {
-        remote = {
-          type     = "caldav";
-          url      = "https://tasks.ironshark.org/dav/projects/${toString id}/";
-          userName = "xin";
-        };
-        thunderbird.enable = true;
-      }) (import ../Services/_vikunja-projects.nix);
-
       programs.thunderbird = {
         enable = true;
         profiles.default = {
