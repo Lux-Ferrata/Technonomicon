@@ -90,7 +90,7 @@
               echo "tn_zpool_free_bytes{pool=\"$p\"} $free"
               [ "$frag" != "-" ] && echo "tn_zpool_fragmentation_percent{pool=\"$p\"} ''${frag%\%}"
               echo "tn_zpool_healthy{pool=\"$p\",health=\"$health\"} $([ "$health" = ONLINE ] && echo 1 || echo 0)"
-              snap=$(zfs list -Hp -t snapshot -o creation -s creation -r "$p" 2>/dev/null | tail -n1)
+              snap=$(zfs list -Hp -t snapshot -o creation -s creation -r "$p" 2>/dev/null | tail -n1) || true
               [ -n "$snap" ] && echo "tn_zfs_newest_snapshot_timestamp_seconds{pool=\"$p\"} $snap"
             done
           } | emit zfs
@@ -124,6 +124,12 @@
     };
 
     config = {
+      tn.metrics.jobs = {
+        postgresqlBackup = lib.mkIf config.services.postgresqlBackup.enable { maxAge = 26 * 3600; };
+        sanoid           = lib.mkIf config.services.sanoid.enable           { maxAge = 3 * 3600; };
+        nixos-upgrade    = lib.mkIf config.system.autoUpgrade.enable        { maxAge = 26 * 3600; };
+      };
+
       services.victoriametrics = {
         enable          = true;
         listenAddress   = "127.0.0.1:8428";
@@ -201,7 +207,7 @@
         };
         systemd  = { enable = true; listenAddress = "127.0.0.1"; };
         smartctl = { enable = true; listenAddress = "127.0.0.1"; };
-        nvidia-gpu = lib.mkIf (config.hardware.nvidia.package or null != null) {
+        nvidia-gpu = lib.mkIf config.hardware.nvidia.enabled {
           enable = true; listenAddress = "127.0.0.1";
         };
         postgres = lib.mkIf config.services.postgresql.enable {
@@ -280,10 +286,10 @@
       environment.systemPackages = [ collect ];
 
       # ── journal: the log store Claude queries ──────────────────────────
-      services.journald.extraConfig = ''
-        SystemMaxUse=8G
-        MaxRetentionSec=1year
-      '';
+      services.journald.settings.Journal = {
+        SystemMaxUse    = "8G";
+        MaxRetentionSec = "1year";
+      };
     };
   };
 }
