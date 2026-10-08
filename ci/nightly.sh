@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
-# Weekly job (Wednesdays 03:00 America/Phoenix, see .forgejo/workflows/weekly.yml)
+# Nightly job (03:00 America/Phoenix, see .forgejo/workflows/nightly.yml).
+# `main` is a readable feature changelog of `working`; no machine deploys it.
 #
-#   1. upgrade:  nix flake update on top of `working`, build every host,
-#                let Claude fix breakage (max 3 rounds), push the result to `working`
+#   1. upgrade:  (weekly only) nix flake update on top of `working`, build every
+#                host, let Claude fix breakage and evaluation warnings (max 3
+#                rounds), push the result to `working`
 #   2. curate:   regroup everything on `working` since the last curated/* tag into
 #                feature commits on top of `main`; main's tree must end up
 #                byte-identical to `working`
 #   3. publish:  push main, tag curated/<date>, keep build results as GC roots so
-#                Akmon's cache can serve them, email a summary
+#                Akmon's cache can serve them; (weekly only) email a summary
 #
+# KIND=weekly|nightly, or auto (default): weekly on Wednesdays. Akmon switches
+# to `working` at 05:30 on Wednesdays to pick up the upgrade.
 # Anything going wrong -> main is not touched and a failure email goes out.
 # MODE=dry-run does all the work but pushes/tags nothing (email says so).
 set -eEuo pipefail   # -E: the ERR trap also fires inside functions
@@ -19,6 +23,10 @@ MAIL_FROM="Technonomicon bot <homelab@ironshark.org>"
 SENDMAIL=/run/wrappers/bin/sendmail
 TODAY=$(date +%F)
 MODE=${MODE:-live}
+KIND=${KIND:-auto}
+if [ "$KIND" = auto ]; then
+  if [ "$(date +%u)" = 3 ]; then KIND=weekly; else KIND=nightly; fi
+fi
 WORK=$(mktemp -d)
 ROOTS="$HOME/gcroots"
 STAGE=startup
