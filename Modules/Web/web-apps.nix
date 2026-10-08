@@ -28,6 +28,9 @@
         blog         = icon "blog.svg"          "https://api.iconify.design/mdi:post-outline.svg?width=128&height=128"               "0vfzawg165h3gdi5dkpzpwq551nj8y4l0ywsmj9mnbh1m719jwpi";
         desmos       = icon "desmos.svg"        "https://api.iconify.design/mdi:function-variant.svg?width=128&height=128"           "0njbnvs1p61vzr6k7v2vpdlf8yj76wy0yb0cf6zk664kbgdhbr6n";
         youtubeMusic = icon "youtube-music.svg" "https://api.iconify.design/simple-icons:youtubemusic.svg?width=128&height=128"    "0cyf745q476fxyly70cwy79rqvl3py0adxyarrwh16gb2gma9s2p";
+        matplotlib   = icon "matplotlib.svg"    "https://api.iconify.design/devicon:matplotlib.svg?width=128&height=128"            "083lrvy463lz45xzcch6hbiyfh0pylgs754xw0fj59gkz7f2zmx5";
+        va           = icon "flag.svg"          "https://api.iconify.design/mdi:flag.svg?width=128&height=128"                      "03s1p7fhq09lni74di1zychq4xlw6p4zdkx8vmnmbyihh7a5bgms";
+        wifiLogin    = icon "wifi-lock.svg"     "https://api.iconify.design/mdi:wifi-lock.svg?width=128&height=128"                 "0shj7zfdc5bmzi1ngniwm8ws15rgp1ihla17x5n2md96g73n6bsj";
         # Akmon's services (*.ironshark.org)
         immich         = icon "immich.svg"         "https://api.iconify.design/simple-icons:immich.svg?width=128&height=128"         "16j709sr80m32i2ga4sqn31bcks9hj5v1r3ryrwrlbkh85337xwh";
         jellyfin       = icon "jellyfin.svg"       "https://api.iconify.design/simple-icons:jellyfin.svg?width=128&height=128"       "0kj3pzgk1rvbkq22bfc8ip3l64f5m38bbg5kf8rxqv6jdl9b0avs";
@@ -44,14 +47,8 @@
         vaultwarden    = icon "vaultwarden.svg"    "https://api.iconify.design/simple-icons:vaultwarden.svg?width=128&height=128"    "19fanbkz33wm9ayk36ai5xms9skwbqhijhms3danhrj5jxvmf4la";
       };
 
-      # read-only copy of Vikunja for offline use (_tasks-offline.py)
-      tasks-offline = pkgs.writers.writePython3Bin "tasks-offline" {
-        flakeIgnore = [ "E501" "W503" ];
-      } (builtins.readFile ./_tasks-offline.py);
-
       # one launcher entry per Akmon service with a web UI (tailnet-only).
-      # Not here on purpose: tasks. (the Vikunja desktop app is the entry),
-      # vault. (the Vaultwarden entry below), dav./lt./wopi./collabora. (no UI
+      # Not here on purpose: vault. (the Vaultwarden entry below), dav./lt./wopi./collabora. (no UI
       # of their own), metrics. (Grafana only draws the report charts).
       akmon = id: title: sub: path: ico: keywords: pkgs.makeDesktopItem {
         name = "akmon-${id}";
@@ -86,6 +83,38 @@
         terminal = false;
         keywords = [ "desmos" "graph" "graphing" "calculator" "math" "plot" ];
         categories = [ "Application" "Education" "Science" ];
+      })
+
+      (pkgs.makeDesktopItem {
+        name = "matplotlib-discourse";
+        desktopName = "Matplotlib Discourse";
+        exec = "${pkgs.brave}/bin/brave --app=https://discourse.matplotlib.org/ --start-maximized";
+        icon = "${icons.matplotlib}";
+        terminal = false;
+        keywords = [ "matplotlib" "discourse" "forum" "python" "plotting" "mpl" ];
+        categories = [ "Application" "Network" ];
+      })
+
+      (pkgs.makeDesktopItem {
+        name = "va-gov";
+        desktopName = "VA";
+        exec = "${pkgs.brave}/bin/brave --app=https://www.va.gov/my-va/ --start-maximized";
+        icon = "${icons.va}";
+        terminal = false;
+        keywords = [ "va" "veterans" "affairs" "benefits" "health" "gi bill" "claims" ];
+        categories = [ "Application" "Network" ];
+      })
+
+      # Captive portals can only intercept plain HTTP, so this opens a page
+      # that is guaranteed never to use HTTPS and lets the portal redirect it.
+      (pkgs.makeDesktopItem {
+        name = "wifi-login";
+        desktopName = "WiFi Login";
+        exec = "${pkgs.brave}/bin/brave --app=http://neverssl.com --start-maximized";
+        icon = "${icons.wifiLogin}";
+        terminal = false;
+        keywords = [ "wifi" "login" "captive" "portal" "hotspot" "neverssl" "network" ];
+        categories = [ "Application" "Network" ];
       })
 
       (pkgs.makeDesktopItem {
@@ -342,37 +371,7 @@
       (akmon "yt"         "Pinchflat"         "yt"         "/" icons.pinchflat      [ "pinchflat" "channels" "downloads" "videos" ])
       (akmon "cal"        "Radicale Calendar" "cal"        "/infcloud/" icons.radicale [ "radicale" "infcloud" "caldav" "calendars" ])
       (akmon "sync"       "Syncthing (Akmon)" "sync"       "/" icons.syncthing      [ "syncthing" "sync" "akmon" "server" ])
-
-      (pkgs.makeDesktopItem {
-        name = "tasks-offline";
-        desktopName = "Tasks (offline copy)";
-        exec = "${pkgs.brave}/bin/brave --app=file:///home/xin/.local/share/tasks-offline/index.html";
-        icon = "${icons.radicale}";
-        terminal = false;
-        keywords = [ "tasks" "todo" "offline" "vikunja" ];
-        categories = [ "Application" "Office" ];
-      })
     ];
-
-    # ── Tasks offline: Vikunja stays the place to edit (desktop app); this
-    # keeps a read-only page of every open task, refreshed every 15 min while
-    # Akmon is reachable, for when it isn't
-    sops.secrets.vikunja-password = { owner = "xin"; mode = "0400"; };
-    home-manager.users.xin.systemd.user = {
-      services.tasks-offline = {
-        Unit.Description = "Save a read-only offline copy of Vikunja's tasks";
-        Service = {
-          Type = "oneshot";
-          Environment = "VIKUNJA_PASSWORD_FILE=${config.sops.secrets.vikunja-password.path}";
-          ExecStart   = "${tasks-offline}/bin/tasks-offline";
-        };
-      };
-      timers.tasks-offline = {
-        Unit.Description = "Refresh the offline copy of Vikunja's tasks";
-        Timer = { OnCalendar = "*:0/15"; OnStartupSec = "1min"; Persistent = true; };
-        Install.WantedBy = [ "timers.target" ];
-      };
-    };
 
     # the syncthing package's own "Syncthing Web UI" entry would be a second
     # Syncthing in the launcher; a same-named user entry hides it
