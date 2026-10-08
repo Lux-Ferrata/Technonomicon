@@ -6,7 +6,7 @@
   # tables from VictoriaMetrics, plus a PDF copy on the weekly one.
   #   daily   06:00, from Tn-server-alerts' digest (always sent: no mail means
   #           the box is down)
-  #   weekly  Wednesday's CI email (ci/weekly.sh calls `tn-report weekly`)
+  #   weekly  Wednesday's CI email (ci/nightly.sh calls `tn-report weekly`)
   # Nobody is expected to open Grafana; it exists to draw the charts.
   flake.nixosModules.Tn-server-reports = { config, lib, pkgs, ... }:
   let

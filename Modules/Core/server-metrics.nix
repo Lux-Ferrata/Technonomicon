@@ -204,7 +204,7 @@
       tn.metrics.jobs = {
         postgresqlBackup = lib.mkIf config.services.postgresqlBackup.enable { maxAge = 26 * 3600; };
         sanoid           = lib.mkIf config.services.sanoid.enable           { maxAge = 3 * 3600; };
-        nixos-upgrade    = lib.mkIf config.system.autoUpgrade.enable        { maxAge = 26 * 3600; };
+        nixos-upgrade    = lib.mkIf config.system.autoUpgrade.enable        { maxAge = 8 * 24 * 3600; };   # weekly
       };
 
       services.victoriametrics = {

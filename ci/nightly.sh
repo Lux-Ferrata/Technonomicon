@@ -87,7 +87,7 @@ send_mail() { # subject body-file [monospace-file]
 on_error() {
   local rc=$?
   {
-    echo "The weekly job failed during: $STAGE (exit $rc, mode $MODE)."
+    echo "The $KIND job failed during: $STAGE (exit $rc, mode $MODE)."
     echo "main was NOT changed."
     echo
     echo "Notes so far:"
@@ -96,7 +96,7 @@ on_error() {
     echo "Last 100 log lines:"
     tail -n 100 "$WORK/log"
   } > "$WORK/failmail"
-  send_mail "[Technonomicon] weekly job FAILED ($TODAY)" "$WORK/failmail" || true
+  send_mail "[Technonomicon] $KIND job FAILED ($TODAY)" "$WORK/failmail" || true
   exit "$rc"
 }
 trap on_error ERR
@@ -138,12 +138,14 @@ prev_tag=$(git tag -l 'curated/*' --sort=-creatordate | head -n 1)
 [ -n "$prev_tag" ] || { echo "no curated/* tag to start from"; false; }
 git checkout -q -B weekly origin/working
 start=$(git rev-parse HEAD)
-echo "mode=$MODE prev=$prev_tag working=$(git rev-parse --short HEAD) main=$(git rev-parse --short origin/main)"
+echo "kind=$KIND mode=$MODE prev=$prev_tag working=$(git rev-parse --short HEAD) main=$(git rev-parse --short origin/main)"
 
 # ---------------------------------------------------------------------------
+upgraded=0
+fixed_warnings=0
+if [ "$KIND" = weekly ]; then
 log "upgrade: nix flake update"
 nix flake update 2>&1 | tee "$WORK/flake-update.txt"
-upgraded=0
 if git diff --quiet -- flake.lock; then
   note "flake update: every input was already current"
 else
@@ -200,7 +202,6 @@ eval_warnings() { # -> $WORK/warnings.txt, empty if none
       | sed "s/^/[$h] /" >> "$WORK/warnings.txt" || true
   done
 }
-fixed_warnings=0
 eval_warnings
 if [ -s "$WORK/warnings.txt" ]; then
   log "warnings: fix"
@@ -239,6 +240,10 @@ When done, write a short plain-text summary to $WORK/warning-fixes.txt: which wa
     note "evaluation warnings: none left"
   fi
 fi
+else
+  log "build working as-is"
+  build_all
+fi
 new=$(git rev-parse HEAD)
 
 if [ "$new" != "$start" ]; then
@@ -259,7 +264,7 @@ if [ ! -s "$WORK/files.txt" ]; then
   note "no changes since $prev_tag; main left as is"
   curated=0
 else
-  claude_do "Plan this week's curated history for this NixOS config repository.
+  claude_do "Plan the curated history for this NixOS config repository.
 
 main is at $(git rev-parse --short origin/main); the working branch is at $(git rev-parse --short "$new"). Everything that differs between them must be regrouped into a handful of feature commits on top of main.
 
@@ -317,13 +322,39 @@ log "publish"
 if [ $curated -eq 1 ]; then
   push origin "HEAD:refs/heads/main"
 fi
-if [ "$MODE" = live ]; then
-  git tag -f -a "curated/$TODAY" -m "Weekly cutoff $TODAY" "$new"   # -f: same-day rerun
+if [ "$MODE" = live ] && [ $curated -eq 1 ]; then
+  git tag -f -a "curated/$TODAY" -m "Curated cutoff $TODAY" "$new"   # -f: same-day rerun
   push -f origin "curated/$TODAY"
 fi
 
-# keep this week's systems alive in the store (Akmon's cache serves them to
-# Kvasir) and diff against last week's for the email
+# keep tonight's systems alive in the store (Akmon's cache serves them to
+# Kvasir)
+if [ "$MODE" = live ]; then
+  for h in "${HOSTS[@]}"; do
+    rm -f "$ROOTS/latest-$h"
+    nix build --out-link "$ROOTS/latest-$h" "$(readlink -f "$WORK/result-$h")"
+  done
+fi
+
+if [ "$KIND" != weekly ]; then
+  echo "done (nightly: no email)"
+  exit 0
+fi
+
+# the week on main, for the email: since last week's weekly/* tag
+main_now=$([ $curated -eq 1 ] && git rev-parse HEAD || git rev-parse origin/main)
+prev_weekly=$(git tag -l 'weekly/*' --sort=-creatordate | head -n 1)
+if [ -n "$prev_weekly" ]; then
+  git log --format='%h %s' "$prev_weekly..$main_now" > "$WORK/curated.txt"
+else
+  git log --format='%h %s' --since='7 days ago' "$main_now" > "$WORK/curated.txt"
+fi
+if [ "$MODE" = live ]; then
+  git tag -f -a "weekly/$TODAY" -m "Weekly upgrade $TODAY" "$main_now"
+  push -f origin "weekly/$TODAY"
+fi
+
+# diff against last week's systems for the email; weekly roots are the baseline
 : > "$WORK/closures.txt"
 for h in "${HOSTS[@]}"; do
   if [ -e "$ROOTS/$h" ]; then
@@ -349,11 +380,11 @@ fi
 log "email"
 claude_do "Write this week's summary email body (plain text, no markdown headings, ~150-400 words) for the owner of this NixOS config repo. Save it to $WORK/summary.txt.
 
-Material: $WORK/notes (facts from the run, include every problem), $WORK/curated.txt (new commits on main; may be missing if nothing changed), $WORK/plan.json, $WORK/flake-update.txt, $WORK/closures.txt (package version changes per host; may be empty), $WORK/fixes.txt (may be missing), $WORK/warnings.txt and $WORK/warning-fixes.txt (evaluation warnings left and fixed; may be missing), $WORK/usage.txt (Akmon's CPU/RAM/GPU/pool usage over the week).
+Material: $WORK/notes (facts from the run, include every problem), $WORK/curated.txt (this week's commits on main, several nights of curation; may be empty), $WORK/plan.json, $WORK/flake-update.txt, $WORK/closures.txt (package version changes per host; may be empty), $WORK/fixes.txt (may be missing), $WORK/warnings.txt and $WORK/warning-fixes.txt (evaluation warnings left and fixed; may be missing), $WORK/usage.txt (Akmon's CPU/RAM/GPU/pool usage over the week).
 
 Structure: one-line verdict; what changed this week grouped like the curated commits; package upgrades worth knowing about (skip noise); anything pinned or fixed and why; evaluation warnings fixed and any left over; a two-or-three-sentence paragraph on Akmon's usage this week (what it mostly did, anything unusual: sustained high load, pool growth, reboots, gaps, failed units; the full table is appended after your text, so don't repeat it); problems needing attention. End with exactly:
 To update Kvasir:  cd ~/Projects/Technonomicon && git pull && deploy kvasir
-Akmon:             updates itself from main at 05:30
+Akmon:             updates itself from working at 05:30 today
 $([ "$MODE" = live ] || echo "Start with a line saying this was a DRY RUN and nothing was pushed.")" \
   "Read,Write,Bash(git log:*),Bash(git show:*)" || true
 
