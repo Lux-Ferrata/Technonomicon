@@ -353,6 +353,7 @@
           # Enter, pick a label.
           "vim.normalModeKeyBindingsNonRecursive" = [
             { before = [ "s" ]; after = [ "<leader>" "<leader>" "/" ]; }
+            { before = [ "<Esc>" ]; after = [ "<Esc>" ]; commands = [ "workbench.action.files.saveFiles" ]; }
             # Harpoon, on LazyVim's harpoon-extra keys: H pins the file,
             # h picks from the pins, 1-5 jump straight to a slot, m edits
             # the pin list (reorder/delete lines, save).
@@ -363,6 +364,12 @@
             before   = [ "<leader>" (toString n) ];
             commands = [ "vscode-harpoon.gotoEditor${toString n}" ];
           }) [ 1 2 3 4 5 ];
+          # Save on leaving insert mode and on <Esc> in normal mode, like the
+          # nvim config. saveFiles writes every dirty file but skips untitled
+          # ones, so it never pops a save dialog.
+          "vim.insertModeKeyBindingsNonRecursive" = [
+            { before = [ "<Esc>" ]; after = [ "<Esc>" ]; commands = [ "workbench.action.files.saveFiles" ]; }
+          ];
           "vim.visualModeKeyBindingsNonRecursive" = [
             { before = [ "s" ]; after = [ "<leader>" "<leader>" "/" ]; }
           ];
@@ -659,6 +666,17 @@
             vim.opt.guicursor = "n-v-c:block,i-ci-ve:ver25,r-cr:hor20,o:hor50"
             vim.opt.wrap      = true
             vim.opt.linebreak = true
+
+            -- Write the current buffer if it has unsaved changes. Guarded so it
+            -- never errors on scratch/terminal/nameless/readonly buffers (E32).
+            -- Shared by the InsertLeave autosave and the normal-mode <Esc> map.
+            function _G.tn_autosave()
+              local buf = vim.api.nvim_get_current_buf()
+              if vim.bo[buf].buftype ~= "" then return end
+              if vim.api.nvim_buf_get_name(buf) == "" then return end
+              if not vim.bo[buf].modifiable or vim.bo[buf].readonly then return end
+              if vim.bo[buf].modified then vim.cmd("silent! write") end
+            end
           '';
 
           autocmds = ''
@@ -682,17 +700,10 @@
               end,
             })
 
-            -- Autosave on every switch to normal mode. Guarded so it never
-            -- errors on scratch/terminal/nameless/readonly buffers (E32).
+            -- Autosave on every switch to normal mode.
             vim.api.nvim_create_autocmd("InsertLeave", {
               pattern = "*",
-              callback = function()
-                local buf = vim.api.nvim_get_current_buf()
-                if vim.bo[buf].buftype ~= "" then return end
-                if vim.api.nvim_buf_get_name(buf) == "" then return end
-                if not vim.bo[buf].modifiable or vim.bo[buf].readonly then return end
-                if vim.bo[buf].modified then vim.cmd("silent! write") end
-              end,
+              callback = function() tn_autosave() end,
             })
 
             vim.api.nvim_create_autocmd("FileType", {
@@ -740,6 +751,14 @@
 
             vim.keymap.set("i", "<C-BS>", "<C-w>", { desc = "Delete word before cursor" })
             vim.keymap.set("i", "<C-h>", "<C-w>", { desc = "Delete word before cursor" })
+
+            -- <Esc> in normal mode also saves. Overrides LazyVim's normal-mode
+            -- <Esc>, so its :noh is kept here; insert-mode <Esc> is untouched
+            -- (InsertLeave already saves).
+            vim.keymap.set("n", "<Esc>", function()
+              vim.cmd("noh")
+              tn_autosave()
+            end, { desc = "Clear hlsearch and save" })
           '';
         };
       };

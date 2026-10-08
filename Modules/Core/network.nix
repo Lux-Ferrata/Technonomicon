@@ -61,7 +61,6 @@
     time.timeZone = "America/Phoenix";
 
     environment.systemPackages = with pkgs; [
-      impala
       gping
     ];
 

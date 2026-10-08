@@ -204,8 +204,15 @@
       EMOJI=$(${pkgs.wofi}/bin/wofi --dmenu --insensitive -p "emoji" < ${emojiList} | cut -d' ' -f1)
       [ -z "$EMOJI" ] && exit 0
       printf '%s' "$EMOJI" | ${pkgs.wl-clipboard}/bin/wl-copy
+      # let focus return to the previous window, then paste from the clipboard.
+      # Typing it with wtype doesn't work for emoji: most apps drop the
+      # multi-codepoint ones (skin tones, ZWJ sequences, variation selectors).
       sleep 0.15
-      ${pkgs.wtype}/bin/wtype -- "$EMOJI"
+      CLASS=$(${hyprlandPkg}/bin/hyprctl activewindow -j | ${pkgs.jq}/bin/jq -r '.class // ""')
+      case "$CLASS" in
+        com.mitchellh.ghostty) ${pkgs.wtype}/bin/wtype -M ctrl -M shift -k v ;;
+        *)                     ${pkgs.wtype}/bin/wtype -M ctrl -k v ;;
+      esac
     '';
 
   in {
@@ -641,6 +648,7 @@
             hl.exec_cmd("quickshell")
             hl.exec_cmd("udiskie --tray")
             hl.exec_cmd("blueman-applet")
+            hl.exec_cmd("nm-applet --indicator")
             hl.exec_cmd("wl-clip-persist --clipboard regular")
             hl.exec_cmd("clipse -listen")
             hl.exec_cmd("hyprsunset")
@@ -651,14 +659,23 @@
             hl.exec_cmd("[workspace 9 silent] ${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized")
           end)
 
+          -- Trackpad gestures. Three fingers sideways pans the scrolling
+          -- tape (window to window), four fingers switches workspace, three
+          -- fingers up toggles fullscreen.
+          hl.gesture({ fingers = 3, direction = "horizontal", action = "scroll_move" })
+          hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
+          hl.gesture({ fingers = 3, direction = "up",         action = "fullscreen" })
+
           hl.config({
             input = {
               kb_layout                 = "us",
-              follow_mouse              = 0,
+              -- Focus follows the cursor. The reverse (cursor follows focus)
+              -- is the cursor.* warp settings below.
+              follow_mouse              = 1,
               float_switch_override_focus = 0,
               sensitivity               = 0,
               touchpad = {
-                natural_scroll      = false,
+                natural_scroll      = true,
                 disable_while_typing = true,
                 drag_lock           = false,
               },
@@ -707,6 +724,11 @@
             },
             cursor = {
               inactive_timeout = 0.5,
+              -- Keyboard focus changes (scrolling-layout focus, the window
+              -- pickers, workspace switches) move the cursor to the newly
+              -- focused window, so it is always over what has focus.
+              no_warps                 = false,
+              warp_on_change_workspace = 1,
             },
             misc = {
               disable_hyprland_logo    = true,
@@ -1062,6 +1084,21 @@
                       Process { id: netInfoProc; command: ["/etc/scripts/net-info.sh"] }
                       Process { id: nmEditorProc; command: ["${pkgs.networkmanagerapplet}/bin/nm-connection-editor"] }
 
+                      // nm-applet's own menu (networks, VPNs, "Edit Connections"),
+                      // opened under this icon. nm-applet is hidden from the tray
+                      // below so it isn't shown twice.
+                      function openNmMenu() {
+                          const items = SystemTray.items.values
+                          for (let i = 0; i < items.length; i++) {
+                              if (items[i].id === "nm-applet" && items[i].hasMenu) {
+                                  const pos = netWidget.mapToItem(null, 0, 0)
+                                  items[i].display(root, pos.x, root.implicitHeight)
+                                  return
+                              }
+                          }
+                          nmEditorProc.running = true   // applet not running
+                      }
+
                       Text {
                           anchors.centerIn: parent
                           font.pixelSize: 18
@@ -1073,12 +1110,13 @@
 
                       MouseArea {
                           anchors.fill: parent
+                          // left: network menu, right: connection info
                           acceptedButtons: Qt.LeftButton | Qt.RightButton
                           onClicked: mouse => {
                               if (mouse.button === Qt.RightButton) {
-                                  nmEditorProc.running = true
-                              } else {
                                   netInfoProc.running = true
+                              } else {
+                                  netWidget.openNmMenu()
                               }
                           }
                       }
@@ -1089,7 +1127,8 @@
                       delegate: Item {
                           id: trayItem
                           required property SystemTrayItem modelData
-                          implicitWidth: 22; implicitHeight: 22
+                          visible: modelData.id !== "nm-applet"
+                          implicitWidth: visible ? 22 : 0; implicitHeight: 22
 
                           Image {
                               anchors.centerIn: parent
