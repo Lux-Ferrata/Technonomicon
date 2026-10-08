@@ -60,19 +60,17 @@ sudo nixos-rebuild switch --flake /home/xin/Projects/Technonomicon#Akmon
 sudo nixos-rebuild switch --flake /home/xin/Projects/Technonomicon#Kvasir
 ```
 
-Check a flake builds without activating:
-```bash
-nix build .#nixosConfigurations.Akmon.config.system.build.toplevel
-```
+Check a host builds without activating: `tn-check <akmon|kvasir|all>` (below). If you ever run a plain `nix build` locally, delete the `result` symlink afterwards.
 
-After any `nix build` test, always delete the resulting `result` symlink:
+**After making any changes to `.nix` files, always check the affected hosts build before reporting the task as done.** Build on Akmon, not on the laptop (Akmon is the build server and keeps the result; nothing is copied back):
 ```bash
-rm result
+tn-check kvasir        # or: tn-check akmon / tn-check all
 ```
-
-**After making any changes to `.nix` files, always run a build to confirm correctness before reporting the task as done. Build only the current host:**
+`tn-check` (Tn-dev-client) falls back to a local build when Akmon is unreachable. Without it (e.g. before the first switch that installs it), the same by hand:
 ```bash
-nix build ".#nixosConfigurations.$(hostname).config.system.build.toplevel" && rm result
+drv=$(nix eval --raw ".#nixosConfigurations.<Host>.config.system.build.toplevel.drvPath")
+nix copy --derivation --to ssh-ng://xin@akmon "$drv"
+ssh xin@akmon "nix build --no-link --print-out-paths '$drv^out'"
 ```
 
 ## Architecture
