@@ -28,6 +28,7 @@
         blog         = icon "blog.svg"          "https://api.iconify.design/mdi:post-outline.svg?width=128&height=128"               "0vfzawg165h3gdi5dkpzpwq551nj8y4l0ywsmj9mnbh1m719jwpi";
         desmos       = icon "desmos.svg"        "https://api.iconify.design/mdi:function-variant.svg?width=128&height=128"           "0njbnvs1p61vzr6k7v2vpdlf8yj76wy0yb0cf6zk664kbgdhbr6n";
         youtubeMusic = icon "youtube-music.svg" "https://api.iconify.design/simple-icons:youtubemusic.svg?width=128&height=128"    "0cyf745q476fxyly70cwy79rqvl3py0adxyarrwh16gb2gma9s2p";
+        matplotlib   = icon "matplotlib.svg"    "https://api.iconify.design/devicon:matplotlib.svg?width=128&height=128"            "083lrvy463lz45xzcch6hbiyfh0pylgs754xw0fj59gkz7f2zmx5";
         va           = icon "flag.svg"          "https://api.iconify.design/mdi:flag.svg?width=128&height=128"                      "03s1p7fhq09lni74di1zychq4xlw6p4zdkx8vmnmbyihh7a5bgms";
         wifiLogin    = icon "wifi-lock.svg"     "https://api.iconify.design/mdi:wifi-lock.svg?width=128&height=128"                 "0shj7zfdc5bmzi1ngniwm8ws15rgp1ihla17x5n2md96g73n6bsj";
         # Akmon's services (*.ironshark.org)
@@ -82,6 +83,16 @@
         terminal = false;
         keywords = [ "desmos" "graph" "graphing" "calculator" "math" "plot" ];
         categories = [ "Application" "Education" "Science" ];
+      })
+
+      (pkgs.makeDesktopItem {
+        name = "matplotlib-discourse";
+        desktopName = "Matplotlib Discourse";
+        exec = "${pkgs.brave}/bin/brave --app=https://discourse.matplotlib.org/ --start-maximized";
+        icon = "${icons.matplotlib}";
+        terminal = false;
+        keywords = [ "matplotlib" "discourse" "forum" "python" "plotting" "mpl" ];
+        categories = [ "Application" "Network" ];
       })
 
       (pkgs.makeDesktopItem {
