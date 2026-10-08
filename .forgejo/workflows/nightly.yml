@@ -1,0 +1,38 @@
+# Nightly curated main; on Wednesdays also the flake upgrade + summary email.
+# Logic lives in ci/nightly.sh.
+name: nightly
+on:
+  schedule:
+    - cron: "0 10 * * *"   # 10:00 UTC = 03:00 America/Phoenix (no DST)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run builds/plans/emails but pushes nothing"
+        type: choice
+        options: [dry-run, live]
+        default: dry-run
+      kind:
+        description: "nightly = curate only; weekly = upgrade + curate + email; auto = weekly on Wednesdays"
+        type: choice
+        options: [auto, nightly, weekly]
+        default: auto
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  nightly:
+    runs-on: nixos
+    timeout-minutes: 720
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: working
+          fetch-depth: 0
+          token: ${{ secrets.BOT_TOKEN }}   # may push to working and main
+      - name: nightly
+        run: bash ci/nightly.sh   # workspace may be noexec under the runner sandbox
+        env:
+          MODE: ${{ inputs.mode || 'live' }} # schedule has no inputs -> live
+          KIND: ${{ inputs.kind || 'auto' }}
