@@ -97,7 +97,7 @@
           gitMinimal openssh curl jq
           nix
           nodejs            # JS actions such as actions/checkout
-          claude-code       # weekly job: fixes, grouping, summary (ci/weekly.sh)
+          claude-code       # nightly job: fixes, grouping, summary (ci/nightly.sh)
         ];
         settings.runner = {
           capacity = 2;

@@ -1,15 +1,17 @@
-# Akmon follows `main` (written only by the weekly CI job, see ci/weekly.sh).
-# Daily so a manual re-run of the job also lands; when main hasn't moved this
-# is a no-op. The flake comes from the local Forgejo over plain HTTP (repo is
-# public on the tailnet), so root needs no git credentials. CI already built
-# this exact system, so the "build" is just store lookups.
+# Akmon follows `working`, weekly: Wednesday's CI job (ci/nightly.sh) pushes
+# the flake update to working around 03:00, and this picks it up. Not `main`:
+# main is only a curated changelog, and following it rolled back anything
+# deployed by hand since the last curation. Day to day, `deploy akmon` is how
+# changes land. The flake comes from the local Forgejo over plain HTTP (repo
+# is public on the tailnet), so root needs no git credentials. CI already
+# built this exact system, so the "build" is just store lookups.
 { ... }: {
 
   system.autoUpgrade = {
     enable  = true;
-    flake   = "git+http://127.0.0.1:3000/xin/Technonomicon.git?ref=main#Akmon";
+    flake   = "git+http://127.0.0.1:3000/xin/Technonomicon.git?ref=working#Akmon";
     upgrade = false;        # honour main's flake.lock, never update inputs here
-    dates   = "05:30";      # Wed's job starts 03:00; usually done long before.
+    dates   = "Wed 05:30";  # the job starts 03:00; usually done long before.
                             # Before the 06:00 alert digest, which reports on it
     # reboot only when kernel/initrd/modules changed, and only at night
     allowReboot  = true;
