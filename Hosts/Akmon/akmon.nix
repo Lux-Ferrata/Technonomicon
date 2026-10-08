@@ -43,9 +43,9 @@
       self.nixosModules.Tn-overnight
       self.nixosModules.Tn-grimoire
       self.nixosModules.Tn-languagetool
-      self.nixosModules.Tn-vikunja
       self.nixosModules.Tn-radicale
       self.nixosModules.Tn-calendar-push
+      self.nixosModules.Tn-task-deadlines
       self.nixosModules.Tn-webdav
       self.nixosModules.Tn-paperless
       self.nixosModules.Tn-immich

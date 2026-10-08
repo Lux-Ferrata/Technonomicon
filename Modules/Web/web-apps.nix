@@ -43,14 +43,8 @@
         pinchflat      = icon "television-classic.svg" "https://api.iconify.design/mdi:television-classic.svg?width=128&height=128"  "0kx4dssja7j4h9chndw2305ncj2v5yvzf09626f4s42q9bcy0a8c";
         radicale       = icon "calendar-sync.svg"  "https://api.iconify.design/mdi:calendar-sync.svg?width=128&height=128"           "1lvjm5wnynv67rdrx06aav4imhxwl8ilvzz72p6rq9y902dp2x58";
         opencloud      = icon "file-document-multiple.svg" "https://api.iconify.design/mdi:file-document-multiple.svg?width=128&height=128" "0cwkxdrmfh30zzf0240y8k2hppkszc60c377rdsf5yxykbaj9y53";
-        vikunja        = icon "vikunja.svg"        "https://api.iconify.design/simple-icons:vikunja.svg?width=128&height=128"        "01xv1dzcx2rj48hpfqyr57kmk7ar0fz586xx6zfc4d1y8v75qsd7";
         vaultwarden    = icon "vaultwarden.svg"    "https://api.iconify.design/simple-icons:vaultwarden.svg?width=128&height=128"    "19fanbkz33wm9ayk36ai5xms9skwbqhijhms3danhrj5jxvmf4la";
       };
-
-      # read-only copy of Vikunja for offline use (_tasks-offline.py)
-      tasks-offline = pkgs.writers.writePython3Bin "tasks-offline" {
-        flakeIgnore = [ "E501" "W503" ];
-      } (builtins.readFile ./_tasks-offline.py);
 
       # one launcher entry per Akmon service with a web UI (tailnet-only).
       # Not here on purpose: vault. (the Vaultwarden entry below), dav./lt./wopi./collabora. (no UI
@@ -352,7 +346,6 @@
         categories = [ "Application" "Network" ];
       })
 
-      (akmon "tasks"      "Tasks"             "tasks"      "/" icons.vikunja        [ "tasks" "vikunja" "todo" "projects" "kanban" ])
       (akmon "office"     "Office"            "office"     "/" icons.opencloud      [ "office" "opencloud" "documents" "files" "word" "spreadsheet" "collabora" ])
       (akmon "photos"     "Photos"            "photos"     "/" icons.immich         [ "photos" "immich" "pictures" "images" "gallery" ])
       (akmon "media"      "Jellyfin"          "media"      "/" icons.jellyfin       [ "jellyfin" "media" "movies" "tv" "shows" ])
@@ -367,37 +360,7 @@
       (akmon "yt"         "Pinchflat"         "yt"         "/" icons.pinchflat      [ "pinchflat" "channels" "downloads" "videos" ])
       (akmon "cal"        "Radicale Calendar" "cal"        "/infcloud/" icons.radicale [ "radicale" "infcloud" "caldav" "calendars" ])
       (akmon "sync"       "Syncthing (Akmon)" "sync"       "/" icons.syncthing      [ "syncthing" "sync" "akmon" "server" ])
-
-      (pkgs.makeDesktopItem {
-        name = "tasks-offline";
-        desktopName = "Tasks (offline copy)";
-        exec = "${pkgs.brave}/bin/brave --app=file:///home/xin/.local/share/tasks-offline/index.html";
-        icon = "${icons.radicale}";
-        terminal = false;
-        keywords = [ "tasks" "todo" "offline" "vikunja" ];
-        categories = [ "Application" "Office" ];
-      })
     ];
-
-    # ── Tasks offline: Vikunja stays the place to edit (desktop app); this
-    # keeps a read-only page of every open task, refreshed every 15 min while
-    # Akmon is reachable, for when it isn't
-    sops.secrets.vikunja-password = { owner = "xin"; mode = "0400"; };
-    home-manager.users.xin.systemd.user = {
-      services.tasks-offline = {
-        Unit.Description = "Save a read-only offline copy of Vikunja's tasks";
-        Service = {
-          Type = "oneshot";
-          Environment = "VIKUNJA_PASSWORD_FILE=${config.sops.secrets.vikunja-password.path}";
-          ExecStart   = "${tasks-offline}/bin/tasks-offline";
-        };
-      };
-      timers.tasks-offline = {
-        Unit.Description = "Refresh the offline copy of Vikunja's tasks";
-        Timer = { OnCalendar = "*:0/15"; OnStartupSec = "1min"; Persistent = true; };
-        Install.WantedBy = [ "timers.target" ];
-      };
-    };
 
     # the syncthing package's own "Syncthing Web UI" entry would be a second
     # Syncthing in the launcher; a same-named user entry hides it

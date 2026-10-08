@@ -97,9 +97,9 @@
 
         networking.hostName = "Kvasir";
 
-        # Tasks: Vikunja on Akmon as a web app (Tn-web-apps), with a read-only
-        # offline copy. The old local server's data stays in
-        # /var/lib/private/vikunja until removed by hand.
+        # Tasks: Super Productivity (Tn-mind), synced to Akmon over WebDAV.
+        # The old local Vikunja server's data stays in /var/lib/private/vikunja
+        # until removed by hand.
 
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 
