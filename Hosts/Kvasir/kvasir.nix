@@ -97,10 +97,9 @@
 
         networking.hostName = "Kvasir";
 
-        # Vikunja desktop app; the server is Akmon's (Tn-vikunja), so set the
-        # app's server URL to https://tasks.ironshark.org. The old local
-        # server's data stays in /var/lib/private/vikunja until removed by hand.
-        environment.systemPackages = [ pkgs.vikunja-desktop ];
+        # Tasks: Super Productivity (Tn-mind), synced to Akmon over WebDAV.
+        # The old local Vikunja server's data stays in /var/lib/private/vikunja
+        # until removed by hand.
 
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 

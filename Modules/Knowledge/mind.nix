@@ -3,6 +3,7 @@
     environment.systemPackages = with pkgs; [
       obsidian
       pomodoro-gtk
+      super-productivity   # tasks; syncs to Akmon over WebDAV (Tn-webdav)
     ];
 
     xdg.mime.defaultApplications = {

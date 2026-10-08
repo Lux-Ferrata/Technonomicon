@@ -60,9 +60,9 @@
       # Gmail signs in with OAuth2 in Thunderbird's own window on first
       # start. "Archive" is Akmon's permanent copy (Tn-mail-archive), read-only
       # and full-text searchable; its password is sops mail-archive-password.
-      # Calendars: File > New > Calendar > On the Network, URL
-      # https://cal.ironshark.org/ (Radicale, finds them all); Google Calendar
-      # the same way with a Google login. Feeds live in the "Feeds" account.
+      # Calendars: the Google ones below (offline cache on; one Google login
+      # in Thunderbird's window on first start). Feeds live in the "Feeds"
+      # account.
       accounts.email.accounts = {
         ironshark = {
           primary     = true;
@@ -87,6 +87,32 @@
           };
         };
       };
+      # Google Calendar is where calendars live; Thunderbird keeps an offline
+      # copy. The 🔒 ones are generated on Akmon (task-deadlines.nix) and
+      # read-only. Attribute names are the names shown in Thunderbird.
+      accounts.calendar.basePath = ".local/share/hm-calendars";   # unused: remote only
+      accounts.calendar.accounts = let
+        google = id: { color, readOnly ? false, primary ? false }: {
+          inherit primary;
+          remote = {
+            type     = "caldav";
+            url      = "https://apidata.googleusercontent.com/caldav/v2/${
+              lib.replaceStrings [ "@" "#" ] [ "%40" "%23" ] id}/events/";
+            userName = "xin@ironshark.org";
+          };
+          thunderbird = { enable = true; inherit color readOnly; };
+        };
+      in {
+        "Kevin Fanning" = google "xin@ironshark.org" { color = "#9fe1e7"; primary = true; };
+        "Class Times"   = google "c_7882cd8419d72b633223f39c5eb2ae061710ba6c9eebb5a6d76a7ab0541641dd@group.calendar.google.com" { color = "#cca6ac"; };
+        "Office Hours"  = google "c_bdaf0ac3c8f5e55db5da6d91ba1ad5ff8a1971189ebc857e9d10bcf8aeecde1e@group.calendar.google.com" { color = "#fa573c"; };
+        "School"        = google "c_7faad55430eba0e6927d955fbd7fd36a45143b418a037ce674f02fee647eb2d7@group.calendar.google.com" { color = "#b99aff"; };
+        "🔒 Projects"   = google "c_f200476eb0cdab5c8901fffc8b6b2359a3af29c94aab81b222e6703b66b180a5@group.calendar.google.com" { color = "#9fc6e7"; readOnly = true; };
+        "🔒 Academics"  = google "c_07612d4356b2fe10dcf5330759186b2a6c8aba1d209dac0d1eb37590ddde2949@group.calendar.google.com" { color = "#d06b64"; readOnly = true; };
+        "Holidays in United States" = google "en.usa#holiday@group.v.calendar.google.com" { color = "#16a765"; readOnly = true; };
+        "Pima Honors Program" = google "c_3dvc4bkp9meoi57miql7demous@group.calendar.google.com" { color = "#b99aff"; readOnly = true; };
+      };
+
       programs.thunderbird = {
         enable = true;
         profiles.default = {
