@@ -5,8 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this repo is
 
 Personal NixOS system configuration ("Technonomicon") for two machines:
-- **Akmon** — desktop with Nvidia GPU, Kinesis Advantage2 keyboard
-- **Kvasir** — Lenovo ThinkPad T480s laptop, runs fish
+- **Akmon** — headless server (Nvidia RTX 5080, ZFS, wipe-on-boot root): build host and binary cache, Forgejo + CI, local LLMs, every `*.ironshark.org` service. Reached over the tailnet; xin manages it through Claude.
+- **Kvasir** — Lenovo ThinkPad T480s, the only desktop (Hyprland), Kinesis Advantage2 keyboard; everything is authored here
 
 ## Distraction blocking — do not disable
 
