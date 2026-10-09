@@ -1,6 +1,6 @@
 { inputs, ... }: {
 
-  flake.nixosModules.Tn-neovim = { pkgs, pkgs-stable, lib, ... }:
+  flake.nixosModules.Tn-neovim = { config, pkgs, pkgs-stable, lib, ... }:
   let
     openVsx   = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.open-vsx;
     vscodeMkt = inputs.nix-vscode-extensions.extensions.${pkgs.stdenv.hostPlatform.system}.vscode-marketplace;
@@ -474,6 +474,16 @@
     ];
 
     home-manager.users.xin.home.file = {
+      # Personal code snippets: snippets/<language>.json in this repo, VS Code
+      # format, added as needed. A live symlink (not a store copy), so
+      # "Snippets: Configure Snippets" in VSCodium edits -- and creates new
+      # language files in -- the repo itself. LazyVim loads the same files
+      # (LuaSnip spec below) and tn-snip (Super+Shift+H) searches them. Plain
+      # JSON only: LuaSnip's .json parser rejects comments.
+      ".config/VSCodium/User/snippets".source =
+        config.home-manager.users.xin.lib.file.mkOutOfStoreSymlink
+          "/home/xin/Projects/Technonomicon/snippets";
+
       ".config/yazi/yazi.toml".text = ''
         [mgr]
         show_hidden    = false
@@ -603,6 +613,33 @@
                   vim.fn.jobstart({ "xdg-open", url })
                 end,
               },
+            }
+          '';
+
+          # The repo's snippets/<language>.json (shared with VSCodium and
+          # tn-snip). LuaSnip only maps files to languages through a
+          # package.json, so one is generated at startup in the cache dir,
+          # next to symlinks to the files: a new language file needs no edit
+          # here. Same setup(opts) the default config would run.
+          snippets = ''
+            return {
+              "L3MON4D3/LuaSnip",
+              config = function(_, opts)
+                require("luasnip").setup(opts)
+                local src   = vim.fn.expand("~/Projects/Technonomicon/snippets")
+                local cache = vim.fn.stdpath("cache") .. "/tn-snippets"
+                vim.fn.delete(cache, "rf")
+                vim.fn.mkdir(cache, "p")
+                local entries = {}
+                for _, file in ipairs(vim.fn.glob(src .. "/*.json", false, true)) do
+                  local name = vim.fn.fnamemodify(file, ":t")
+                  vim.uv.fs_symlink(file, cache .. "/" .. name)
+                  table.insert(entries, { language = vim.fn.fnamemodify(name, ":r"), path = "./" .. name })
+                end
+                vim.fn.writefile({ vim.json.encode({ name = "tn-snippets", contributes = { snippets = entries } }) },
+                  cache .. "/package.json")
+                require("luasnip.loaders.from_vscode").lazy_load({ paths = { cache } })
+              end,
             }
           '';
 
