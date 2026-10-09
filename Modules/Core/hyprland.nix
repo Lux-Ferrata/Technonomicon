@@ -53,11 +53,20 @@
     tnShowKeybindings = pkgs.writeShellScript "tn-show-keybindings"
       (builtins.readFile ../../bin/tn-show-keybindings);
 
-    # Needs node on PATH: math-snippets.js is JS (replacements may be
-    # functions), so it is eval'd rather than parsed.
-    tnShowSnippets = pkgs.writeShellScript "tn-show-snippets" ''
-      export PATH="${pkgs.nodejs}/bin:${pkgs.wofi}/bin:$PATH"
-      ${builtins.readFile ../../bin/tn-show-snippets}
+    # Snippet finder (bin/tn-snip). node evals math-snippets.js (JS, may hold
+    # functions); pylatexenc renders LaTeX to Unicode for searching; json5
+    # reads the VS Code snippet files. Only the bare launch is locked, and
+    # the lock rides along into the Ghostty window it execs.
+    tnSnip = let
+      py = pkgs.python3.withPackages (p: [ p.pylatexenc p.json5 ]);
+    in pkgs.writeShellScript "tn-snip" ''
+      export PATH="${pkgs.nodejs}/bin:${pkgs.fzf}/bin:$PATH"
+      export TN_SNIP="$0"
+      if [ "$#" -eq 0 ]; then
+        exec 9>"''${XDG_RUNTIME_DIR:-/tmp}/tn-snip.lock"
+        flock -n 9 || exit 0
+      fi
+      exec ${py}/bin/python3 ${../../bin/tn-snip} "$@"
     '';
 
     cleanWin = ''
@@ -306,8 +315,8 @@
         pointer_color=#${palette.base08}dd
       '';
 
-      home.file.".local/share/tn/bin/tn-show-snippets" = {
-        source     = tnShowSnippets;
+      home.file.".local/share/tn/bin/tn-snip" = {
+        source     = tnSnip;
         executable = true;
       };
 
@@ -624,6 +633,14 @@
           })
 
           hl.window_rule({
+            name   = "tn-snippets-float",
+            match  = { class = "tn-snippets" },
+            float  = true,
+            size   = "1100 650",
+            center = true,
+          })
+
+          hl.window_rule({
             name   = "clipse-float",
             match  = { class = "clipse" },
             float  = true,
@@ -763,7 +780,7 @@
           hl.bind(mainMod .. " + Return",      hl.dsp.exec_cmd("${vimEdit}"))
           hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&commandid=periodic-notes%3Aopen-daily-note&openmode=window'"))
           hl.bind(mainMod .. " + H",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-keybindings"))
-          hl.bind(mainMod .. " + SHIFT + H",  hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-snippets"))
+          hl.bind(mainMod .. " + SHIFT + H",  hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-snip"))
           hl.bind(mainMod .. " + X",          hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + SHIFT + X",  hl.dsp.exec_cmd("${quickPaste}"))
           hl.bind(mainMod .. " + ALT + X",    hl.dsp.exec_cmd("${emojiPick}"))

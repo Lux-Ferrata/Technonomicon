@@ -5,10 +5,10 @@ by meaning rather than just trigger, with a preview of the full skeleton.
 Look-up only -- nothing is inserted. Sources are re-read on every launch, so
 a newly added snippet shows up straight away:
 
-  latex   ~/Grimoire/math-snippets.js (Latex Suite; read-only here -- it is
+  math    ~/Grimoire/math-snippets.js (Latex Suite; read-only here -- it is
           JS, may hold functions, and vault edits go through Obsidian)
-  python  ~/Projects/Technonomicon/snippets/python.json (VS Code format,
-          shared with VSCodium and LazyVim; Ctrl-E edits it)
+  <lang>  ~/Projects/Technonomicon/snippets/<lang>.json, one per language
+          (VS Code format, shared with VSCodium and LazyVim; Ctrl-E edits)
 
   tn-snip                    open the picker (source from the focused app)
   tn-snip pick <source>      run fzf in this terminal
@@ -28,10 +28,29 @@ from pylatexenc.latex2text import LatexNodes2Text
 
 HOME = Path.home()
 LATEX_FILE = HOME / "Grimoire/math-snippets.js"
-PYTHON_FILE = HOME / "Projects/Technonomicon/snippets/python.json"
+SNIPPET_DIR = HOME / "Projects/Technonomicon/snippets"
 CACHE = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "tn-snip.json"
-SOURCES = ["latex", "python", "all"]
-TAG = {"latex": "tex", "python": "py "}
+# the Nix wrapper (which supplies node, fzf and the Python deps) sets this, so
+# fzf's preview/reload/edit keys come back through it rather than this file
+SELF = os.environ.get("TN_SNIP", os.path.realpath(sys.argv[0]))
+
+# VSCodium window title "file.ext - folder - VSCodium" -> snippet language
+EXT_LANG = {
+    "py": "python", "ipynb": "python", "c": "c", "h": "c", "cpp": "cpp",
+    "cc": "cpp", "hpp": "cpp", "rs": "rust", "zig": "zig", "hs": "haskell",
+    "nix": "nix", "jl": "julia", "r": "r", "tex": "latex", "typ": "typst",
+    "md": "markdown", "qmd": "markdown", "sh": "shellscript", "fish": "fish",
+    "lua": "lua", "js": "javascript", "ts": "typescript", "go": "go",
+    "java": "java", "sql": "sql", "toml": "toml", "yaml": "yaml", "yml": "yaml",
+}
+
+
+def languages():
+    return sorted(p.stem for p in SNIPPET_DIR.glob("*.json"))
+
+
+def sources():
+    return ["math"] + languages() + ["all"]
 
 # Nord, as 24-bit ANSI
 def fg(hexc):
@@ -70,7 +89,7 @@ OPTIONS = {"t": "text", "m": "math", "M": "block math", "n": "inline math",
            "r": "regex", "w": "word boundary", "A": "auto-expand", "v": "visual"}
 
 latex2text = LatexNodes2Text(math_mode="verbatim", strict_latex_spaces=True)
-TABSTOP = re.compile(r"\$\{(\d+):([^}]*)\}|\$(\d+)|\[\[(\d+)\]\]")
+TABSTOP = re.compile(r"\$\{(\d+)(?::([^}]*))?\}|\$(\d+)|\[\[(\d+)\]\]")
 
 
 def flat(s):
@@ -116,6 +135,7 @@ for (const s of arr) {
   const fn = typeof s.replacement === "function";
   out.push({
     trigger: s.trigger instanceof RegExp ? s.trigger.source : String(s.trigger),
+    regex: s.trigger instanceof RegExp || String(s.options || "").includes("r"),
     body: fn ? "" : String(s.replacement),
     computed: fn,
     options: String(s.options || ""),
@@ -127,35 +147,43 @@ console.log(JSON.stringify(out));
 """
 
 
-def load_latex():
+def load_math():
     if not LATEX_FILE.exists():
         return []
     out = subprocess.run(["node", "-e", NODE, str(LATEX_FILE)],
                          capture_output=True, text=True).stdout
     data = json.loads(out or "[]")
     if isinstance(data, dict):
-        return [{"source": "latex", "trigger": "!", "body": "",
+        return [{"source": "math", "trigger": "!", "body": "",
                  "description": "math-snippets.js failed to parse: " + data["error"],
                  "options": "", "section": "", "rendered": "", "words": ""}]
     lines = LATEX_FILE.read_text().split("\n")
     for s in data:
-        s["source"] = "latex"
-        s["rendered"] = "" if s["computed"] else render(s["body"])
+        s["source"] = "math"
+        body = s["body"]
+        # a leading ([^\\]) group only guards against a preceding backslash;
+        # its capture is re-emitted as-is, so it isn't part of the output
+        if s["regex"] and s["trigger"].startswith("([^\\\\])"):
+            body = body.replace("[[0]]", "", 1)
+        math = any(c in s["options"] for c in "mMn")
+        s["rendered"] = render(body) if math and not s["computed"] else ""
         s["words"] = words(s["body"])
+        # as written in the source: a JS string literal or a /regex/
+        forms = (json.dumps(s["trigger"])[1:-1], "/" + s["trigger"] + "/")
         s["line"] = next((i + 1 for i, l in enumerate(lines)
-                          if json.dumps(s["trigger"])[1:-1] in l), 1)
+                          if "trigger" in l and not l.lstrip().startswith("//")
+                          and any(f in l for f in forms)), 1)
     return data
 
 
-def load_python():
-    if not PYTHON_FILE.exists():
-        return []
-    text = PYTHON_FILE.read_text()
+def load_lang(path):
+    lang = path.stem
+    text = path.read_text()
     try:
         data = json5.loads(text)
     except Exception as e:
-        return [{"source": "python", "trigger": "!", "body": "", "options": "",
-                 "description": f"python.json failed to parse: {e}",
+        return [{"source": lang, "file": str(path), "trigger": "!", "body": "",
+                 "options": "", "description": f"{path.name} failed to parse: {e}",
                  "section": "", "rendered": "", "words": ""}]
     lines = text.split("\n")
     out = []
@@ -165,7 +193,8 @@ def load_python():
         body = s.get("body", "")
         body = "\n".join(body) if isinstance(body, list) else body
         out.append({
-            "source": "python", "trigger": " ".join(prefixes), "body": body,
+            "source": lang, "file": str(path),
+            "trigger": " ".join(prefixes), "body": body,
             "options": "", "description": s.get("description", ""),
             "section": name, "rendered": "", "words": "",
             "line": next((i + 1 for i, l in enumerate(lines)
@@ -175,7 +204,9 @@ def load_python():
 
 
 def build_cache():
-    entries = load_latex() + load_python()
+    entries = load_math()
+    for path in sorted(SNIPPET_DIR.glob("*.json")):
+        entries += load_lang(path)
     for i, e in enumerate(entries):
         e["id"] = i
     CACHE.write_text(json.dumps(entries))
@@ -200,13 +231,13 @@ def cmd_list(source):
         if source != "all" and e["source"] != source:
             continue
         trig = readable_trigger(e)
-        if "r" in e["options"]:
+        if e.get("regex"):
             trig = "/" + trig + "/"
         what = e["description"] or e["words"]
-        if e["source"] == "python":
+        if e["source"] != "math":
             what = f"{e['description']}  {DIM}{e['section']}{RESET}"
         cols = [
-            f"{DIM}{TAG[e['source']]}{RESET}",
+            f"{DIM}{e['source'][:6]:<6}{RESET}",
             f"{FROST}{trig[:22]:<22}{RESET}",
             f"{GOLD}{e['rendered'][:18]:<18}{RESET}",
             what,
@@ -217,8 +248,10 @@ def cmd_list(source):
 
 def highlight(body):
     def tab(m):
-        if m.group(1):
+        if m.group(1) and m.group(2) is not None:
             return f"{PURPLE}${{{m.group(1)}:{RESET}{GREEN}{m.group(2)}{RESET}{PURPLE}}}{RESET}"
+        if m.group(1):
+            return f"{PURPLE}${{{m.group(1)}}}{RESET}"
         if m.group(3):
             return f"{PURPLE}${m.group(3)}{RESET}"
         return f"{RED}[[{m.group(4)}]]{RESET}"
@@ -246,32 +279,36 @@ def cmd_preview(ident):
         print(f"{DIM}mode{RESET}     {opts}")
     if e["words"]:
         print(f"{DIM}about{RESET}    {e['words']}")
-    if "r" in e["options"]:
+    if e.get("regex"):
         print(f"{DIM}captures{RESET} [[n]] = n-th regex group of the trigger")
     print(f"{DIM}section{RESET}  {e['section'] or '—'}")
-    path = LATEX_FILE if e["source"] == "latex" else PYTHON_FILE
+    path = e.get("file", str(LATEX_FILE))
     print(f"{DIM}file{RESET}     {str(path).replace(str(HOME), '~')}:{e.get('line', 1)}")
     print(f"{DIM}Tab after the trigger expands it{RESET}")
 
 
 def cmd_edit(ident):
     e = next((e for e in cached() if str(e["id"]) == ident), None)
-    if e is None or e["source"] != "python":
+    if e is None or e["source"] == "math":
         return
-    subprocess.Popen(["eol", "-g", f"{PYTHON_FILE}:{e.get('line', 1)}"],
+    subprocess.Popen(["eol", "-g", f"{e['file']}:{e.get('line', 1)}"],
                      start_new_session=True,
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def cmd_pick(source):
     build_cache()
-    me = os.path.realpath(sys.argv[0])
+    me = SELF
+    srcs = sources()
     cycle = " ".join(f"{a}) echo 'change-prompt({b} > )+reload({me} list {b})';;"
-                     for a, b in zip(SOURCES, SOURCES[1:] + SOURCES[:1]))
+                     for a, b in zip(srcs, srcs[1:] + srcs[:1]))
     subprocess.run([
-        "fzf", "--ansi", "--delimiter", "\t", "--with-nth", "2..",
+        # bind commands use sh syntax; fzf would otherwise run them in fish
+        "fzf", "--with-shell", "bash -c",
+        "--ansi", "--delimiter", "\t", "--with-nth", "2..",
         "--prompt", f"{source} > ", "--layout", "reverse", "--info", "inline-right",
-        "--header", "tab: latex / python / all   ctrl-e: edit (python)   esc: close",
+        "--no-hscroll",
+        "--header", f"tab: {' / '.join(srcs)}   ctrl-e: edit (code snippets)   esc: close",
         "--preview", f"{me} preview {{1}}",
         "--preview-window", "right,55%,wrap,border-left",
         "--bind", f"tab:transform:case ${{FZF_PROMPT% > }} in {cycle} esac",
@@ -289,8 +326,14 @@ def cmd_launch():
     except ValueError:
         active = {}
     cls = (active.get("class") or "").lower()
-    source = "latex" if "obsidian" in cls else "python" if "codium" in cls else "all"
-    me = os.path.realpath(sys.argv[0])
+    source = "all"
+    if "obsidian" in cls:
+        source = "math"
+    elif "codium" in cls:
+        m = re.match(r"\S+\.(\w+)\b", active.get("title") or "")
+        lang = EXT_LANG.get(m.group(1).lower()) if m else None
+        source = lang if lang in languages() else "all"
+    me = SELF
     os.execvp("ghostty", ["ghostty", "--class=tn-snippets", "-e", me, "pick", source])
 
 
@@ -301,9 +344,9 @@ def main():
     if cmd == "launch":
         cmd_launch()
     elif cmd == "pick":
-        cmd_pick(arg if arg in SOURCES else "all")
+        cmd_pick(arg if arg in sources() else "all")
     elif cmd == "list":
-        cmd_list(arg if arg in SOURCES else "all")
+        cmd_list(arg if arg in sources() else "all")
     elif cmd == "preview":
         cmd_preview(arg)
     elif cmd == "edit":
