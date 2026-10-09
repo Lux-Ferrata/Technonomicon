@@ -40,8 +40,6 @@ calendars (`task-deadlines.nix` → `calendar-push.nix`).
 ## Client setup (manual, any time)
 
 - [ ] Phone: accept the Grimoire share in Syncthing-Fork, open it in Obsidian.
-- [ ] Phone: DAVx5 → `https://cal.ironshark.org/` (user `xin`, sops
-      `radicale-password`) for calendars.
 - [ ] Phone: Paperless and Karakeep apps (`docs.` / `keep.ironshark.org`).
 - [ ] LanguageTool in Obsidian and the Brave extension → `https://lt.ironshark.org`.
 - [ ] Karakeep: make the first (admin) account, add the Brave extension.
