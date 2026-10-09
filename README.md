@@ -146,7 +146,7 @@ Also on Akmon:
 - A 05:40 Claude health review, and digest mails at 06:00.
 
 **Local AI:**
-- llama.cpp on the GPU: a small always-on completion model for editors (`:8012`), and Qwen3-Coder-30B-A3B for chat, loaded on demand (`:8011`).
+- llama.cpp on the GPU, each model loaded by its first request: a completion model for editors (`:8012`, unloaded after an idle hour) and Qwen3-Coder-30B-A3B for chat (`:8011`).
 - When Akmon is away, Kvasir falls back to a CPU model.
 - Each night the **overnight agents** (Claude supervising the local models) work through Forgejo issues labelled `overnight` and leave branches or PRs. They delegate to `lagent`:
   - `lagent ask` answers from the local model.
