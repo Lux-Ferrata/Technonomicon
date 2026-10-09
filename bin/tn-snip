@@ -1,0 +1,316 @@
+#!/usr/bin/env python3
+"""Snippet finder (Super+Shift+H): fzf over every snippet source, searchable
+by meaning rather than just trigger, with a preview of the full skeleton.
+
+Look-up only -- nothing is inserted. Sources are re-read on every launch, so
+a newly added snippet shows up straight away:
+
+  latex   ~/Grimoire/math-snippets.js (Latex Suite; read-only here -- it is
+          JS, may hold functions, and vault edits go through Obsidian)
+  python  ~/Projects/Technonomicon/snippets/python.json (VS Code format,
+          shared with VSCodium and LazyVim; Ctrl-E edits it)
+
+  tn-snip                    open the picker (source from the focused app)
+  tn-snip pick <source>      run fzf in this terminal
+  tn-snip list <source>      fzf lines (from the cache `pick` writes)
+  tn-snip preview <id>       preview pane for one snippet
+  tn-snip edit <id>          open a snippet's file at its line
+"""
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+import json5
+from pylatexenc.latex2text import LatexNodes2Text
+
+HOME = Path.home()
+LATEX_FILE = HOME / "Grimoire/math-snippets.js"
+PYTHON_FILE = HOME / "Projects/Technonomicon/snippets/python.json"
+CACHE = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "tn-snip.json"
+SOURCES = ["latex", "python", "all"]
+TAG = {"latex": "tex", "python": "py "}
+
+# Nord, as 24-bit ANSI
+def fg(hexc):
+    r, g, b = (int(hexc[i:i + 2], 16) for i in (0, 2, 4))
+    return f"\033[38;2;{r};{g};{b}m"
+RESET, BOLD = "\033[0m", "\033[1m"
+DIM, FROST, GOLD, GREEN, PURPLE, RED = (fg(c) for c in (
+    "616E88", "88C0D0", "F1B855", "A3BE8C", "B48EAD", "BF616A"))
+
+# English words for LaTeX commands, so "integral" or "matrix" finds the
+# snippet even though only `\int` / `pmatrix` appear in it. Greek letters
+# need no entry: their command name is already the word.
+ALIASES = {
+    "frac": "fraction divide", "dfrac": "fraction", "sqrt": "root square-root",
+    "int": "integral", "iint": "double integral", "iiint": "triple integral",
+    "oint": "contour integral", "sum": "sum sigma series", "prod": "product",
+    "lim": "limit", "partial": "partial derivative", "nabla": "gradient del",
+    "infty": "infinity", "vec": "vector arrow", "hat": "accent hat unit",
+    "bar": "accent bar mean conjugate", "dot": "accent dot time-derivative",
+    "ddot": "accent second-derivative", "tilde": "accent tilde",
+    "underline": "underline", "overline": "overline", "boldsymbol": "bold",
+    "mathbf": "bold", "mathbb": "blackboard set", "mathcal": "calligraphic",
+    "mathrm": "roman upright", "text": "text words", "cdot": "dot multiply",
+    "times": "cross multiply", "implies": "implies ⇒", "iff": "iff ⇔",
+    "leq": "less-equal ≤", "geq": "greater-equal ≥", "neq": "not-equal ≠",
+    "approx": "approx ≈", "equiv": "equivalent ≡", "to": "arrow maps-to",
+    "in": "element member", "subset": "subset", "cup": "union", "cap": "intersection",
+    "forall": "for-all", "exists": "exists", "pmod": "modulo",
+    "det": "determinant", "exp": "exponential", "log": "logarithm",
+    "ln": "logarithm natural", "binom": "binomial choose",
+    "pmatrix": "matrix", "bmatrix": "matrix", "vmatrix": "matrix determinant",
+    "matrix": "matrix", "cases": "cases piecewise", "align": "align equations",
+    "begin": "environment", "left": "delimiters brackets", "norm": "norm",
+}
+OPTIONS = {"t": "text", "m": "math", "M": "block math", "n": "inline math",
+           "r": "regex", "w": "word boundary", "A": "auto-expand", "v": "visual"}
+
+latex2text = LatexNodes2Text(math_mode="verbatim", strict_latex_spaces=True)
+TABSTOP = re.compile(r"\$\{(\d+):([^}]*)\}|\$(\d+)|\[\[(\d+)\]\]")
+
+
+def flat(s):
+    return s.replace("\n", "⏎ ").replace("\t", " ")
+
+
+def render(body):
+    """LaTeX -> Unicode, placeholders as their default text or □."""
+    plain = TABSTOP.sub(lambda m: m.group(2) or ("x" if m.group(4) else "□"), body)
+    try:
+        return flat(latex2text.latex_to_text(plain)).strip()
+    except Exception:
+        return ""
+
+
+def words(body):
+    found = []
+    for cmd in re.findall(r"\\([A-Za-z]+)", body):
+        w = ALIASES.get(cmd)
+        if w and w not in found:
+            found.append(w)
+    return " ".join(found)
+
+
+# ── loaders ─────────────────────────────────────────────────────────────
+NODE = r"""
+const fs = require("fs");
+const src = fs.readFileSync(process.argv[1], "utf8");
+const lines = src.split("\n");
+// Section headers (// ── Name ───) become marker elements, so each snippet
+// knows its section without matching triggers back against the text.
+const marked = lines.map((l, i) => {
+  const m = l.match(/^\s*\/\/\s*──\s*(.*?)\s*─*\s*$/);
+  return m ? `{__section: ${JSON.stringify(m[1])}, __line: ${i + 1}},` : l;
+}).join("\n");
+let arr;
+try { arr = eval(marked); }
+catch (e) { console.log(JSON.stringify({ error: e.message })); process.exit(0); }
+let section = "";
+const out = [];
+for (const s of arr) {
+  if (s.__section !== undefined) { section = s.__section; continue; }
+  const fn = typeof s.replacement === "function";
+  out.push({
+    trigger: s.trigger instanceof RegExp ? s.trigger.source : String(s.trigger),
+    body: fn ? "" : String(s.replacement),
+    computed: fn,
+    options: String(s.options || ""),
+    description: s.description || "",
+    section,
+  });
+}
+console.log(JSON.stringify(out));
+"""
+
+
+def load_latex():
+    if not LATEX_FILE.exists():
+        return []
+    out = subprocess.run(["node", "-e", NODE, str(LATEX_FILE)],
+                         capture_output=True, text=True).stdout
+    data = json.loads(out or "[]")
+    if isinstance(data, dict):
+        return [{"source": "latex", "trigger": "!", "body": "",
+                 "description": "math-snippets.js failed to parse: " + data["error"],
+                 "options": "", "section": "", "rendered": "", "words": ""}]
+    lines = LATEX_FILE.read_text().split("\n")
+    for s in data:
+        s["source"] = "latex"
+        s["rendered"] = "" if s["computed"] else render(s["body"])
+        s["words"] = words(s["body"])
+        s["line"] = next((i + 1 for i, l in enumerate(lines)
+                          if json.dumps(s["trigger"])[1:-1] in l), 1)
+    return data
+
+
+def load_python():
+    if not PYTHON_FILE.exists():
+        return []
+    text = PYTHON_FILE.read_text()
+    try:
+        data = json5.loads(text)
+    except Exception as e:
+        return [{"source": "python", "trigger": "!", "body": "", "options": "",
+                 "description": f"python.json failed to parse: {e}",
+                 "section": "", "rendered": "", "words": ""}]
+    lines = text.split("\n")
+    out = []
+    for name, s in data.items():
+        prefixes = s.get("prefix", "")
+        prefixes = prefixes if isinstance(prefixes, list) else [prefixes]
+        body = s.get("body", "")
+        body = "\n".join(body) if isinstance(body, list) else body
+        out.append({
+            "source": "python", "trigger": " ".join(prefixes), "body": body,
+            "options": "", "description": s.get("description", ""),
+            "section": name, "rendered": "", "words": "",
+            "line": next((i + 1 for i, l in enumerate(lines)
+                          if json.dumps(name) in l), 1),
+        })
+    return out
+
+
+def build_cache():
+    entries = load_latex() + load_python()
+    for i, e in enumerate(entries):
+        e["id"] = i
+    CACHE.write_text(json.dumps(entries))
+    return entries
+
+
+def cached():
+    try:
+        return json.loads(CACHE.read_text())
+    except (OSError, ValueError):
+        return build_cache()
+
+
+# ── commands ────────────────────────────────────────────────────────────
+def readable_trigger(e):
+    t = e["trigger"].replace("${GREEK}", "greek").replace("${ACCENT}", "accent")
+    return t
+
+
+def cmd_list(source):
+    for e in cached():
+        if source != "all" and e["source"] != source:
+            continue
+        trig = readable_trigger(e)
+        if "r" in e["options"]:
+            trig = "/" + trig + "/"
+        what = e["description"] or e["words"]
+        if e["source"] == "python":
+            what = f"{e['description']}  {DIM}{e['section']}{RESET}"
+        cols = [
+            f"{DIM}{TAG[e['source']]}{RESET}",
+            f"{FROST}{trig[:22]:<22}{RESET}",
+            f"{GOLD}{e['rendered'][:18]:<18}{RESET}",
+            what,
+            f"{DIM}{e['words'] if e['description'] else ''} {flat(e['body'])[:60]}{RESET}",
+        ]
+        print(f"{e['id']}\t" + " ".join(cols))
+
+
+def highlight(body):
+    def tab(m):
+        if m.group(1):
+            return f"{PURPLE}${{{m.group(1)}:{RESET}{GREEN}{m.group(2)}{RESET}{PURPLE}}}{RESET}"
+        if m.group(3):
+            return f"{PURPLE}${m.group(3)}{RESET}"
+        return f"{RED}[[{m.group(4)}]]{RESET}"
+    return TABSTOP.sub(tab, body.replace("\t", "    "))
+
+
+def cmd_preview(ident):
+    e = next((e for e in cached() if str(e["id"]) == ident), None)
+    if e is None:
+        return
+    trig = readable_trigger(e)
+    print(f"{BOLD}{FROST}{trig}{RESET}")
+    if e["description"]:
+        print(e["description"])
+    print()
+    if e.get("computed"):
+        print(f"{DIM}(replacement computed by a function at expansion){RESET}")
+    else:
+        print(highlight(e["body"]))
+    print()
+    if e["rendered"]:
+        print(f"{DIM}renders{RESET}  {GOLD}{e['rendered']}{RESET}")
+    if e["options"]:
+        opts = ", ".join(OPTIONS.get(c, c) for c in e["options"])
+        print(f"{DIM}mode{RESET}     {opts}")
+    if e["words"]:
+        print(f"{DIM}about{RESET}    {e['words']}")
+    if "r" in e["options"]:
+        print(f"{DIM}captures{RESET} [[n]] = n-th regex group of the trigger")
+    print(f"{DIM}section{RESET}  {e['section'] or '—'}")
+    path = LATEX_FILE if e["source"] == "latex" else PYTHON_FILE
+    print(f"{DIM}file{RESET}     {str(path).replace(str(HOME), '~')}:{e.get('line', 1)}")
+    print(f"{DIM}Tab after the trigger expands it{RESET}")
+
+
+def cmd_edit(ident):
+    e = next((e for e in cached() if str(e["id"]) == ident), None)
+    if e is None or e["source"] != "python":
+        return
+    subprocess.Popen(["eol", "-g", f"{PYTHON_FILE}:{e.get('line', 1)}"],
+                     start_new_session=True,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def cmd_pick(source):
+    build_cache()
+    me = os.path.realpath(sys.argv[0])
+    cycle = " ".join(f"{a}) echo 'change-prompt({b} > )+reload({me} list {b})';;"
+                     for a, b in zip(SOURCES, SOURCES[1:] + SOURCES[:1]))
+    subprocess.run([
+        "fzf", "--ansi", "--delimiter", "\t", "--with-nth", "2..",
+        "--prompt", f"{source} > ", "--layout", "reverse", "--info", "inline-right",
+        "--header", "tab: latex / python / all   ctrl-e: edit (python)   esc: close",
+        "--preview", f"{me} preview {{1}}",
+        "--preview-window", "right,55%,wrap,border-left",
+        "--bind", f"tab:transform:case ${{FZF_PROMPT% > }} in {cycle} esac",
+        "--bind", f"ctrl-e:execute-silent({me} edit {{1}})",
+        "--bind", "enter:ignore",
+        "--color", "bg+:#3B4252,hl:#EBCB8B,hl+:#EBCB8B,pointer:#88C0D0,prompt:#88C0D0,header:#616E88,border:#4C566A",
+    ], input=subprocess.run([me, "list", source], capture_output=True,
+                            text=True).stdout, text=True)
+
+
+def cmd_launch():
+    try:
+        active = json.loads(subprocess.run(["hyprctl", "activewindow", "-j"],
+                                           capture_output=True, text=True).stdout or "{}")
+    except ValueError:
+        active = {}
+    cls = (active.get("class") or "").lower()
+    source = "latex" if "obsidian" in cls else "python" if "codium" in cls else "all"
+    me = os.path.realpath(sys.argv[0])
+    os.execvp("ghostty", ["ghostty", "--class=tn-snippets", "-e", me, "pick", source])
+
+
+def main():
+    args = sys.argv[1:]
+    cmd = args[0] if args else "launch"
+    arg = args[1] if len(args) > 1 else "all"
+    if cmd == "launch":
+        cmd_launch()
+    elif cmd == "pick":
+        cmd_pick(arg if arg in SOURCES else "all")
+    elif cmd == "list":
+        cmd_list(arg if arg in SOURCES else "all")
+    elif cmd == "preview":
+        cmd_preview(arg)
+    elif cmd == "edit":
+        cmd_edit(arg)
+    else:
+        print(__doc__)
+
+
+if __name__ == "__main__":
+    main()
