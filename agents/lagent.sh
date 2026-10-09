@@ -142,7 +142,7 @@ Work only from the notes; say what they do not cover." < "$tmp/notes"
 }
 
 search() {
-  local n=10
+  local n=10 o OPTIND=1
   while getopts "n:" o; do
     case $o in n) n=$OPTARG ;; *) usage ;; esac
   done
