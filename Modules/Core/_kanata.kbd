@@ -1,7 +1,6 @@
 (defcfg
   process-unmapped-keys yes
   concurrent-tap-hold yes          ;; Safe: Keeps processing flowing so keys don't queue up
-  danger-enable-cmd yes
   linux-continue-if-no-devs-found yes
   linux-dev (
     /dev/input/by-id/usb-Kinesis_Advantage2_Keyboard_314159265359-event-if02
