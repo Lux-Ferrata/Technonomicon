@@ -134,6 +134,6 @@ The layout is Colemak-DH with:
 - Escape → num layer on hold (numpad layout on HJKL cluster)
 - One-shot modifiers on modifier keys (tap = one-shot, hold = sticky)
 
-### Dev toolchains installed system-wide (via Tn-neovim)
+### Dev toolchains installed system-wide (via Tn-devtools, both hosts)
 
-Haskell (GHC + cabal + HLS), Python (pyright + ruff + black), Nix (nixfmt + nixd), C (clangd), Zig (zig + zls), BQN (cbqn), Guile, Racket, NASM, GForth, Verilog/VHDL (verilator + verible + ghdl), TypeScript (ts-ls + prettier), Typst (typst + tinymist).
+Haskell (GHC + cabal + HLS), Python (pyright + ruff + black), Nix (nixfmt + nixd), C/C++ (clang-tools, gcc, cmake, ninja, bear), Rust, Zig (zig + zls), BQN (cbqn), Guile, Racket, NASM, GForth, Verilog/VHDL (verilator + verible + ghdl), TypeScript (ts-ls + prettier), LaTeX (texlive + texlab), Typst (typst + tinymist), competitive programming (ACL headers, `oj`).
