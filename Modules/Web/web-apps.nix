@@ -350,6 +350,7 @@
       })
 
       (akmon "office"     "Office"            "office"     "/" icons.opencloud      [ "office" "opencloud" "documents" "files" "word" "spreadsheet" "collabora" ])
+      (akmon "draw"       "Flowchart"         "draw"       "/" icons.flowchart      [ "flowchart" "diagram" "whiteboard" "excalidraw" "astradraw" "drawing" ])
       (akmon "photos"     "Photos"            "photos"     "/" icons.immich         [ "photos" "immich" "pictures" "images" "gallery" ])
       (akmon "media"      "Jellyfin"          "media"      "/" icons.jellyfin       [ "jellyfin" "media" "movies" "tv" "shows" ])
       (akmon "audiobooks" "Audiobooks"        "audiobooks" "/" icons.audiobookshelf [ "audiobooks" "audiobookshelf" "podcasts" "books" ])
