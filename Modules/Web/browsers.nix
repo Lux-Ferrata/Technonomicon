@@ -12,9 +12,15 @@
         brave = let
           braveBase = (prev.brave.override {
             commandLineArgs = [
-              "--enable-features=UseOzonePlatform"
+              # Chromium honours only the LAST --enable-features and the last
+              # --disable-features. nixpkgs' wrapper (make-brave.nix) passes
+              # its own pair before these args, and its lists are let-bound,
+              # so each list here must repeat nixpkgs' entries: dropping them
+              # silently turned off VA-API video decode (every video on the
+              # CPU) and re-enabled the decoder path that breaks it on Intel.
+              "--enable-features=AcceleratedVideoDecodeLinuxGL,AcceleratedVideoEncoder,WaylandWindowDecorations"
+              "--disable-features=OutdatedBuildDetector,UseChromeOSDirectVideoDecoder,BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
               "--ozone-platform=wayland"
-              "--disable-features=BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
               "--hide-crash-restore-bubble"
               "--password-store=basic"
               # fcitx5 (Pinyin) over Wayland's text-input-v3
@@ -75,6 +81,9 @@
       "IPFSCompanionEnabled" = false;
 
       "RestoreOnStartup" = 5;
+      # Memory Saver: discard tabs left inactive for a while (they reload on
+      # click), so long sessions don't keep every background page running.
+      "HighEfficiencyModeEnabled" = true;
 
       "DefaultBrowserSettingEnabled" = false;
       "MetricsReportingEnabled" = false;
@@ -98,6 +107,10 @@
         "emhhlhigmokehndjjmgnailciakdmoba;https://clients2.google.com/service/update2/crx" # 101weiqiLocalizer
         "mnjggcdmjocbbbhaepdhchncahnbgone;https://clients2.google.com/service/update2/crx" # SponsorBlock
         "cjnmckjndlpiamhfimnnjmnckgghkjbl;https://clients2.google.com/service/update2/crx" # Competitive Companion
+        # enhanced-h264ify: YouTube only. Kaby Lake has no AV1 (or VP8)
+        # decoder, so by default this blocks VP8/VP9/AV1 and YouTube serves
+        # H.264, which the GPU decodes (up to 1080p, the panel's size).
+        "omkfmpieigblcllmkgbflkikinpkodlk;https://clients2.google.com/service/update2/crx"
       ];
 
       "URLBlocklist" = [
