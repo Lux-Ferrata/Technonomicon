@@ -883,7 +883,15 @@
           hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd("${winPickerPull}"))
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))
 
-          hl.bind(mainMod .. " + SHIFT + W", hl.dsp.layout("colresize +conf"))
+          -- Every column on this workspace to half width, or all back to
+          -- full. Judged by the focused column, so it agrees with
+          -- SUPER+ALT+left/right; no window or a floating one counts as full.
+          hl.bind(mainMod .. " + SHIFT + W", function()
+            local w     = hl.get_active_window()
+            local col   = w and type(w.layout) == "table" and w.layout.column
+            local width = type(col) == "table" and col.width or 1.0
+            colWidthAll(width > 0.75 and "0.5" or "1.0")()
+          end)
           hl.bind(mainMod .. " + ALT + W",   hl.dsp.layout("fit visible"))
           hl.bind(mainMod .. " + CTRL + W",  hl.dsp.layout("center"))
 
