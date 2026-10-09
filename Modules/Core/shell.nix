@@ -101,9 +101,7 @@
           dl   = "cd ~/Downloads";
           bzip = "bzip3";
           book-dl   = "aria2c -x 16 -s 16";
-          power-off = "bash /etc/scripts/clean-power-off.sh";
-          restart   = "bash /etc/scripts/clean-reboot.sh";
-          logout    = "sudo kill -9 -1";
+          # power-off / restart / logout are desktop-only (Tn-hyprland);
           # deploying is `deploy <akmon|kvasir|all>` (Tn-dev-client)
         };
 
