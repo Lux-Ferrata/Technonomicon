@@ -8,7 +8,7 @@
   let
     lagent = pkgs.writeShellApplication {
       name          = "lagent";
-      runtimeInputs = with pkgs; [ curl jq git coreutils gnused systemd pkgs-stable.aider-chat ];
+      runtimeInputs = with pkgs; [ curl jq git coreutils gnused gawk systemd file poppler-utils pandoc pkgs-stable.aider-chat ];
       text          = builtins.readFile ../../agents/lagent.sh;
     };
     overnight = pkgs.writeShellApplication {

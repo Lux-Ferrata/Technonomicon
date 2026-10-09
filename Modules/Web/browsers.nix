@@ -88,6 +88,11 @@
       "DefaultBrowserSettingEnabled" = false;
       "MetricsReportingEnabled" = false;
       "SearchSuggestEnabled" = false;
+      # address-bar searches go to SearXNG on Akmon (Tn-searxng)
+      "DefaultSearchProviderEnabled"   = true;
+      "DefaultSearchProviderName"      = "SearXNG";
+      "DefaultSearchProviderKeyword"   = "sx";
+      "DefaultSearchProviderSearchURL" = "https://search.ironshark.org/search?q={searchTerms}";
 
       "ShowHomeButton" = false;
       "NewTabPageLocation" = "https://en.wikipedia.org/wiki/Special:Random";

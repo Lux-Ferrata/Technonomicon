@@ -80,30 +80,27 @@
         (.[0:1] | ascii_upcase) + .[1:];
     '';
 
-    winPicker = pkgs.writeShellScript "tn-win-picker" ''
-      CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
-        ${pkgs.jq}/bin/jq -r '
-          ${cleanWin}
-          map(select(.focusHistoryID != 0)) | sort_by(.focusHistoryID) |
-          .[] | [(.title | clean_title), (.class | clean_class), (.workspace.id | tostring), .address] | @tsv' | \
-        awk -F'\t' '{ printf "%-50s %-12s ws:%-2s  %s\n", $1, $2, $3, $4 }' | \
-        ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "window")
-      ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
-      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
-    '';
-
-    winPickerWs = pkgs.writeShellScript "tn-win-picker-ws" ''
+    # Window pickers in the Super+Space launcher's fuzzel (same theme,
+    # fzf-style fuzzy ranking), most recently focused first. fuzzel --index
+    # returns the chosen line number, so the address stays out of the list.
+    pickWindow = scope: pkgs.writeShellScript "tn-win-picker-${scope}" ''
       WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
-      CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
-        ${pkgs.jq}/bin/jq -r --argjson ws "$WS_ID" '
+      mapfile -t ROWS < <(${hyprlandPkg}/bin/hyprctl clients -j | \
+        ${pkgs.jq}/bin/jq -r --arg scope ${scope} --argjson ws "$WS_ID" '
           ${cleanWin}
-          map(select(.workspace.id == $ws and .focusHistoryID != 0)) | sort_by(.focusHistoryID) |
-          .[] | [(.title | clean_title), (.class | clean_class), .address] | @tsv' | \
-        awk -F'\t' '{ printf "%-50s %-12s  %s\n", $1, $2, $3 }' | \
-        ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "workspace window")
-      ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
+          map(select(.focusHistoryID != 0 and ($scope == "global" or .workspace.id == $ws))) |
+          sort_by(.focusHistoryID) |
+          .[] | [(.title | clean_title), (.class | clean_class), (.workspace.id | tostring), .address] | @tsv')
+      [ "''${#ROWS[@]}" -gt 0 ] || exit 0
+      IDX=$(printf '%s\n' "''${ROWS[@]}" | \
+        awk -F'\t' '{ printf "%-50.50s  %-12.12s  ws %s\n", $1, $2, $3 }' | \
+        ${pkgs.fuzzel}/bin/fuzzel --dmenu --index --width 80 --prompt "window ❯ ") || exit 0
+      ADDR=$(printf '%s\n' "''${ROWS[$IDX]}" | cut -f4)
       ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
+    winPicker   = pickWindow "global";
+    winPickerWs = pickWindow "ws";
+
 
     # Focus the previously focused window: `ws` limits it to the active
     # workspace, `global` takes it from anywhere (switching workspace).
@@ -866,8 +863,8 @@
 
           hl.bind(mainMod .. " + G",         hl.dsp.exec_cmd("wl-kbptr -o modes=floating,click -o mode_floating.source=detect"))
           hl.bind(mainMod .. " + SHIFT + G", hl.dsp.exec_cmd("wl-kbptr -o modes=tile,bisect"))
-          hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd("${winPickerWs}"))
-          hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPicker}"))
+          hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd("${winPicker}"))
+          hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPickerWs}"))
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))
 
           hl.bind(mainMod .. " + SHIFT + W", hl.dsp.layout("colresize +conf"))
