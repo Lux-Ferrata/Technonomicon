@@ -261,9 +261,12 @@
       mode = "0755";
       text = ''
         #!/usr/bin/env bash
-        CONN=$(${pkgs.networkmanager}/bin/nmcli -t -f DEVICE,TYPE,STATE,CONNECTION dev | grep ':connected:' | awk -F: '{print $4 " (" $2 ") on " $1}')
+        LINE=$(${pkgs.networkmanager}/bin/nmcli -t -f DEVICE,TYPE,STATE,CONNECTION dev | grep -m1 ':connected:')
+        CONN=$(printf '%s' "$LINE" | awk -F: '{print $4 " (" $2 ") on " $1}')
         [ -z "$CONN" ] && CONN="Not connected"
-        IP=$(${pkgs.networkmanager}/bin/nmcli -t -f IP4.ADDRESS dev show | awk -F: '$2 != "" {print $2}' | head -1)
+        # that device's address, not whichever device nmcli happens to list first
+        IP=""
+        [ -n "$LINE" ] && IP=$(${pkgs.networkmanager}/bin/nmcli -g IP4.ADDRESS dev show "''${LINE%%:*}" | head -1)
         [ -z "$IP" ] && IP="none"
         exec ${pkgs.libnotify}/bin/notify-send "Network" "$(printf '%s\nIP: %s' "$CONN" "$IP")"
       '';
