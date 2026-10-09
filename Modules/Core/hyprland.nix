@@ -83,23 +83,34 @@
     # Window pickers in the Super+Space launcher's fuzzel (same theme,
     # fzf-style fuzzy ranking), most recently focused first. fuzzel --index
     # returns the chosen line number, so the address stays out of the list.
+    # Scopes: global (focus it anywhere), ws (this workspace), pull (windows
+    # on other workspaces, moved here and focused; `follow = false` keeps the
+    # view on this workspace).
     pickWindow = scope: pkgs.writeShellScript "tn-win-picker-${scope}" ''
       WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
       mapfile -t ROWS < <(${hyprlandPkg}/bin/hyprctl clients -j | \
         ${pkgs.jq}/bin/jq -r --arg scope ${scope} --argjson ws "$WS_ID" '
           ${cleanWin}
-          map(select(.focusHistoryID != 0 and ($scope == "global" or .workspace.id == $ws))) |
+          map(select(.focusHistoryID != 0 and (
+            $scope == "global" or
+            ($scope == "ws"   and .workspace.id == $ws) or
+            ($scope == "pull" and .workspace.id != $ws)))) |
           sort_by(.focusHistoryID) |
           .[] | [(.title | clean_title), (.class | clean_class), (.workspace.id | tostring), .address] | @tsv')
       [ "''${#ROWS[@]}" -gt 0 ] || exit 0
       IDX=$(printf '%s\n' "''${ROWS[@]}" | \
         awk -F'\t' '{ printf "%-50.50s  %-12.12s  ws %s\n", $1, $2, $3 }' | \
-        ${pkgs.fuzzel}/bin/fuzzel --dmenu --index --width 80 --prompt "window ❯ ") || exit 0
+        ${pkgs.fuzzel}/bin/fuzzel --dmenu --index --width 80 \
+          --prompt "${if scope == "pull" then "pull here" else "window"} ❯ ") || exit 0
       ADDR=$(printf '%s\n' "''${ROWS[$IDX]}" | cut -f4)
+      ${lib.optionalString (scope == "pull") ''
+        ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.window.move({ workspace = $WS_ID, window = 'address:$ADDR', follow = false }))"
+      ''}
       ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
     winPicker   = pickWindow "global";
     winPickerWs = pickWindow "ws";
+    winPickerPull = pickWindow "pull";
 
 
     # Focus the previously focused window: `ws` limits it to the active
@@ -865,6 +876,7 @@
           hl.bind(mainMod .. " + SHIFT + G", hl.dsp.exec_cmd("wl-kbptr -o modes=tile,bisect"))
           hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd("${winPicker}"))
           hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPickerWs}"))
+          hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd("${winPickerPull}"))
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))
 
           hl.bind(mainMod .. " + SHIFT + W", hl.dsp.layout("colresize +conf"))
