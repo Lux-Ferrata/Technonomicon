@@ -42,5 +42,12 @@
     };
 
     tn.web.vhosts.search = { inherit port; maxBody = "1m"; };
+
+    # an engine that answers after the request's time limit logs this once
+    # per late engine; it is a timeout, not a fault (bursts of agent
+    # queries trip upstream rate limits and set off dozens at once)
+    tn.alerts.ignore = [
+      "^searx\\.service\t.*call to ResultContainer\\.add_unresponsive_engine after ResultContainer\\.close"
+    ];
   };
 }
