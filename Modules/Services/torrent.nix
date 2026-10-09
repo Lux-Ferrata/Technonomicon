@@ -44,6 +44,8 @@
           Preferences.WebUI = {
             Address = "127.0.0.1";
             LocalHostAuth = false;
+            AuthSubnetWhitelistEnabled = true;
+            AuthSubnetWhitelist        = "100.64.0.0/10,fd7a:115c:a1e0::/48";   # tailnet v4/v6
             ReverseProxySupportEnabled = true;
             TrustedReverseProxiesList  = "127.0.0.1";
             HostHeaderValidation = false;
