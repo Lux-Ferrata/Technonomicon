@@ -316,10 +316,6 @@
           "ltex.languageToolHttpServerUri"   = "https://lt.ironshark.org/";
           "ltex.language"                    = "auto";
 
-          # Quarto has no packaged extension; .qmd is markdown plus fenced
-          # cells, so this gets highlighting without one.
-          "files.associations" = { "*.qmd" = "markdown"; };
-
           # Formatters are all already on PATH via systemPackages above.
           "editor.formatOnSave"      = true;
           "editor.wordWrap"          = "on";
