@@ -185,9 +185,23 @@
           # Nord's selected row in dropdowns (quick fix, completion, command
           # palette, context menus) is a barely-lighter grey. Make it solid
           # frost (nord8) with dark text (nord0) so the active item is obvious.
+          #
+          # High-contrast Nord: the editor sits on a deeper night (#1E222A)
+          # than nord0, so plain text (nord6) is ~14:1 and every syntax
+          # colour below clears 8:1 (WCAG AAA). Line numbers are lifted from
+          # nord3, which nearly vanishes on the darker ground.
           "workbench.colorCustomizations" = let
             sel = { bg = "#88C0D0"; fg = "#2E3440"; };
+            bg  = "#1E222A";
           in {
+            "editor.background"                     = bg;
+            "editor.foreground"                     = "#ECEFF4";  # nord6
+            "editorGutter.background"               = bg;
+            "editorLineNumber.foreground"           = "#7B88A1";
+            "editorLineNumber.activeForeground"     = "#ECEFF4";
+            "panel.background"                      = bg;
+            "terminal.background"                   = bg;
+            "terminal.foreground"                   = "#ECEFF4";
             "editorActionList.focusBackground"      = sel.bg;
             "editorActionList.focusForeground"      = sel.fg;
             "editorSuggestWidget.selectedBackground" = sel.bg;
@@ -205,14 +219,14 @@
             "menu.selectionForeground"              = sel.fg;
           };
           # Tonsky/Alabaster-style syntax on Nord: highlight what reading
-          # needs, not grammar. Comments are bright gold (~7:1) because
+          # needs, not grammar. Comments are bright gold (~10:1) because
           # they matter; strings, constants and *definitions* get a saturated
-          # Nord hue (all >5:1 on nord0);
-          # keywords, calls, variables and punctuation are plain text. Later
+          # Nord hue; keywords, calls, variables and punctuation are plain
+          # (nord6) text. All >= 8:1 on the editor background above. Later
           # rules win, so the catch-all comes first and comments last.
           "editor.tokenColorCustomizations"."[Nord]".textMateRules = let
             rule = scope: settings: { inherit scope settings; };
-            plain = "#D8DEE9";  # nord4
+            plain = "#ECEFF4";  # nord6
           in [
             (rule [
               "keyword" "storage" "keyword.operator" "punctuation"
@@ -223,11 +237,11 @@
               "meta.decorator" "constant.other" "markup.inline.raw"
             ] { foreground = plain; fontStyle = ""; })
             (rule [ "string" "punctuation.definition.string" ]
-              { foreground = "#AADA81"; })  # nord14, saturated
+              { foreground = "#B5E689"; })  # nord14, saturated
             (rule [
               "constant.numeric" "constant.language" "constant.character"
               "constant.other.color" "keyword.other.unit" "support.constant"
-            ] { foreground = "#E198D4"; })  # nord15, saturated
+            ] { foreground = "#EBA2DE"; })  # nord15, saturated
             (rule [
               "meta.function entity.name.function"
               "meta.function.definition entity.name.function"
@@ -241,12 +255,12 @@
               "entity.other.attribute-name.single.nix"
               "entity.other.attribute-name.multipart.nix"
               "entity.name.section"
-            ] { foreground = "#7BD2EA"; })  # nord8, saturated
+            ] { foreground = "#7BDAF4"; })  # nord8, saturated
             (rule [
               "comment" "punctuation.definition.comment"
               "string.quoted.docstring" "string.quoted.docstring punctuation"
               "comment.block.documentation"
-            ] { foreground = "#F1B855"; fontStyle = ""; })  # gold, nord13's hue deepened
+            ] { foreground = "#FBC260"; fontStyle = ""; })  # gold, nord13's hue deepened
           ];
           # Language servers' semantic tokens would repaint variables, types
           # and calls in colour on top of the rules above.

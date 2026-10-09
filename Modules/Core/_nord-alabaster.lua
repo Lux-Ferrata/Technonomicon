@@ -1,13 +1,27 @@
 -- Tonsky/Alabaster-style syntax on top of nord.nvim, matching VSCodium's
 -- tokenColorCustomizations (Tn-neovim): comments bright gold, strings,
--- constants and definitions coloured, everything else plain text. Loaded
+-- constants and definitions coloured, everything else plain text, all on a
+-- deeper-than-nord0 background so every colour is >= 8:1 (WCAG AAA). Loaded
 -- after require("nord").set() by both LazyVim and the server rescue nvim.
 local function nord_alabaster()
-  local plain   = "#D8DEE9" -- nord4
-  local comment = "#F1B855" -- gold, nord13's hue deepened
-  local string  = "#AADA81" -- nord14, saturated
-  local const   = "#E198D4" -- nord15, saturated
-  local def     = "#7BD2EA" -- nord8, saturated
+  local bg      = "#1E222A" -- deeper Nord night
+  local plain   = "#ECEFF4" -- nord6
+  local comment = "#FBC260" -- gold, nord13's hue deepened
+  local string  = "#B5E689" -- nord14, saturated
+  local const   = "#EBA2DE" -- nord15, saturated
+  local def     = "#7BDAF4" -- nord8, saturated
+
+  -- the text area and its margins on the deeper background; floats, status
+  -- and tab lines keep nord.nvim's own shades
+  for _, name in ipairs({ "SignColumn", "FoldColumn", "EndOfBuffer" }) do
+    local hl = vim.api.nvim_get_hl(0, { name = name, link = false })
+    hl.bg = bg
+    vim.api.nvim_set_hl(0, name, hl)
+  end
+  vim.api.nvim_set_hl(0, "Normal", { fg = plain, bg = bg })
+  vim.api.nvim_set_hl(0, "NormalNC", { fg = plain, bg = bg })
+  vim.api.nvim_set_hl(0, "LineNr", { fg = "#7B88A1", bg = bg })
+  vim.api.nvim_set_hl(0, "CursorLineNr", { fg = plain, bg = bg, bold = true })
 
   local groups = {
     [plain] = {
