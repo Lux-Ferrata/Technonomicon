@@ -290,6 +290,15 @@
 
       home.sessionPath = [ "$HOME/.local/share/tn/bin" ];
 
+      # Ending the session belongs to the desktop, not the shared shell, where
+      # these would also power off or reboot Akmon. logout ends just this
+      # Hyprland session.
+      programs.fish.shellAbbrs = {
+        logout    = "loginctl terminate-session $XDG_SESSION_ID";
+        power-off = "bash /etc/scripts/clean-power-off.sh";
+        restart   = "bash /etc/scripts/clean-reboot.sh";
+      };
+
       home.file.".local/share/tn/bin/tn-show-keybindings" = {
         source     = tnShowKeybindings;
         executable = true;
