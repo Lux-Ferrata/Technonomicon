@@ -42,9 +42,12 @@
       ensureDatabases = [ "astradraw" ];
       ensureUsers     = [ { name = "astradraw"; ensureDBOwnership = true; } ];
     };
-    # the api logs in over TCP with a password (peer auth needs a host user)
-    systemd.services.astradraw-db-password = {
-      description = "Set AstraDraw's Postgres password";
+    # The api logs in over TCP with a password (peer auth needs a host user).
+    # The key-value table is made here too: on startup the api's four storage
+    # namespaces race to create it, and @keyv/postgres leaves each loser
+    # broken (every query throws) until the next restart.
+    systemd.services.astradraw-db-setup = {
+      description = "Prepare AstraDraw's Postgres role and table";
       after       = [ "postgresql-setup.service" ];
       requires    = [ "postgresql-setup.service" ];
       path        = [ config.services.postgresql.package ];
@@ -58,6 +61,10 @@
       script = ''
         printf "ALTER ROLE astradraw WITH PASSWORD '%s';\n" "$(cat "$CREDENTIALS_DIRECTORY/pw")" \
           | psql -v ON_ERROR_STOP=1 -q -d postgres
+        psql -v ON_ERROR_STOP=1 -q -d astradraw <<'SQL'
+        CREATE TABLE IF NOT EXISTS public.keyv(key VARCHAR(255) PRIMARY KEY, value TEXT);
+        ALTER TABLE public.keyv OWNER TO astradraw;
+        SQL
       '';
     };
 
