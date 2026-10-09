@@ -553,7 +553,14 @@
     home-manager.users.xin = {
       imports = [ inputs.lazyvim.homeManagerModules.default ];
 
+      # image.nvim's magick luarock, from nix instead of luarocks
       programs.neovim.extraLuaPackages = ps: [ ps.magick ];
+      # molten is a Python remote plugin: it runs in nvim's own provider
+      # (pynvim is already there), so its dependencies go there too.
+      # jupyter-client is required; the rest render and export outputs.
+      programs.neovim.extraPython3Packages = ps: with ps; [
+        jupyter-client nbformat cairosvg pillow pyperclip
+      ];
 
       programs.lazyvim = {
         enable = true;
