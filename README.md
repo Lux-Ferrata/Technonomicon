@@ -105,7 +105,7 @@ Hyprland (Lua config, permanent scrolling layout), Quickshell bar, Ghostty, gree
 **Brave:**
 - Wayland and VA-API hardware video decode. `--enable/--disable-features` must repeat nixpkgs' lists, see the comment in `browsers.nix`.
 - enhanced-h264ify, so YouTube serves H.264 (Kaby Lake can't decode AV1 in hardware).
-- Memory Saver on.
+- Memory Saver off: with 40 GB of RAM, idle tabs stay loaded.
 - SearXNG as the default search engine.
 - PWAs for Gmail, Calendar, etc. (`web-apps.nix`).
 
