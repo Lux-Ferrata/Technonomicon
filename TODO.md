@@ -25,8 +25,8 @@ delete them as they're done.
 Google Calendar is home; Radicale only stages the generated deadline
 calendars (`task-deadlines.nix` → `calendar-push.nix`).
 
-- [ ] Delete the stale Radicale collections `classes` and `office-hours`, then
-      check the push journal shows only the two generated pairs.
+- [x] Stale Radicale collections (`classes`, `office-hours`, an empty "Class
+      Time") deleted 2026-10-09; the push carries only the two generated pairs.
 - [ ] Kvasir: `~/.local/share/calendars` and `~/.local/share/vdirsyncer` are
       left from the retired khal sync and can go.
 
