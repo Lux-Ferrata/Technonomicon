@@ -162,10 +162,21 @@ How to work:
 - You have about $((budget/60)) minutes. Stop in time to write the report.
 - Finally write $out/REPORT.md for the owner, who reads it in the morning: what you did, what the local models did, what you verified and how, what is left or uncertain. Be honest about failures; a clear 'could not do X because Y' beats a weak result."
 
-    ( cd "$dir" && timeout "$budget" claude -p "$prompt" --output-format text \
-        --add-dir "$out" \
-        --allowedTools "Read,Edit,Write,Glob,Grep,WebSearch,WebFetch,Bash" \
-        > "$out/claude.txt" 2>&1 ) || echo "(claude exited with $?)" >> "$out/claude.txt"
+    # Claude runs in a transient unit of its own: same user, network and
+    # tools, but the credentials on disk (forge and Claude tokens, signing
+    # and Syncthing keys, the Google calendar token) don't exist for it, so
+    # nothing it reads on the web or in an issue can get them out. The
+    # budget is RuntimeMaxSec: systemd stops it when time is up.
+    systemd-run --user --pipe --wait --collect --quiet \
+        -p PrivateUsers=yes \
+        -p InaccessiblePaths=/run/secrets -p InaccessiblePaths=-/run/secrets.d \
+        -p InaccessiblePaths=-/srv/xin/.syncthing -p InaccessiblePaths=-/srv/xin/.calendar-push \
+        -p WorkingDirectory="$dir" -p RuntimeMaxSec="$budget" \
+        -E PATH -E CLAUDE_CODE_OAUTH_TOKEN \
+        claude -p "$prompt" --output-format text \
+          --add-dir "$out" \
+          --allowedTools "Read,Edit,Write,Glob,Grep,WebSearch,WebFetch,Bash" \
+        > "$out/claude.txt" 2>&1 || echo "(claude exited with $?)" >> "$out/claude.txt"
   fi
 
   # ---- publish ----------------------------------------------------------
