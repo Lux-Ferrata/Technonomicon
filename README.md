@@ -19,7 +19,7 @@ Modules/Core/          desktop, shell, editors, dev client/host, server, monitor
 Modules/Services/      Akmon's web services (one Tn-<svc> per file)
 Modules/Knowledge/     learning, science, PDF, scanning, Obsidian
 Modules/Web/           browser, web apps, mail, chat, games, Google Drive
-Modules/Art/           creative tools (local PureRef/Allusion derivations)
+Modules/Art/           creative tools (a local Allusion derivation)
 bin/                   scripts wrapped by modules (tn-snip, tn-show-keybindings)
 agents/                overnight agent runner + lagent (local-model helper)
 ci/                    nightly curation / weekly upgrade job (Forgejo Actions)
