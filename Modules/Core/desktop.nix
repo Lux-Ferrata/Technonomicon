@@ -33,7 +33,7 @@
 
       kanata = {
         enable = true;
-        package = pkgs.kanata-with-cmd;
+        # plain kanata: the layout runs no shell commands
         keyboards.colmacs.configFile = ./_kanata.kbd;
       };
 
