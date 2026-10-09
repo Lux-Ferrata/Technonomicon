@@ -20,16 +20,15 @@ delete them as they're done.
   - The Google OAuth client already has (or needs) the Photos Library API
     enabled. Big imports can borrow the GPU with `gpu-lend`.
 
-## Calendar push to Google (Phase 2)
+## Calendars
 
-The Google login is done; the token is on Akmon at
-`/srv/xin/.calendar-push/google-token`.
+Google Calendar is home; Radicale only stages the generated deadline
+calendars (`task-deadlines.nix` → `calendar-push.nix`).
 
-- [ ] Create the calendars in InfCloud (`https://cal.ironshark.org/infcloud/`).
-- [ ] Create an empty Google calendar for each one to publish.
-- [ ] Pair them in `tn.calendarPush.calendars`
-      (`Modules/Services/calendar-push.nix`). Google IDs: `calendar-push-login`,
-      or ask Claude to look them up on Akmon.
+- [ ] Delete the stale Radicale collections `classes` and `office-hours`, then
+      check the push journal shows only the two generated pairs.
+- [ ] Kvasir: `~/.local/share/calendars` and `~/.local/share/vdirsyncer` are
+      left from the retired khal sync and can go.
 
 ## Mail
 
