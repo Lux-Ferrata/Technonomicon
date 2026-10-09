@@ -111,7 +111,7 @@ Uses **home-manager** for the `xin` user, configured inline within each module v
 
 ### Secrets
 
-Encrypted with **sops-nix** + age keys. The secrets file is `_secrets.yaml` at the repo root. Three age keys are configured in `.sops.yaml`. The SSH host key at `/etc/ssh/ssh_host_ed25519_key` is used for decryption.
+Encrypted with **sops-nix** + age keys. The secrets file is `_secrets.yaml` at the repo root. Three age keys are configured in `.sops.yaml`. Each host decrypts with its SSH host key (Akmon's lives in `/persist/etc/ssh/`, since its root is wiped on boot). Service passwords are generated straight into the file.
 
 To edit secrets:
 ```bash
