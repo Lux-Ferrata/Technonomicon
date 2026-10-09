@@ -430,7 +430,6 @@
       wget
       glib
       unzip
-      nix-ld
       curl
       zoxide
       pciutils
