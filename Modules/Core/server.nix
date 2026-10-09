@@ -42,8 +42,11 @@
     boot.loader.systemd-boot.configurationLimit = 10;
 
     # generations (and the store paths only they use) go after 30 days, not
-    # Tn-nix's 6: the server upgrades itself daily, so a month of rollback
-    # targets stays on disk; the boot menu still shows only the newest 10
+    # Tn-nix's 6: a month of rollback targets (deploys and the weekly
+    # auto-upgrade) stays on disk; the boot menu still shows only the newest 10
     programs.nh.clean.extraArgs = lib.mkForce "--keep-since 30d --keep 3";
+    # the repo isn't checked out here (it isn't in the synced ~/Projects):
+    # nh uses the branch the auto-upgrade follows
+    programs.nh.flake = lib.mkForce "git+http://127.0.0.1:3000/xin/Technonomicon.git?ref=working";
   };
 }
