@@ -37,28 +37,15 @@ Removing friction is precisely what this section exists to prevent.
 
 ## Building and deploying
 
-`nh` is configured system-wide with the flake path pointing to this repo, so all rebuilds use the shorthand:
+Deploying goes through `deploy` (Tn-dev-client) on Kvasir. It asks for the sudo password up front, so xin runs it:
 
 ```bash
-# Rebuild and switch (preferred — handles diffs, GC, etc.)
-nh os switch
-
-# Rebuild for a specific host
-nh os switch --hostname Akmon
-nh os switch --hostname Kvasir
-
-# Test without switching boot entry
-nh os test
-
-# Build without activating
-nh os build
+deploy akmon     # evaluate here, build on Akmon, switch Akmon over ssh
+deploy kvasir    # build on Akmon (locally when it's away), switch Kvasir
+deploy all       # Akmon first; Kvasir only if Akmon succeeded
 ```
 
-Raw nixos-rebuild equivalents (if nh is unavailable):
-```bash
-sudo nixos-rebuild switch --flake /home/xin/Projects/Technonomicon#Akmon
-sudo nixos-rebuild switch --flake /home/xin/Projects/Technonomicon#Kvasir
-```
+Never switch a machine to the other's configuration: `nh os switch --hostname Akmon` run on Kvasir would do exactly that. A plain `nh os switch` means "this machine" (Kvasir's flake path is this repo; Akmon's is the Forgejo `working` branch). `nixos-rebuild` is blocked by a hook.
 
 Check a host builds without activating: `tn-check <akmon|kvasir|all>` (below). If you ever run a plain `nix build` locally, delete the `result` symlink afterwards.
 
