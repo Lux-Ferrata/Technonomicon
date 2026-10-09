@@ -725,8 +725,8 @@
               -- still reads as "one window at a time" like monocle did, but
               -- with the whole workspace laid out on a tape behind it.
               column_width = 1.0,
-              -- SUPER+SHIFT+W cycles this list with `colresize +conf`, so a
-              -- two-entry list is exactly a full-width <-> half-width toggle.
+              -- What `colresize +conf/-conf` steps through. No key uses it
+              -- now: SUPER+SHIFT+W sets every column at once (below).
               explicit_column_widths = "0.5, 1.0",
               fullscreen_on_one_column = true,
               -- Focusing a window (incl. from the SUPER+B pickers) scrolls
