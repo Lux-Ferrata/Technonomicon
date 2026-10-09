@@ -21,6 +21,9 @@
         BASE_URL    = "https://rss.ironshark.org/";
         POLLING_FREQUENCY = 30;      # minutes
         CLEANUP_ARCHIVE_READ_DAYS = 365;
+        # unread entries go 30 days after they arrive, so no backlog builds
+        # up; starred entries are never removed (star anything to keep)
+        CLEANUP_ARCHIVE_UNREAD_DAYS = 30;
       };
     };
 
