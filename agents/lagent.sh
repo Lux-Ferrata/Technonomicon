@@ -30,7 +30,8 @@ EOF
 }
 
 ask() {
-  local system="You are a careful senior software engineer. Be concise and concrete." max=2048
+  # OPTIND is global and read_doc calls ask repeatedly: start getopts afresh
+  local system="You are a careful senior software engineer. Be concise and concrete." max=2048 o OPTIND=1
   while getopts "s:n:" o; do
     case $o in s) system=$OPTARG ;; n) max=$OPTARG ;; *) usage ;; esac
   done
