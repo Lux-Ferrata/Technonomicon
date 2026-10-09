@@ -52,6 +52,7 @@
       self.nixosModules.Tn-karakeep
       self.nixosModules.Tn-mail-archive
       self.nixosModules.Tn-miniflux
+      self.nixosModules.Tn-atuin
       self.nixosModules.Tn-vaultwarden
       self.nixosModules.Tn-media
       self.nixosModules.Tn-nas

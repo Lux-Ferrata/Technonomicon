@@ -189,6 +189,31 @@
         esac
       '';
     };
+
+    # zoxide (`t`) learns directories per machine, so Akmon's terminals knew
+    # almost none. Each run copies the directories one side has and the
+    # other lacks (with their score), both ways; entries both know keep
+    # their own local ranking. zoxide-merge-in (Tn-shell) drops paths that
+    # don't exist on the receiving side.
+    zoxideSync = pkgs.writeShellApplication {
+      name = "zoxide-sync";
+      runtimeInputs = with pkgs; [ zoxide openssh gawk coreutils ];
+      text = ''
+        ssh -o BatchMode=yes -o ConnectTimeout=3 akmon true 2>/dev/null || exit 0
+        here=$(zoxide query -ls || true)
+        there=$(ssh akmon zoxide query -ls || true)
+        now=$(date +%s)
+        # lines of $1 whose path isn't in $2, as path|score|now
+        missing() {
+          awk -v now="$now" '
+            NR == FNR { sub(/^ *[0-9.]+ /, ""); have[$0] = 1; next }
+            { score = $1; sub(/^ *[0-9.]+ /, ""); if ($0 != "" && !($0 in have)) print $0 "|" score "|" now }
+          ' <(printf '%s\n' "$2") <(printf '%s\n' "$1")
+        }
+        missing "$here" "$there" | ssh akmon zoxide-merge-in
+        missing "$there" "$here" | zoxide-merge-in
+      '';
+    };
   in {
     # Chat stand-in for when Akmon is away: started by the first offline
     # chat request, stopped again after 10 idle minutes, so it costs no RAM
@@ -300,7 +325,16 @@
     };
 
     home-manager.users.xin = {
-      home.packages = [ akmonReady deploy tn-check grimoireCmds grimoireGit
+      systemd.user.services.zoxide-sync = {
+        Unit.Description = "Share zoxide directories with Akmon";
+        Service = { Type = "oneshot"; ExecStart = "${zoxideSync}/bin/zoxide-sync"; };
+      };
+      systemd.user.timers.zoxide-sync = {
+        Timer = { OnBootSec = "2min"; OnUnitActiveSec = "15min"; };
+        Install.WantedBy = [ "timers.target" ];
+      };
+
+      home.packages = [ akmonReady deploy tn-check grimoireCmds grimoireGit zoxideSync
         (pkgs.callPackage ./_stt.nix { })   # speech to text, Akmon's GPU or local CPU
         (pkgs.callPackage ./_tts.nix { })   # text to speech, local (Kokoro)
       ];
@@ -374,30 +408,6 @@
       };
 
       programs.fish.functions = {
-        # Queue a task for the overnight agents (Akmon, Tn-overnight):
-        #   overnight-add "Write tests for parser.py" [project|owner/repo] [details...]
-        # A name with a slash is a Forgejo repo (result: PR), a bare name a
-        # git project in ~/Projects (result: branch), none a research task.
-        overnight-add = ''
-          test (count $argv) -ge 1; or begin
-            echo "usage: overnight-add TITLE [PROJECT|OWNER/REPO] [DETAILS...]"; return 1
-          end
-          set -l body ""
-          if test (count $argv) -ge 2; and test -n "$argv[2]"
-            if string match -q "*/*" -- $argv[2]
-              set body "repo: $argv[2]"
-            else
-              set body "project: $argv[2]"
-            end
-          end
-          test (count $argv) -ge 3; and set body "$body"\n\n(string join " " -- $argv[3..])
-          set -l api https://git.ironshark.org/api/v1/repos/xin/agent-tasks
-          set -l tok (cat ~/.config/forgejo-token)
-          set -l label (curl -sf -H "Authorization: token $tok" "$api/labels" | jq '.[] | select(.name=="overnight") | .id')
-          jq -n --arg t "$argv[1]" --arg b (printf "%b" "$body") --argjson l "[$label]" '{title:$t, body:$b, labels:$l}' \
-            | curl -sf -X POST -H "Authorization: token $tok" -H "Content-Type: application/json" -d @- "$api/issues" \
-            | jq -r '"queued #\(.number): \(.html_url)"'
-        '';
         # Akmon's load (Tn-server-usage): btop live, `aku -s` one-screen
         # snapshot with pools + llama servers, `aku --week` the 7-day digest
         aku = "ssh -t akmon aku $argv";

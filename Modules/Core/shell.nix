@@ -7,6 +7,11 @@
       mode  = "0400";
     };
 
+    # git over ssh from any machine: Akmon's shells push with Kvasir's
+    # forwarded agent, but ssh still needs to trust the host first
+    programs.ssh.knownHosts."github.com".publicKey =
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
+
     # fish is the interactive/login shell; xonsh stays installed for scripting
     programs.fish.enable = true;
 
@@ -138,6 +143,40 @@
           };
 
           tnc = "cd ~/Projects/Technonomicon; and claude $argv";
+
+          # Taildrop files to the phone (tailscale is on every machine)
+          send = ''
+            test (count $argv) -gt 0; or begin; echo "usage: send <files...>"; return 1; end
+            tailscale file cp $argv pixel-10-pro-xl:
+          '';
+
+        # Queue a task for the overnight agents (Akmon, Tn-overnight), from either machine:
+        #   overnight-add "Write tests for parser.py" [project|owner/repo] [details...]
+        # A name with a slash is a Forgejo repo (result: PR), a bare name a
+        # git project in ~/Projects (result: branch), none a research task.
+        overnight-add = ''
+          test (count $argv) -ge 1; or begin
+            echo "usage: overnight-add TITLE [PROJECT|OWNER/REPO] [DETAILS...]"; return 1
+          end
+          set -l body ""
+          if test (count $argv) -ge 2; and test -n "$argv[2]"
+            if string match -q "*/*" -- $argv[2]
+              set body "repo: $argv[2]"
+            else
+              set body "project: $argv[2]"
+            end
+          end
+          test (count $argv) -ge 3; and set body "$body"\n\n(string join " " -- $argv[3..])
+          set -l api https://git.ironshark.org/api/v1/repos/xin/agent-tasks
+          # Kvasir: xin's own token; Akmon: the agents' token from sops
+          set -l tok (cat ~/.config/forgejo-token 2>/dev/null)
+          test -n "$tok"; or set tok (cat /run/secrets/forgejo-agent-token)
+          set -l label (curl -sf -H "Authorization: token $tok" "$api/labels" | jq '.[] | select(.name=="overnight") | .id')
+          jq -n --arg t "$argv[1]" --arg b (printf "%b" "$body") --argjson l "[$label]" '{title:$t, body:$b, labels:$l}' \
+            | curl -sf -X POST -H "Authorization: token $tok" -H "Content-Type: application/json" -d @- "$api/issues" \
+            | jq -r '"queued #\(.number): \(.html_url)"'
+        '';
+
           tnr = "cd ~/Projects/Technonomicon; and claude --resume $argv";
           grc = "cd ~/Grimoire; and claude $argv";
           grr = "cd ~/Grimoire; and claude --resume $argv";
@@ -248,6 +287,10 @@
           inline_height = 20;
           enter_accept  = false;
           update_check  = false;
+          # one history across machines, through Akmon (Tn-atuin)
+          sync_address   = "https://atuin.ironshark.org";
+          auto_sync      = true;
+          sync_frequency = "5m";
         };
       };
 
@@ -352,6 +395,21 @@
     };
 
     environment.systemPackages = with pkgs; [
+      # receiving end of Kvasir's zoxide-sync (Tn-dev-client): z-format lines
+      # ("path|rank|time") on stdin, only directories that exist here, merged
+      # into this machine's database
+      (writeShellApplication {
+        name = "zoxide-merge-in";
+        runtimeInputs = [ zoxide coreutils ];
+        text = ''
+          f=$(mktemp); trap 'rm -f "$f"' EXIT
+          while IFS= read -r l; do
+            [ -n "$l" ] && [ -d "''${l%%|*}" ] && printf '%s\n' "$l"
+          done > "$f"
+          [ -s "$f" ] || exit 0
+          _Z_DATA="$f" zoxide import z --merge
+        '';
+      })
       nix-your-shell
       uutils-coreutils   # prefixed (uutils-cp, …) so GNU coreutils stays the default
       gitFull

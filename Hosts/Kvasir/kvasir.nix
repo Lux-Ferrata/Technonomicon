@@ -122,10 +122,6 @@
             };
             Install.WantedBy = [ "default.target" ];
           };
-          programs.fish.functions.send = ''
-            test (count $argv) -gt 0; or begin; echo "usage: send <files...>"; return 1; end
-            tailscale file cp $argv pixel-10-pro-xl:
-          '';
         };
 
         home-manager = {
