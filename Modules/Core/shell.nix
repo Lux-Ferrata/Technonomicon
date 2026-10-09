@@ -170,7 +170,13 @@
           set -l tok (cat ~/.config/forgejo-token 2>/dev/null)
           test -n "$tok"; or set tok (cat /run/secrets/forgejo-agent-token)
           set -l label (curl -sf -H "Authorization: token $tok" "$api/labels" | jq '.[] | select(.name=="overnight") | .id')
-          jq -n --arg t "$argv[1]" --arg b (printf "%b" "$body") --argjson l "[$label]" '{title:$t, body:$b, labels:$l}' \
+          # the run only picks up issues that carry the label
+          test -n "$label"; or begin
+            echo "overnight-add: no 'overnight' label in xin/agent-tasks (or Forgejo unreachable)" >&2; return 1
+          end
+          # "$body" stays one argument; a bare (command) would split it at
+          # newlines, or vanish entirely when it is empty
+          jq -n --arg t "$argv[1]" --arg b "$body" --argjson l "[$label]" '{title:$t, body:$b, labels:$l}' \
             | curl -sf -X POST -H "Authorization: token $tok" -H "Content-Type: application/json" -d @- "$api/issues" \
             | jq -r '"queued #\(.number): \(.html_url)"'
         '';
