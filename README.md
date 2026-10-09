@@ -93,6 +93,8 @@ Hyprland (Lua config, permanent scrolling layout), Quickshell bar, Ghostty, gree
 |---|---|
 | `Super+Space` | App launcher (fuzzel) |
 | `Super+B` / `Super+Shift+B` / `Super+Alt+B` | Window picker: all windows / this workspace / pull one here from another workspace (fuzzel, fuzzy) |
+| `Super+Shift+W` | Every column on the workspace to half width, or all back to full |
+| 3 fingers | Sideways scrolls the window tape; up/down switches workspace |
 | `Super+Shift+H` | Snippet finder |
 | `Super+X` / `Super+Shift+X` | Clipboard history / quick-paste personal values |
 | `Super+G` / `Super+Shift+G` | Keyboard pointer (wl-kbptr) |
