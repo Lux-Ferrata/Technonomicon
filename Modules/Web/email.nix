@@ -44,16 +44,10 @@
       notmuch
       isync
       msmtp
-      # CalDAV calendar stack
-      khal
-      vdirsyncer
+      # Calendars live in Google; Thunderbird (below) keeps the offline copy
       calcurse
       calendarPushLogin
     ];
-
-    # Radicale on Akmon (https://cal.ironshark.org) <-> ~/.local/share/calendars,
-    # read and edited with khal. Two-way; offline edits go up next time.
-    sops.secrets.radicale-password = { owner = "xin"; };
 
     home-manager.users.xin = {
       # ── Thunderbird: mail, calendar, RSS ───────────────────────────────
