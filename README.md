@@ -196,7 +196,7 @@ Attachments sync over WebDAV: Zotero → Settings → Sync → Files → WebDAV,
 - Syncthing-Fork: the Grimoire share, opened in Obsidian
 - Super Productivity (WebDAV sync to Akmon)
 - Capy Reader → Miniflux
-- DAVx5 → `cal.ironshark.org`; Paperless and Karakeep apps
+- Paperless and Karakeep apps
 
 ## Roadmap
 
