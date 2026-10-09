@@ -10,8 +10,9 @@
 # under research/.
 #
 # Containment: every task gets a throwaway clone under $WORKROOT. Claude runs
-# without any push credential, forge token or ssh agent; this script does
-# the pushing, PRs and issue comments afterwards. Nothing is ever merged.
+# without any push credential, forge token or ssh agent (its unit can't see
+# /run/secrets at all); this script does the pushing, PRs and issue comments
+# afterwards. Nothing is ever merged.
 set -uo pipefail
 
 API=http://127.0.0.1:3000/api/v1
