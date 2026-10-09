@@ -137,11 +137,14 @@
 
         akmon_with_pw() {
           local drv out
+          # explicit returns: `deploy all` calls this inside `if`, where
+          # set -e is off, so a failed build would otherwise go on to switch
           step "Akmon: evaluating"
-          drv=$(nix eval --raw "$flake#nixosConfigurations.Akmon.config.system.build.toplevel.drvPath")
+          drv=$(nix eval --raw "$flake#nixosConfigurations.Akmon.config.system.build.toplevel.drvPath") || return 1
           step "Akmon: building on akmon"
-          nix copy --derivation --to ssh-ng://xin@akmon "$drv"
-          out=$(ssh xin@akmon "nix build --no-link --print-out-paths -L '$drv^out'")
+          nix copy --derivation --to ssh-ng://xin@akmon "$drv" || return 1
+          out=$(ssh xin@akmon "nix build --no-link --print-out-paths -L '$drv^out'") || return 1
+          [ -n "$out" ] || return 1
           if [ "$(ssh xin@akmon readlink -f /run/current-system)" = "$out" ]; then
             step "Akmon: already running this generation"; return 0
           fi
