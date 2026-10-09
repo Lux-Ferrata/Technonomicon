@@ -316,6 +316,11 @@
           "ltex.languageToolHttpServerUri"   = "https://lt.ironshark.org/";
           "ltex.language"                    = "auto";
 
+          # .qmd is the Quarto extension's own language (preview, render,
+          # cells). Stated outright: settings.json is merged, never pruned,
+          # so the old "markdown" association would otherwise stay in it.
+          "files.associations" = { "*.qmd" = "quarto"; };
+
           # Formatters are all already on PATH via systemPackages above.
           "editor.formatOnSave"      = true;
           "editor.wordWrap"          = "on";
