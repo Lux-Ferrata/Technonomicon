@@ -145,6 +145,30 @@
         exit 1
       '')
     ];
+    # Kvasir's Akmon helpers (Tn-dev-client), as they behave when already
+    # here, so the same commands work in an Akmon terminal: rb runs in
+    # place (direnv is already active), ak attaches the same shpool
+    # session locally, overnight-now starts the run directly. aku is a
+    # binary here already (Tn-server-usage).
+    home-manager.users.xin.programs.fish.functions = {
+      rb = ''
+        test (count $argv) -gt 0; or begin; echo "usage: rb <command...>"; return 1; end
+        $argv
+      '';
+      ak = ''
+        set -l name $argv[1]
+        set -l dir $HOME
+        set -l rel (string replace -- "$HOME/Projects/" "" $PWD)
+        if test "$rel" != "$PWD"
+          set dir $PWD
+          test -z "$name"; and set name (string split -m1 / -- $rel)[1]
+        end
+        test -z "$name"; and set name main
+        shpool attach -f -d $dir -- $name
+      '';
+      overnight-now = "systemctl --user start --no-block overnight; and echo 'started; follow with: journalctl --user -fu overnight'";
+    };
+
     systemd.packages           = [ pkgs.shpool ];
     systemd.user.sockets.shpool.wantedBy = [ "sockets.target" ];
     users.users.xin.linger     = true;
