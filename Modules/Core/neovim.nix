@@ -22,6 +22,8 @@
       # Grammar/style in LaTeX, Markdown and Typst, against Akmon's
       # LanguageTool (MPL-2.0)
       ltex-plus.vscode-ltex-plus
+      # flash.nvim-style jump labels (MIT), on `s` below
+      souravahmed.flash-vscode-latest
     ]) ++ [
       # Harpoon-style pinned files (MIT). Published only to the MS
       # marketplace, so it comes from that index rather than Open VSX --
@@ -33,9 +35,11 @@
       vscodevim.vim
       # Every extension below is MIT/BSD0 and Open-VSX-clean. Pylance is
       # deliberately absent: it is unfree and refuses to run on VSCodium.
+      # basedpyright is the pyright fork that rebuilds its extras (inlay
+      # hints, builtin docstrings, better auto-imports).
       mkhl.direnv
       jnoortheen.nix-ide
-      ms-pyright.pyright
+      detachhead.basedpyright
       ms-python.python
       ms-python.black-formatter
       charliermarsh.ruff
@@ -159,6 +163,10 @@
           }
           # F4 toggles the bottom terminal from anywhere, and back to the editor
           { key = "f4"; command = "workbench.action.terminal.toggleTerminal"; }
+          # While a flash jump is active, Escape and Backspace belong to it,
+          # not to VSCodeVim (user keybindings win over both extensions').
+          { key = "escape";    command = "flash-vscode.exit";      when = "flash-vscode.active"; }
+          { key = "backspace"; command = "flash-vscode.backspace"; when = "flash-vscode.active && editorTextFocus"; }
         ]
         # Alt+1..5 jumps to harpoon slot N from any mode, terminal included
         ++ map (n: {
@@ -168,6 +176,12 @@
 
         userSettings = {
           "workbench.colorTheme"           = "Nord";
+          # flash labels in Nord: red tags with dark text, matches in frost
+          "flash-vscode.labelBackgroundColor"         = "#BF616A";
+          "flash-vscode.labelColor"                   = "#2E3440";
+          "flash-vscode.labelQuestionBackgroundColor" = "#5E81AC";
+          "flash-vscode.matchColor"                   = "#88C0D0";
+
           # Nord's selected row in dropdowns (quick fix, completion, command
           # palette, context menus) is a barely-lighter grey. Make it solid
           # frost (nord8) with dark text (nord0) so the active item is obvious.
@@ -190,6 +204,52 @@
             "menu.selectionBackground"              = sel.bg;
             "menu.selectionForeground"              = sel.fg;
           };
+          # Tonsky/Alabaster-style syntax on Nord: highlight what reading
+          # needs, not grammar. Comments are bright (nord13, ~9:1) because
+          # they matter; strings, constants and *definitions* get a colour;
+          # keywords, calls, variables and punctuation are plain text. Later
+          # rules win, so the catch-all comes first and comments last.
+          "editor.tokenColorCustomizations"."[Nord]".textMateRules = let
+            rule = scope: settings: { inherit scope settings; };
+            plain = "#D8DEE9";  # nord4
+          in [
+            (rule [
+              "keyword" "storage" "keyword.operator" "punctuation"
+              "variable" "variable.language" "variable.parameter" "support"
+              "entity.name.function" "entity.name.type" "entity.name.tag"
+              "entity.name.namespace" "entity.other.attribute-name"
+              "entity.other.inherited-class" "meta.function-call"
+              "meta.decorator" "constant.other" "markup.inline.raw"
+            ] { foreground = plain; fontStyle = ""; })
+            (rule [ "string" "punctuation.definition.string" ]
+              { foreground = "#A3BE8C"; })  # nord14
+            (rule [
+              "constant.numeric" "constant.language" "constant.character"
+              "constant.other.color" "keyword.other.unit" "support.constant"
+            ] { foreground = "#B48EAD"; })  # nord15
+            (rule [
+              "meta.function entity.name.function"
+              "meta.function.definition entity.name.function"
+              "meta.definition.function entity.name.function"
+              "entity.name.function.definition" "entity.name.class"
+              "entity.name.type.class" "entity.name.type.struct"
+              "entity.name.type.enum" "entity.name.type.interface"
+              "entity.name.type.alias" "entity.name.type.typedef"
+              "entity.name.function.macro"
+              # nix: the name on the left of `=` is the definition
+              "entity.other.attribute-name.single.nix"
+              "entity.other.attribute-name.multipart.nix"
+              "entity.name.section"
+            ] { foreground = "#88C0D0"; })  # nord8
+            (rule [
+              "comment" "punctuation.definition.comment"
+              "string.quoted.docstring" "string.quoted.docstring punctuation"
+              "comment.block.documentation"
+            ] { foreground = "#EBCB8B"; fontStyle = ""; })  # nord13
+          ];
+          # Language servers' semantic tokens would repaint variables, types
+          # and calls in colour on top of the rules above.
+          "editor.semanticHighlighting.enabled" = false;
           "editor.fontFamily"              = "'JetBrains Mono', monospace";
           "editor.fontSize"                = 14;
           "editor.lineNumbers"             = "relative";
@@ -301,8 +361,11 @@
           "llama-vscode.rag_enabled"          = false;
 
           # ms-python.python would otherwise try to start Pylance; the
-          # standalone pyright extension provides the language server.
+          # basedpyright extension provides the language server.
           "python.languageServer" = "None";
+          # basedpyright's default "recommended" mode is far stricter than
+          # pyright; "standard" keeps the same diagnostics as before.
+          "basedpyright.analysis.typeCheckingMode" = "standard";
 
           # vim. Defaults that differ from real vim / the nvim config:
           # useSystemClipboard matches `set clipboard=unnamed`, hlsearch and
@@ -348,11 +411,11 @@
           "vim.iskeyword" = ''/\()"':,.;<>~!@#$%^&*|+=[]{}`?-_'';
           # Same for non-vim word ops: double-click, ctrl+arrow, ctrl+backspace
           "editor.wordSeparators" = ''/\()"':,.;<>~!@#$%^&*|+=[]{}`?-_'';
-          # LazyVim binds `s` to flash.nvim. easymotion's n-char search is the
-          # closest analogue: press s, type as many characters as you like,
-          # Enter, pick a label.
+          # `s` is flash, as in LazyVim: type as many characters as you like,
+          # labels follow every keystroke, press one to jump (Enter takes
+          # the nearest match). Visual `s` extends the selection instead.
           "vim.normalModeKeyBindingsNonRecursive" = [
-            { before = [ "s" ]; after = [ "<leader>" "<leader>" "/" ]; }
+            { before = [ "s" ]; commands = [ "flash-vscode.start" ]; }
             { before = [ "<Esc>" ]; after = [ "<Esc>" ]; commands = [ "workbench.action.files.saveFiles" ]; }
             # Harpoon, on LazyVim's harpoon-extra keys: H pins the file,
             # h picks from the pins, 1-5 jump straight to a slot, m edits
@@ -371,7 +434,7 @@
             { before = [ "<Esc>" ]; after = [ "<Esc>" ]; commands = [ "workbench.action.files.saveFiles" ]; }
           ];
           "vim.visualModeKeyBindingsNonRecursive" = [
-            { before = [ "s" ]; after = [ "<leader>" "<leader>" "/" ]; }
+            { before = [ "s" ]; commands = [ "flash-vscode.startSelection" ]; }
           ];
         };
       };
@@ -513,6 +576,7 @@
                 vim.g.nord_italic                 = true
                 vim.g.nord_bold                   = false
                 require("nord").set()
+                ${builtins.readFile ./_nord-alabaster.lua}
               end,
             }
           '';
