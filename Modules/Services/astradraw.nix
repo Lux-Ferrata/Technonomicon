@@ -6,84 +6,38 @@
   # sign-ups are off (one user).
   #
   # Upstream ships only container images, so the three app parts run under
-  # podman, pinned by digest; what they stand on is native:
-  #   app       127.0.0.1:3040  nginx serving the page            (/)
-  #   room      127.0.0.1:3041  socket.io relay for collaboration (/socket.io/)
-  #   api       127.0.0.1:3042  NestJS API                        (/api/v2/)
-  #                             host network: Postgres and MinIO are localhost-only
-  #   Postgres  the shared one: database and role astradraw, password over TCP
-  #   MinIO     127.0.0.1:9010  scenes and files on the fast pool; thumbnails
-  #                             are public-read, served at /s3/
+  # podman, pinned by digest:
+  #   app   127.0.0.1:3040  nginx serving the page            (/)
+  #   room  127.0.0.1:3041  socket.io relay for collaboration (/socket.io/)
+  #   api   127.0.0.1:3042  NestJS API                        (/api/v2/)
+  #                         host network, to reach Postgres on localhost
+  # Everything it stores (users, scenes, files, thumbnails) goes in the
+  # shared Postgres -- its keyv storage mode -- so the nightly dumps and
+  # snapshots cover it and there is no object store to run. (Upstream's
+  # default is MinIO, which nixpkgs refuses: abandoned, unfixed CVEs.)
   flake.nixosModules.Tn-astradraw = { config, lib, pkgs, ... }:
   let
-    url    = "https://draw.${config.tn.web.domain}";
-    ports  = { app = 3040; room = 3041; api = 3042; minio = 9010; };
-    s3     = "http://127.0.0.1:${toString ports.minio}";
-    bucket = "excalidraw";
-    srv    = "/srv/astradraw";
-    image  = name: digest: "docker.io/astradraw/${name}:1.0.1@sha256:${digest}";
-    ph     = config.sops.placeholder;
+    url   = "https://draw.${config.tn.web.domain}";
+    ports = { app = 3040; room = 3041; api = 3042; };
+    api   = "http://127.0.0.1:${toString ports.api}";
+    image = name: digest: "docker.io/astradraw/${name}:1.0.1@sha256:${digest}";
+    db    = "postgresql://astradraw:${config.sops.placeholder.astradraw-db-password}@127.0.0.1:5432/astradraw";
   in {
     sops.secrets = {
       astradraw-jwt-secret     = {};
       astradraw-db-password    = {};
-      astradraw-minio-password = {};
       astradraw-admin-password = {};
     };
-    sops.templates."astradraw-minio.env".content = ''
-      MINIO_ROOT_USER=astradraw
-      MINIO_ROOT_PASSWORD=${ph.astradraw-minio-password}
-    '';
     # read by podman (root) into the api's environment: the image runs as
     # uid 1000, which couldn't open root-only secret files
     sops.templates."astradraw-api.env".content = ''
-      DATABASE_URL=postgresql://astradraw:${ph.astradraw-db-password}@127.0.0.1:5432/astradraw?schema=public
-      S3_ACCESS_KEY=astradraw
-      S3_SECRET_KEY=${ph.astradraw-minio-password}
-      JWT_SECRET=${ph.astradraw-jwt-secret}
-      ADMIN_PASSWORD=${ph.astradraw-admin-password}
+      DATABASE_URL=${db}?schema=public
+      STORAGE_URI=${db}
+      JWT_SECRET=${config.sops.placeholder.astradraw-jwt-secret}
+      ADMIN_PASSWORD=${config.sops.placeholder.astradraw-admin-password}
     '';
 
-    # ── blobs: MinIO on the fast pool ────────────────────────────────────
-    services.minio = {
-      enable              = true;
-      listenAddress       = "127.0.0.1:${toString ports.minio}";
-      consoleAddress      = "127.0.0.1:${toString (ports.minio + 1)}";
-      browser             = false;
-      dataDir             = [ "${srv}/minio" ];
-      configDir           = "${srv}/minio-config";
-      certificatesDir     = "${srv}/minio-certs";
-      rootCredentialsFile = config.sops.templates."astradraw-minio.env".path;
-    };
-    systemd.services.minio.unitConfig.RequiresMountsFor = [ srv ];
-
-    # the bucket, thumbnails readable without a login (the page shows them
-    # as plain image URLs under /s3/)
-    systemd.services.astradraw-bucket = {
-      description = "Create AstraDraw's MinIO bucket";
-      after       = [ "minio.service" ];
-      requires    = [ "minio.service" ];
-      path        = [ pkgs.minio-client ];
-      environment.MC_CONFIG_DIR = "/run/astradraw-bucket";
-      serviceConfig = {
-        Type             = "oneshot";
-        RemainAfterExit  = true;
-        DynamicUser      = true;
-        RuntimeDirectory = "astradraw-bucket";
-        LoadCredential   = "minio:${config.sops.secrets.astradraw-minio-password.path}";
-        Restart          = "on-failure";   # MinIO may still be starting
-        RestartSec       = 10;
-      };
-      # the alias comes from the environment, so the key never hits argv
-      script = ''
-        MC_HOST_local="http://astradraw:$(cat "$CREDENTIALS_DIRECTORY/minio")@127.0.0.1:${toString ports.minio}"
-        export MC_HOST_local
-        mc mb --ignore-existing local/${bucket}
-        mc anonymous set download local/${bucket}/thumbnails
-      '';
-    };
-
-    # ── metadata: the shared Postgres ────────────────────────────────────
+    # ── the shared Postgres ─────────────────────────────────────────────
     services.postgresql = {
       ensureDatabases = [ "astradraw" ];
       ensureUsers     = [ { name = "astradraw"; ensureDBOwnership = true; } ];
@@ -135,11 +89,7 @@
           NODE_ENV            = "production";   # secure cookies (nginx serves https)
           PORT                = toString ports.api;
           APP_URL             = url;
-          STORAGE_BACKEND     = "s3";
-          S3_ENDPOINT         = s3;
-          S3_BUCKET           = bucket;
-          S3_REGION           = "us-east-1";
-          S3_FORCE_PATH_STYLE = "true";
+          STORAGE_BACKEND     = "keyv";
           ENABLE_LOCAL_AUTH   = "true";
           ENABLE_REGISTRATION = "false";
           ADMIN_USERNAME      = "xin";
@@ -151,17 +101,21 @@
       };
     };
     systemd.services.podman-astradraw-api = {
-      after    = [ "astradraw-db-password.service" "astradraw-bucket.service" ];
-      requires = [ "astradraw-db-password.service" "astradraw-bucket.service" ];
+      after    = [ "astradraw-db-password.service" ];
+      requires = [ "astradraw-db-password.service" ];
     };
 
     tn.web.vhosts.draw = {
       port = ports.app;
       locations = {
         "/socket.io/" = { proxyPass = "http://127.0.0.1:${toString ports.room}"; proxyWebsockets = true; };
-        "/api/v2/"    = { proxyPass = "http://127.0.0.1:${toString ports.api}"; };
-        # /s3/<bucket>/thumbnails/... -> MinIO, with /s3 stripped
-        "/s3/"        = { proxyPass = "${s3}/"; };
+        "/api/v2/"    = { proxyPass = api; };
+        # Scenes record their thumbnail as /s3/<bucket>/thumbnails/<id>.png,
+        # an object-store URL; with keyv storage the api serves it instead
+        # (the login cookie comes along with the image request)
+        "~ ^/s3/excalidraw/thumbnails/(?<scene>[A-Za-z0-9_-]+)\\.png$" = {
+          proxyPass = "${api}/api/v2/workspace/scenes/$scene/thumbnail";
+        };
       };
     };
   };
