@@ -108,8 +108,8 @@
       };
     };
     systemd.services.podman-astradraw-api = {
-      after    = [ "astradraw-db-password.service" ];
-      requires = [ "astradraw-db-password.service" ];
+      after    = [ "astradraw-db-setup.service" ];
+      requires = [ "astradraw-db-setup.service" ];
     };
 
     tn.web.vhosts.draw = {
