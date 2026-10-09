@@ -28,6 +28,9 @@ if [ "$KIND" = auto ]; then
   if [ "$(date +%u)" = 3 ]; then KIND=weekly; else KIND=nightly; fi
 fi
 WORK=$(mktemp -d)
+# everything logged here also reaches the job output (tee below), and the
+# failure mail is sent before exit, so nothing in it needs to outlive the run
+trap 'rm -rf "$WORK"' EXIT
 ROOTS="$HOME/gcroots"
 STAGE=startup
 
