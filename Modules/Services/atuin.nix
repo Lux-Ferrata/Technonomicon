@@ -11,8 +11,9 @@
       enable = true;
       host = "127.0.0.1";
       inherit port;
-      # only xin's account; open just long enough to `atuin register` it
-      openRegistration = true;
+      # xin's account exists (2026-10-08); a new machine logs in to it with
+      # `atuin login -u xin -k "$(atuin key)"` (password: sops atuin-password)
+      openRegistration = false;
       database.createLocally = true;
     };
 
