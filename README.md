@@ -125,7 +125,9 @@ Every service is `<name>.ironshark.org`: an A record pointing at Akmon's tailnet
 | `dav.` | WebDAV (Zotero attachments, Super Productivity sync) |
 | `vault.` | Vaultwarden (nightly backup of the Bitwarden cloud vault) |
 | `office.` | OpenCloud + Collabora |
-| `media.`, `audiobooks.`, `torrent.` | Media stack (placeholder layout, see TODO.md) |
+| `media.`, `audiobooks.`, `yt.`, `torrent.` | Media stack: Jellyfin, Audiobookshelf, Pinchflat, qBittorrent (placeholder layout, see TODO.md) |
+| `mail.` | IMAP of the mail archive (Thunderbird) |
+| `admin.` | Cockpit (VMs, containers) |
 | `sync.` | Syncthing GUI (Akmon is the hub) |
 | `metrics.` | Grafana |
 
