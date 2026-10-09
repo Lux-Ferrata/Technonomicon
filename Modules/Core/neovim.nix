@@ -205,8 +205,9 @@
             "menu.selectionForeground"              = sel.fg;
           };
           # Tonsky/Alabaster-style syntax on Nord: highlight what reading
-          # needs, not grammar. Comments are bright (nord13, ~9:1) because
-          # they matter; strings, constants and *definitions* get a colour;
+          # needs, not grammar. Comments are bright gold (~7:1) because
+          # they matter; strings, constants and *definitions* get a saturated
+          # Nord hue (all >5:1 on nord0);
           # keywords, calls, variables and punctuation are plain text. Later
           # rules win, so the catch-all comes first and comments last.
           "editor.tokenColorCustomizations"."[Nord]".textMateRules = let
@@ -222,11 +223,11 @@
               "meta.decorator" "constant.other" "markup.inline.raw"
             ] { foreground = plain; fontStyle = ""; })
             (rule [ "string" "punctuation.definition.string" ]
-              { foreground = "#A3BE8C"; })  # nord14
+              { foreground = "#AADA81"; })  # nord14, saturated
             (rule [
               "constant.numeric" "constant.language" "constant.character"
               "constant.other.color" "keyword.other.unit" "support.constant"
-            ] { foreground = "#B48EAD"; })  # nord15
+            ] { foreground = "#E198D4"; })  # nord15, saturated
             (rule [
               "meta.function entity.name.function"
               "meta.function.definition entity.name.function"
@@ -240,12 +241,12 @@
               "entity.other.attribute-name.single.nix"
               "entity.other.attribute-name.multipart.nix"
               "entity.name.section"
-            ] { foreground = "#88C0D0"; })  # nord8
+            ] { foreground = "#7BD2EA"; })  # nord8, saturated
             (rule [
               "comment" "punctuation.definition.comment"
               "string.quoted.docstring" "string.quoted.docstring punctuation"
               "comment.block.documentation"
-            ] { foreground = "#EBCB8B"; fontStyle = ""; })  # nord13
+            ] { foreground = "#F1B855"; fontStyle = ""; })  # gold, nord13's hue deepened
           ];
           # Language servers' semantic tokens would repaint variables, types
           # and calls in colour on top of the rules above.
@@ -445,15 +446,16 @@
     # prepending its own. `--new-window` keeps it from handing the path to
     # an already-open window. When `akmon-ready` (Tn-dev-client) says the
     # project can run on Akmon, the window opens there over Remote-SSH --
-    # same path on both machines -- otherwise it opens locally.
-    home-manager.users.xin.home.packages = [
-      (pkgs.writeShellScriptBin "eo" ''
+    # same path on both machines -- otherwise it opens locally. `eol` is the
+    # same thing forced local, even when Akmon is up.
+    home-manager.users.xin.home.packages = let
+      eo = pkgs.writeShellScriptBin "eo" ''
         code=${pkgs.vscodium}/bin/codium
         # the CLI half of `codium` warns about the wrapper's Wayland flags,
         # which are meant for the window; drop just those lines
         exec 2> >(grep -v "is not in the list of known options" >&2)
         [ "$#" -eq 0 ] && set -- .
-        if command -v akmon-ready >/dev/null && akmon-ready "$1"; then
+        if [ -z "''${EO_LOCAL:-}" ] && command -v akmon-ready >/dev/null && akmon-ready "$1"; then
           args=()
           for p in "$@"; do
             p=$(realpath -m -- "$p")
@@ -463,6 +465,11 @@
           exec "$code" --new-window "''${args[@]}"
         fi
         exec "$code" --new-window "$@"
+      '';
+    in [
+      eo
+      (pkgs.writeShellScriptBin "eol" ''
+        EO_LOCAL=1 exec ${eo}/bin/eo "$@"
       '')
     ];
 

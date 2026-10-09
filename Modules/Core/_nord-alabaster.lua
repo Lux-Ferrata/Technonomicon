@@ -1,13 +1,13 @@
 -- Tonsky/Alabaster-style syntax on top of nord.nvim, matching VSCodium's
--- tokenColorCustomizations (Tn-neovim): comments bright (nord13), strings,
+-- tokenColorCustomizations (Tn-neovim): comments bright gold, strings,
 -- constants and definitions coloured, everything else plain text. Loaded
 -- after require("nord").set() by both LazyVim and the server rescue nvim.
 local function nord_alabaster()
   local plain   = "#D8DEE9" -- nord4
-  local comment = "#EBCB8B" -- nord13
-  local string  = "#A3BE8C" -- nord14
-  local const   = "#B48EAD" -- nord15
-  local def     = "#88C0D0" -- nord8
+  local comment = "#F1B855" -- gold, nord13's hue deepened
+  local string  = "#AADA81" -- nord14, saturated
+  local const   = "#E198D4" -- nord15, saturated
+  local def     = "#7BD2EA" -- nord8, saturated
 
   local groups = {
     [plain] = {

@@ -15,7 +15,6 @@
         syncthing    = icon "syncthing.svg"        "https://api.iconify.design/simple-icons:syncthing.svg?width=128&height=128"      "1qkwh9029zslazknaacvpjvzs2dgblizf9k89pc8rhjr2hbzq80f";
         exercism     = icon "exercism.svg"         "https://api.iconify.design/simple-icons:exercism.svg?width=128&height=128"       "1hcb0ny4yc45g50srmzzni1pxlkbbivghkknrzfsgpp1dsy1gpw7";
         bitwarden    = icon "bitwarden.svg"        "https://api.iconify.design/simple-icons:bitwarden.svg?width=128&height=128"      "1d8djqdz0zar6p7nm2pvfkqq1xkd8fd0sx2q3wqmh72qwjbhpwx5";
-        habitica     = icon "dragon-head.svg"      "https://api.iconify.design/game-icons:dragon-head.svg?width=128&height=128"      "0k28xw0vhinaa1320nvgfmadlp9mc7svvs02isrj1m965ygb9bjg";
         amazon       = pkgs.fetchurl { name = "amazon.svg";  sha256 = "1xc3qdzp1gzhg8py1j9mzbj0ik9g66l35rfrby7d5pb5wi881kb9"; url = "https://api.iconify.design/simple-icons:amazon.svg?width=128&height=128"; };
         weather      = pkgs.fetchurl { name = "weather.svg"; sha256 = "1kj75df6j02phrbb6ziqihvc5rhxfc5p1z0gakjzqm72g8qvwn4d"; url = "https://api.iconify.design/simple-icons:theweatherchannel.svg?width=128&height=128"; };
         pima         = pkgs.fetchurl { name = "pima.svg";    sha256 = "0d0kw117lp3mna02zl61pzqa9khj9p6sgdk1pmd6h8hy7yaviksz"; url = "https://api.iconify.design/mdi:school.svg?width=128&height=128"; };
@@ -237,15 +236,6 @@
         categories = [ "Application" "Network" ];
       })
 
-      (pkgs.makeDesktopItem {
-        name = "habitica";
-        desktopName = "Habitica";
-        exec = "${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized";
-        icon = "${icons.habitica}";
-        terminal = false;
-        keywords = [ "habitica" "habits" "todo" "tasks" "rpg" ];
-        categories = [ "Application" "Network" ];
-      })
 
       (pkgs.makeDesktopItem {
         name = "amazon";

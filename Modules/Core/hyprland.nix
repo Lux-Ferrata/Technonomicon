@@ -563,8 +563,8 @@
           })
 
           hl.window_rule({
-            name      = "habitica-workspace",
-            match     = { class = "brave-habitica.com__-Default" },
+            name      = "super-productivity-workspace",
+            match     = { class = "superproductivity" },
             workspace = 9,
           })
 
@@ -656,7 +656,7 @@
             hl.exec_cmd("fcitx5 -d --replace")
             hl.exec_cmd("[workspace 8 silent] obsidian")
             -- hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
-            hl.exec_cmd("[workspace 9 silent] ${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized")
+            hl.exec_cmd("[workspace 9 silent] superproductivity")
           end)
 
           -- Trackpad gestures. Three fingers sideways pans the scrolling
