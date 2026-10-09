@@ -123,7 +123,8 @@ Every service is `<name>.ironshark.org`: an A record pointing at Akmon's tailnet
 | `docs.` | Paperless-ngx |
 | `photos.` | Immich (search by description, faces, text) |
 | `keep.` | Karakeep (bookmarks with archives, tags from the local model) |
-| `cal.` | Radicale + InfCloud; staging for calendars pushed to Google Calendar |
+| `cal.` | Radicale: staging for the generated calendars pushed to Google Calendar |
+| `draw.` | AstraDraw (Excalidraw with workspaces); launcher "Flowchart" |
 | `dav.` | WebDAV (Zotero attachments, Super Productivity sync) |
 | `vault.` | Vaultwarden (nightly backup of the Bitwarden cloud vault) |
 | `office.` | OpenCloud + Collabora |
