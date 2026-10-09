@@ -23,8 +23,8 @@
   ;; Nav & utility
   spc-nav  (tap-hold 200 350 spc (layer-toggle nav))
   bspc-nav (tap-hold 200 350 bspc (layer-toggle nav))
-  mouse    (multi lctl lalt lmet lsft spc)
-  mouse-2  (multi lctl lalt lmet lsft ret)
+  mouse    (multi lmet g)          ;; Super+G: keyboard pointer, hint mode (wl-kbptr)
+  mouse-2  (multi lmet lsft g)     ;; Super+Shift+G: keyboard pointer, grid mode
 
   hrm-f    (tap-hold 200 250 f lsft)
   hrm-p    (tap-hold 200 250 p lsft)
