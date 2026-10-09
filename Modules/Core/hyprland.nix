@@ -1096,7 +1096,9 @@
 
                       Process {
                           id: netStatusProc
-                          command: ["sh", "-c", "${pkgs.networkmanager}/bin/nmcli -t -f TYPE,STATE dev | grep ':connected' | head -1"]
+                          // exactly "connected": tun/loopback/bridge are always
+                          // "connected (externally)", which would hide a dropped Wi-Fi
+                          command: ["sh", "-c", "${pkgs.networkmanager}/bin/nmcli -t -f TYPE,STATE dev | ${pkgs.gawk}/bin/awk -F: '$2 == \"connected\" { print; exit }'"]
                           running: true
                           property bool gotData: false
                           onRunningChanged: if (running) gotData = false
