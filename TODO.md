@@ -36,8 +36,6 @@ calendars (`task-deadlines.nix` → `calendar-push.nix`).
       (`Modules/Web/email.nix`) and to the archive (`tn.mailArchive.accounts`,
       `Modules/Services/mail-archive.nix`). Microsoft 365 / Google schools
       usually need OAuth2 (sasl-xoauth2 + oama) instead of a password.
-- [ ] Thunderbird calendars: File > New > Calendar > On the Network,
-      `https://cal.ironshark.org/` (Radicale) and Google.
 
 ## Client setup (manual, any time)
 
