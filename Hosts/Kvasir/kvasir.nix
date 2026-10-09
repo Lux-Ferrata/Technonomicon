@@ -133,7 +133,6 @@
               "uinput"
               "input"
               "dialout"
-              "plugdev"
               "networkmanager"
             ];
           };
