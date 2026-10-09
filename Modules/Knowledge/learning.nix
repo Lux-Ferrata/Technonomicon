@@ -55,10 +55,12 @@
         name = "javelin-udev-rules";
         text = ''
           # RP2040 Bootloader (for flashing firmware)
-      SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="0003", TAG+="uaccess"
+          SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="0003", TAG+="uaccess"
 
-      # Generic HID (for Javelin WebHID Tools)
-      KERNEL=="hidraw*", SUBSYSTEM=="hidraw", TAG+="uaccess"
+          # Javelin's HID interface (WebHID tools), for Javelin boards only: not
+          # every keyboard and security key. Javelin's product IDs are 0x40xx;
+          # the vendor ID depends on the board (javelin-steno-pico config/*.h).
+          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="9000|feed|4653|8d1d|7fce|2e8a", ATTRS{idProduct}=="40??", TAG+="uaccess"
         '';
         destination = "/etc/udev/rules.d/70-javelin.rules";
       })
