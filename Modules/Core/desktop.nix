@@ -215,10 +215,7 @@
         "org/gtk/gtk4/settings/file-chooser" = {
           show-hidden = false;
         };
-        "org/virt-manager/virt-manager/connections" = {
-          autoconnect = [ "qemu:///system" ];
-          uris = [ "qemu:///system" ];
-        };
+        # virt-manager's connections are set in Tn-virtualization
       };
 
       gtk = {
