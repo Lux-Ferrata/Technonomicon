@@ -60,6 +60,7 @@
       self.nixosModules.Tn-torrent
       self.nixosModules.Tn-hosting
       self.nixosModules.Tn-office
+      self.nixosModules.Tn-astradraw
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
