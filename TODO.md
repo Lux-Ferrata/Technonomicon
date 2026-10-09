@@ -62,6 +62,8 @@ calendars (`task-deadlines.nix` → `calendar-push.nix`).
       `tn.torrent.vpnInterface = "tailscale0"`.
 - [ ] DAS: once bought, create the `bulk` pool and set `tn.nas.bulkPool`.
 - [ ] Thunderbird: drop the Feeds account once Miniflux has taken over.
+- [ ] AstraDraw (`draw.`, launcher "Flowchart"): first login as `xin`,
+      password sops `astradraw-admin-password`.
 
 ## Later
 
