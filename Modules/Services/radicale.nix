@@ -35,8 +35,7 @@
 
     tn.web.vhosts.cal = {
       inherit port;
-      maxBody   = "50m";   # whole-calendar .ics imports
-      locations."/infcloud/".alias = "${infcloud}/";
+      maxBody   = "50m";   # whole-calendar .ics uploads
     };
   };
 }
