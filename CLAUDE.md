@@ -68,35 +68,42 @@ The flake uses `flake-parts` + `import-tree` to auto-import all `.nix` files und
 
 ### Module naming convention
 
-All shared modules are prefixed `Tn-` (Technonomicon):
+All shared modules are prefixed `Tn-` (Technonomicon); each host picks the ones it wants.
 
 **Core/**
-- `Tn-desktop` — wayland/wm, greetd, kanata, pipewire, fonts, dconf, GTK theme
-- `Tn-hyprland` — Hyprland WM, Quickshell bar, hypridle, hyprlock, keybindings, Ghostty terminal config (no multiplexer)
-- `Tn-neovim` — LazyVim + Neovim, dev tooling (LSPs, compilers, formatters), VSCodium, Yazi
-- `Tn-shell` — fish (interactive/login), xonsh (scripting only), atuin, carapace, zoxide (`t`/`ti`), direnv, starship, git, core CLI tools
-- `Tn-network` — networking
-- `Tn-nix` — nix daemon settings, nh, nix-index/comma
-- `Tn-sound` — PipeWire / audio
-- `Tn-theme` — colorscheme settings
-- `Tn-utf` — Unicode / input method
-- `Tn-virtualization` — libvirt / QEMU
+- `Tn-desktop` — greetd, kanata, PipeWire, fonts, portals, GTK/Qt theme, Plover, Steam
+- `Tn-hyprland` — Hyprland (Lua config, scrolling layout), Quickshell bar and notifications, hypridle/hyprlock, pickers and keybindings, Ghostty
+- `Tn-neovim` — LazyVim, VSCodium (primary editor, on trial) and `eo`, Yazi
+- `Tn-devtools` — compilers, language servers, formatters, debuggers, aider (both hosts)
+- `Tn-shell` — fish, xonsh (scripting only), atuin, carapace, zoxide (`t`/`ti`), direnv, starship, git, CLI tools (both hosts)
+- `Tn-network`, `Tn-nix` (nix settings, nh, nix-index), `Tn-sound`, `Tn-theme`, `Tn-utf` (locales, fcitx5), `Tn-print`, `Tn-virtualization`, `Tn-user-settings` (the `tn.*` options)
+- `Tn-dev-client` / `Tn-dev-host` — "Akmon is the dev box": `eo`, `rb`, `ak`, Syncthing, LLM endpoints with offline fallbacks, `deploy`, `tn-check`
+- `Tn-build-client` / `Tn-build-host` — remote builds and Akmon's signed cache (harmonia)
+- `Tn-server`, `Tn-server-*`, `Tn-console-kanata` — Akmon's base: tailscale and sshd, mail relay, alerts (`tn-issue`), metrics, report mails, Claude's health review, `aku`, a rescue nvim, the console keyboard
+- `Tn-forgejo` (git + CI runner), `Tn-overnight` (overnight agents)
+
+**Services/** — Akmon's web services. Each sets `tn.web.vhosts.<name>`, which gives it `https://<name>.ironshark.org` (tailnet-only) and a DNS record. `Tn-server-web` provides nginx, the wildcard cert and the shared Postgres; the rest are one module per service (Grimoire, LanguageTool, Radicale + calendar push + task deadlines, WebDAV, Paperless, Immich, Karakeep, mail archive, Miniflux, Atuin, SearXNG, Vaultwarden, media, NAS, torrent, hosting, office, AstraDraw).
 
 **Knowledge/**
-- `Tn-learning` — hledger (+ ui/web), fava, beancount, visidata, datasette, anki, zotero, foliate, wtfutil
-- `Tn-mind` — Obsidian, pomodoro-gtk
-- `Tn-pdf` — sioyek (PDF viewer with inverse search to Neovim)
-- `Tn-science` — julia, R, octave, maxima, gnuplot, gap, sage, lean4, quarto
+- `Tn-learning` — hledger, fava, beancount, gnucash, visidata, anki, zotero (pinned input), foliate, rnote
+- `Tn-mind` — Obsidian, Super Productivity, pomodoro
+- `Tn-pdf` — sioyek (inverse search into VSCodium)
+- `Tn-science` — julia, R, octave, maxima, gnuplot, gap, sage, lean4, quarto, geogebra
+- `Tn-scan` — scanner, `scan` / `multi-scan`, `paperless-add`
+- `Tn-provenance` — signed, timestamped snapshots of flagged Grimoire notes
 
 **Web/**
-- `Tn-web-browsers` — Brave
-- `Tn-web-apps` — PWA desktop entries (Gmail, Calendar, etc.)
-- `Tn-communication` — Discord
-- `Tn-email` — aerc, notmuch, isync, msmtp, khal, vdirsyncer, calcurse
-- `Tn-games` — gaming tools
+- `Tn-web-browsers` — Brave (wrapper, flags, policy)
+- `Tn-web-apps` — PWA launchers (icons vendored in `Modules/Web/icons/`)
+- `Tn-communication` — Discord (flatpak), NewsFlash
+- `Tn-email` — Thunderbird (mail and the Google calendars), aerc/notmuch/isync/msmtp, `calendar-push-login`
+- `Tn-gdrive` — rclone `gdrive:` and the `~/GDrive` mount
+- `Tn-games` — games
 
 **Art/**
-- `Tn-art` — creative tools; contains local derivations for PureRef and Allusion (proprietary AppImage-style packages not in nixpkgs)
+- `Tn-art` — creative tools; a local Allusion derivation (AppImage, not in nixpkgs)
+
+Akmon's own files under `Hosts/Akmon/`: disko layout, impermanence (anything not under `/persist`, `/nix` or a data pool is gone after a reboot) and the weekly auto-upgrade.
 
 ### Home management
 
