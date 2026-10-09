@@ -122,9 +122,9 @@
       style  = "adwaita-dark";
     };
 
+    # Serial devices (steno machines, boards) stay root:dialout 0660; xin is
+    # in dialout, so they needn't be open to everyone.
     services.udev.extraRules = ''
-      KERNEL=="ttyACM[0-9]*", MODE="0666"
-      KERNEL=="ttyUSB[0-9]*", MODE="0666"
       KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
     '';
 
