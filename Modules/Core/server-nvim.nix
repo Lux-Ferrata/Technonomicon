@@ -28,6 +28,7 @@
           vim.g.nord_italic   = true
           vim.g.nord_bold     = false
           require("nord").set()
+          ${builtins.readFile ./_nord-alabaster.lua}
 
           -- same `s` jump as LazyVim (no treesitter here, so no `S`)
           require("flash").setup()
