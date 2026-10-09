@@ -121,12 +121,6 @@
       pdf2svg
       # PDF Tooling
       poppler
-      # nvim's notebook/image plugins (molten, image.nvim)
-      python3Packages.pynvim
-      python3Packages.cairosvg
-      mcpy
-      # image.nvim — provides the magick luarock via nix instead of luarocks
-      luajitPackages.magick
     ];
 
     # VSCodium; `eo` opens projects on Akmon over Open Remote - SSH whenever
