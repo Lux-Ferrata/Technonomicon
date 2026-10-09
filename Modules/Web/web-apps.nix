@@ -1,54 +1,55 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-web-apps = { pkgs, config, lib, ... }:
     let
-      icon = name: url: sha256: pkgs.fetchurl { inherit name url sha256; };
-      icons = {
-        khanAcademy  = icon "khanacademy.svg"    "https://api.iconify.design/simple-icons:khanacademy.svg?width=128&height=128"     "06azkd71q5f9ibc20l33kvn8vx8zkx4b2z3f9c26zd6kk45m69lc";
-        odinProject  = icon "theodinproject.svg" "https://api.iconify.design/simple-icons:theodinproject.svg?width=128&height=128"   "1rqwdrn08974kamd7p044hl0slg8mdiaxcldpmj5dpmy93kpwccz";
-        youtube      = icon "youtube-icon.svg"   "https://api.iconify.design/logos:youtube-icon.svg?width=128&height=128"            "000v6w4apb6dkwhk4c0qwsx06qnax6hs4nyr16jp9x0f6b15qr2p";
-        gemini       = icon "google-gemini.svg"  "https://api.iconify.design/logos:google-gemini.svg?width=128&height=128"           "02jq5rynxlca6h4pxp0n3ybzlw21yzgc62jg5ghdg11wwddrwxi6";
-        stenoJig     = icon "keyboard.svg"       "https://api.iconify.design/tabler:keyboard.svg?width=128&height=128"               "062f03p0fnp1biyig9c3rlalzk37j52qf297484hjmrsfwmg51a6";
-        typeyType    = icon "typey-type.png"     "https://didoesdigital.com/typey-type/favicon-192x192.png"                          "0736jdsqnj0pj8m1gpqpqrhwgbf8diz6zwn2qp8xcd7rm8f3s54j";
-        gmail        = pkgs.fetchurl { name = "gmail.svg"; sha256 = "01gvhxl2wxjmfj5fhdmr3l12ydlmkiqna5snpgk1nd4wjgzrs4ny"; url = "https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg"; };
-        calendar     = icon "google-calendar.svg"  "https://api.iconify.design/logos:google-calendar.svg?width=128&height=128"       "sha256-v4oOkriF27KZ5wcnDKow9Xs5vvOHXntKqaMRWbZkwJw="; # 2026-10-05: upstream iconify SVG changed, hash refreshed
-        toggl        = icon "toggl.svg"            "https://api.iconify.design/simple-icons:toggl.svg?width=128&height=128"          "1ljdq4vgzzxiflpjn4ag6yyzlh27fx2ljh41lyyw4zyanlq5ygwd";
-        syncthing    = icon "syncthing.svg"        "https://api.iconify.design/simple-icons:syncthing.svg?width=128&height=128"      "1qkwh9029zslazknaacvpjvzs2dgblizf9k89pc8rhjr2hbzq80f";
-        exercism     = icon "exercism.svg"         "https://api.iconify.design/simple-icons:exercism.svg?width=128&height=128"       "1hcb0ny4yc45g50srmzzni1pxlkbbivghkknrzfsgpp1dsy1gpw7";
-        bitwarden    = icon "bitwarden.svg"        "https://api.iconify.design/simple-icons:bitwarden.svg?width=128&height=128"      "1d8djqdz0zar6p7nm2pvfkqq1xkd8fd0sx2q3wqmh72qwjbhpwx5";
-        amazon       = pkgs.fetchurl { name = "amazon.svg";  sha256 = "1xc3qdzp1gzhg8py1j9mzbj0ik9g66l35rfrby7d5pb5wi881kb9"; url = "https://api.iconify.design/simple-icons:amazon.svg?width=128&height=128"; };
-        weather      = pkgs.fetchurl { name = "weather.svg"; sha256 = "1kj75df6j02phrbb6ziqihvc5rhxfc5p1z0gakjzqm72g8qvwn4d"; url = "https://api.iconify.design/simple-icons:theweatherchannel.svg?width=128&height=128"; };
-        pima         = pkgs.fetchurl { name = "pima.svg";    sha256 = "0d0kw117lp3mna02zl61pzqa9khj9p6sgdk1pmd6h8hy7yaviksz"; url = "https://api.iconify.design/mdi:school.svg?width=128&height=128"; };
-        d2l          = pkgs.fetchurl { name = "d2l.svg";     sha256 = "0sz6pkijy4gfky564d8c62829zj3vpc8060ydgvcwa9ff237b48c"; url = "https://api.iconify.design/mdi:book-education.svg?width=128&height=128"; };
-        ogs          = pkgs.fetchurl { name = "ogs.svg";     sha256 = "1v6fgy5d18fkaz5sv9h71kq91xmw3s1mpcyw2g2lrbd8v041cz6d"; url = "https://api.iconify.design/simple-icons:go.svg?width=128&height=128"; };
-        tsumego      = pkgs.fetchurl { name = "tsumego.svg"; sha256 = "0hcldvigsh69fp1yvgjsmchxk9fj38rzfczczw60pf0h0373c1xa"; url = "https://api.iconify.design/game-icons:stone-pile.svg?width=128&height=128"; };
-        kifubara     = pkgs.fetchurl { name = "kifubara.svg"; sha256 = "0xh0lqfyvyn1bfa4k5515dq0p1z57zii66154xfa5f3lnqp58g9m"; url = "https://api.iconify.design/game-icons:abstract-119.svg?width=128&height=128"; };
-        googleDrive  = icon "google-drive.svg"  "https://api.iconify.design/logos:google-drive.svg?width=128&height=128"             "sha256-rYGQpNUdENre/ZwZbAiOxihlTNtXUR4Cf7lvbEn5c2k="; # 2026-10-05: upstream iconify SVG changed, hash refreshed
-        googleDocs   = icon "google-docs.svg"   "https://api.iconify.design/simple-icons:googledocs.svg?width=128&height=128"      "1jr8vcbz578z02zgc9cq6ss51x4dh8ckv8sg7kf4cdcxwvx7pnan";
-        blog         = icon "blog.svg"          "https://api.iconify.design/mdi:post-outline.svg?width=128&height=128"               "0vfzawg165h3gdi5dkpzpwq551nj8y4l0ywsmj9mnbh1m719jwpi";
-        desmos       = icon "desmos.svg"        "https://api.iconify.design/mdi:function-variant.svg?width=128&height=128"           "0njbnvs1p61vzr6k7v2vpdlf8yj76wy0yb0cf6zk664kbgdhbr6n";
-        youtubeMusic = icon "youtube-music.svg" "https://api.iconify.design/simple-icons:youtubemusic.svg?width=128&height=128"    "0cyf745q476fxyly70cwy79rqvl3py0adxyarrwh16gb2gma9s2p";
-        matplotlib   = icon "matplotlib.svg"    "https://api.iconify.design/devicon:matplotlib.svg?width=128&height=128"            "083lrvy463lz45xzcch6hbiyfh0pylgs754xw0fj59gkz7f2zmx5";
-        va           = icon "flag.svg"          "https://api.iconify.design/mdi:flag.svg?width=128&height=128"                      "03s1p7fhq09lni74di1zychq4xlw6p4zdkx8vmnmbyihh7a5bgms";
-        wifiLogin    = icon "wifi-lock.svg"     "https://api.iconify.design/mdi:wifi-lock.svg?width=128&height=128"                 "0shj7zfdc5bmzi1ngniwm8ws15rgp1ihla17x5n2md96g73n6bsj";
+      # Launcher icons, kept in the repo (icons/SOURCES says where each came
+      # from): fetched and pinned by hash, they broke the build whenever
+      # upstream redrew an SVG.
+      icons = lib.mapAttrs (_: file: ./icons + "/${file}") {
+        khanAcademy    = "khanacademy.svg";
+        odinProject    = "theodinproject.svg";
+        youtube        = "youtube-icon.svg";
+        gemini         = "google-gemini.svg";
+        stenoJig       = "keyboard.svg";
+        typeyType      = "typey-type.png";
+        gmail          = "gmail.svg";
+        calendar       = "google-calendar.svg";
+        toggl          = "toggl.svg";
+        syncthing      = "syncthing.svg";
+        exercism       = "exercism.svg";
+        amazon         = "amazon.svg";
+        weather        = "weather.svg";
+        pima           = "pima.svg";
+        d2l            = "d2l.svg";
+        ogs            = "ogs.svg";
+        tsumego        = "tsumego.svg";
+        kifubara       = "kifubara.svg";
+        googleDrive    = "google-drive.svg";
+        googleDocs     = "google-docs.svg";
+        blog           = "blog.svg";
+        desmos         = "desmos.svg";
+        youtubeMusic   = "youtube-music.svg";
+        matplotlib     = "matplotlib.svg";
+        va             = "flag.svg";
+        wifiLogin      = "wifi-lock.svg";
         # Akmon's services (*.ironshark.org)
-        immich         = icon "immich.svg"         "https://api.iconify.design/simple-icons:immich.svg?width=128&height=128"         "16j709sr80m32i2ga4sqn31bcks9hj5v1r3ryrwrlbkh85337xwh";
-        jellyfin       = icon "jellyfin.svg"       "https://api.iconify.design/simple-icons:jellyfin.svg?width=128&height=128"       "0kj3pzgk1rvbkq22bfc8ip3l64f5m38bbg5kf8rxqv6jdl9b0avs";
-        audiobookshelf = icon "audiobookshelf.svg" "https://api.iconify.design/simple-icons:audiobookshelf.svg?width=128&height=128" "0pdvwcm9dvaxb58sx24wnd2yrww96jmwkzqi8a6qkfxr9421pxgg";
-        paperless      = icon "paperlessngx.svg"   "https://api.iconify.design/simple-icons:paperlessngx.svg?width=128&height=128"   "1cq562jx9mgmwgwn8pjcgghfzaiwsnlg6zkm555w563hj2f4ypzn";
-        karakeep       = icon "bookmark-multiple.svg" "https://api.iconify.design/mdi:bookmark-multiple.svg?width=128&height=128"    "1xrk047csv8c5c9s4wc20r0scjgfgq2a13y64lk3jw42db1amnhq";
-        miniflux       = icon "rss-box.svg"        "https://api.iconify.design/mdi:rss-box.svg?width=128&height=128"                 "1f398pgnqgkpslbyln4kcr6cjijhr9vp4v31m7knilqdv76cjrv7";
-        forgejo        = icon "forgejo.svg"        "https://api.iconify.design/simple-icons:forgejo.svg?width=128&height=128"        "05m1r0141x3jirr5kgfyg2p1llpr2pla1rb713sx6z1dnb0f8qnf";
-        cockpit        = icon "server.svg"         "https://api.iconify.design/mdi:server.svg?width=128&height=128"                  "1sapccdf29dzx76603ppz597p33jzh7bm9zyyrza0rdynl7pnqyb";
-        qbittorrent    = icon "qbittorrent.svg"    "https://api.iconify.design/simple-icons:qbittorrent.svg?width=128&height=128"    "0wy7ypqfx436zhf7szgwy0dk1wzy5lg863npzpgkfl7qnh2s1pg8";
-        pinchflat      = icon "television-classic.svg" "https://api.iconify.design/mdi:television-classic.svg?width=128&height=128"  "0kx4dssja7j4h9chndw2305ncj2v5yvzf09626f4s42q9bcy0a8c";
-        radicale       = icon "calendar-sync.svg"  "https://api.iconify.design/mdi:calendar-sync.svg?width=128&height=128"           "1lvjm5wnynv67rdrx06aav4imhxwl8ilvzz72p6rq9y902dp2x58";
-        opencloud      = icon "file-document-multiple.svg" "https://api.iconify.design/mdi:file-document-multiple.svg?width=128&height=128" "0cwkxdrmfh30zzf0240y8k2hppkszc60c377rdsf5yxykbaj9y53";
-        vaultwarden    = icon "vaultwarden.svg"    "https://api.iconify.design/simple-icons:vaultwarden.svg?width=128&height=128"    "19fanbkz33wm9ayk36ai5xms9skwbqhijhms3danhrj5jxvmf4la";
+        immich         = "immich.svg";
+        jellyfin       = "jellyfin.svg";
+        audiobookshelf = "audiobookshelf.svg";
+        paperless      = "paperlessngx.svg";
+        karakeep       = "bookmark-multiple.svg";
+        miniflux       = "rss-box.svg";
+        forgejo        = "forgejo.svg";
+        cockpit        = "server.svg";
+        qbittorrent    = "qbittorrent.svg";
+        pinchflat      = "television-classic.svg";
+        opencloud      = "file-document-multiple.svg";
+        vaultwarden    = "vaultwarden.svg";
       };
 
       # one launcher entry per Akmon service with a web UI (tailnet-only).
       # Not here on purpose: vault. (the Vaultwarden entry below), dav./lt./wopi./collabora. (no UI
-      # of their own), metrics. (Grafana only draws the report charts).
+      # of their own), metrics. (Grafana only draws the report charts), cal. (only
+      # stages generated calendars; calendars are edited in Google).
       akmon = id: title: sub: path: ico: keywords: pkgs.makeDesktopItem {
         name = "akmon-${id}";
         desktopName = title;
@@ -359,7 +360,6 @@
       (akmon "torrent"    "qBittorrent"       "torrent"    "/" icons.qbittorrent    [ "qbittorrent" "torrent" "downloads" ])
       # no "youtube" keyword, so searching "youtube" still finds only YouTube
       (akmon "yt"         "Pinchflat"         "yt"         "/" icons.pinchflat      [ "pinchflat" "channels" "downloads" "videos" ])
-      (akmon "cal"        "Radicale Calendar" "cal"        "/infcloud/" icons.radicale [ "radicale" "infcloud" "caldav" "calendars" ])
       (akmon "sync"       "Syncthing (Akmon)" "sync"       "/" icons.syncthing      [ "syncthing" "sync" "akmon" "server" ])
     ];
 
