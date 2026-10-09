@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -re '.tool_input.command | test(\"(^|[[:space:]])(sudo[[:space:]]+)?nixos-rebuild\")' > /dev/null 2>&1 && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Use nh instead of nixos-rebuild. Examples: nh os switch, nh os switch --hostname Akmon, nh os test, nh os build\"}}' || true"
+            "command": "jq -re '.tool_input.command | test(\"(^|[[:space:]])(sudo[[:space:]]+)?nixos-rebuild\")' > /dev/null 2>&1 && echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Do not use nixos-rebuild. Check a host builds with tn-check <akmon|kvasir|all>; deploy with deploy <akmon|kvasir|all> (it asks for the sudo password, so the user runs it). Never switch this machine to another host's configuration.\"}}' || true"
           }
         ]
       }
