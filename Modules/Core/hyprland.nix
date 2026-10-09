@@ -1300,9 +1300,10 @@
                                   onClicked: notif.modelData.dismiss()
                               }
 
+                              // expireTimeout is in seconds; interval is in ms
                               Timer {
                                   interval: notif.modelData.expireTimeout > 0
-                                      ? notif.modelData.expireTimeout : 3000
+                                      ? notif.modelData.expireTimeout * 1000 : 3000
                                   running: true
                                   onTriggered: notif.modelData.dismiss()
                               }
