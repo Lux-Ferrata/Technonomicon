@@ -1,8 +1,11 @@
 { inputs, ... }: {
   # qBittorrent (headless) at https://torrent.ironshark.org (scaffolding).
   # Downloads land in /srv/downloads (group media, so the media apps and the
-  # NAS share see them). The web UI is only reached through nginx, so it
-  # trusts localhost and asks for no login; the tailnet is the boundary.
+  # NAS share see them). The web UI is only reached through nginx and asks
+  # tailnet addresses for no login; the tailnet is the boundary. (nginx
+  # forwards the client's address, so qBittorrent sees the tailnet IP, not
+  # localhost. A password set in the UI wouldn't last anyway: the module
+  # rewrites qBittorrent.conf on every start.)
   #
   # VPN: Akmon's internet traffic is meant to leave through Tailscale's
   # Mullvad exit node (`tailscale set --exit-node=<mullvad node>
