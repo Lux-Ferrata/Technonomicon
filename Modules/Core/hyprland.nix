@@ -685,11 +685,15 @@
           end)
 
           -- Trackpad gestures. Three fingers sideways pans the scrolling
-          -- tape (window to window), four fingers switches workspace, three
-          -- fingers up toggles fullscreen.
+          -- tape (window to window); three fingers up/down switches
+          -- workspace, as does four fingers sideways.
           hl.gesture({ fingers = 3, direction = "horizontal", action = "scroll_move" })
+          hl.gesture({ fingers = 3, direction = "vertical",   action = "workspace" })
           hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
-          hl.gesture({ fingers = 3, direction = "up",         action = "fullscreen" })
+
+          -- Workspaces slide vertically, following the three-finger swipe.
+          -- Speed and curve are Hyprland's defaults; only the direction changes.
+          hl.animation({ leaf = "workspaces", enabled = true, speed = 8, bezier = "default", style = "slidevert" })
 
           hl.config({
             input = {
