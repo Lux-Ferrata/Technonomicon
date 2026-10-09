@@ -81,9 +81,9 @@
       "IPFSCompanionEnabled" = false;
 
       "RestoreOnStartup" = 5;
-      # Memory Saver: discard tabs left inactive for a while (they reload on
-      # click), so long sessions don't keep every background page running.
-      "HighEfficiencyModeEnabled" = true;
+      # Memory Saver off: with 40 GB of RAM, discarding idle tabs only buys a
+      # reload when you return to them; background tabs are throttled anyway.
+      "HighEfficiencyModeEnabled" = false;
 
       "DefaultBrowserSettingEnabled" = false;
       "MetricsReportingEnabled" = false;
@@ -118,6 +118,12 @@
         "omkfmpieigblcllmkgbflkikinpkodlk;https://clients2.google.com/service/update2/crx"
       ];
 
+      # A second, user-installed uBlock Origin (another extension ID) ran
+      # alongside the forced one, filtering every page twice.
+      "ExtensionInstallBlocklist" = [
+        "jcokkipkhhgiakinbnnplhkdbjbgcgpe"
+      ];
+
       "URLBlocklist" = [
         "youtube.com/shorts*"
       ];
@@ -144,6 +150,14 @@
           };
         };
       };
+
+      # Extension managed storage. Brave Shields blocks ads and uBO keeps only
+      # "My filters": with both running the same YouTube scriptlets, each copy
+      # wrapped JSON.stringify and cloned through the others' wrappers, which
+      # pegged a core per YouTube tab. uBO applies this when it starts.
+      "3rdparty".extensions."cjpalhdlnbpafiamejdnhcphjbkeiagm".toOverwrite.filterLists = [
+        "user-filters"
+      ];
     };
 
   };
