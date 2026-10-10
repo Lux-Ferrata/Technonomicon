@@ -28,6 +28,34 @@
       };
     };
 
-    tn.web.vhosts.rss = { inherit port; maxBody = "10m"; };
+    # Feeds for sites that publish none (Nature Futures, ...): a scraper
+    # writes Atom files every 6 h, served at https://rss.ironshark.org/scraped/
+    # and subscribed to in Miniflux with the crawler on. Not persisted: the
+    # first run after boot rewrites them.
+    users.users.feed-scrapers = { isSystemUser = true; group = "feed-scrapers"; };
+    users.groups.feed-scrapers = {};
+    systemd.services.feed-scrapers = {
+      description = "Write Atom feeds for sites without one";
+      after    = [ "network-online.target" ];
+      wants    = [ "network-online.target" ];
+      wantedBy = [ "multi-user.target" ];
+      startAt  = "00/6:20";
+      serviceConfig = {
+        Type  = "oneshot";
+        User  = "feed-scrapers";
+        StateDirectory     = "feed-scrapers";
+        StateDirectoryMode = "0755";   # nginx reads it
+        ExecStart = "${pkgs.python3.withPackages (p: [ p.beautifulsoup4 ])}/bin/python3 ${./_feed-scrapers.py} /var/lib/feed-scrapers";
+      };
+    };
+
+    tn.web.vhosts.rss = {
+      inherit port;
+      maxBody = "10m";
+      locations."/scraped/" = {
+        alias = "/var/lib/feed-scrapers/";
+        extraConfig = "types { application/atom+xml xml; }";
+      };
+    };
   };
 }
