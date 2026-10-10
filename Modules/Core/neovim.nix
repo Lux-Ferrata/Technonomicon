@@ -10,6 +10,43 @@
     pal = import ./_palette.nix;   # Technonomicon's colours (also nvim)
     c   = pal.roles;
 
+    # VSCodium's theme: a blank canvas with no token rules of its own. A
+    # built-in theme's specific selectors (Dark Modern's keyword.control,
+    # support.function) out-rank the catch-all rules in userSettings, so
+    # `for` and `print` kept their colours. With nothing to compete, the
+    # rules below are the whole story. UI colours and token rules stay in
+    # userSettings, which each switch merges into settings.json.
+    tnTheme = pkgs.vscode-utils.buildVscodeExtension rec {
+      pname              = "tn-theme";
+      version            = "1.0.0";
+      vscodeExtPublisher = "technonomicon";
+      vscodeExtName      = "tn-theme";
+      vscodeExtUniqueId  = "${vscodeExtPublisher}.${vscodeExtName}";
+      src = pkgs.runCommand "tn-theme-src" { } ''
+        mkdir -p $out/extension/themes
+        cp ${pkgs.writeText "package.json" (builtins.toJSON {
+          name        = vscodeExtName;
+          displayName = "Technonomicon";
+          publisher   = vscodeExtPublisher;
+          inherit version;
+          engines.vscode = "^1.70.0";
+          categories  = [ "Themes" ];
+          contributes.themes = [ {
+            id = "Technonomicon"; label = "Technonomicon";
+            uiTheme = "vs-dark"; path = "./themes/technonomicon.json";
+          } ];
+        })} $out/extension/package.json
+        cp ${pkgs.writeText "technonomicon.json" (builtins.toJSON {
+          name = "Technonomicon";
+          type = "dark";
+          semanticHighlighting = false;
+          colors = { "editor.background" = c.bg; "editor.foreground" = c.plain; };
+          tokenColors = [ ];
+        })} $out/extension/themes/technonomicon.json
+      '';
+      sourceRoot = "tn-theme-src/extension";
+    };
+
     # Installed locally by home-manager, and on Akmon's VSCodium server through
     # remote.SSH.defaultExtensions (by ID, from Open VSX).
     editorExtensions = (with openVsx; [
@@ -130,7 +167,7 @@
     home-manager.users.xin.programs.vscodium = {
       enable  = true;
       profiles.default = {
-        extensions = editorExtensions;
+        extensions = editorExtensions ++ [ tnTheme ];   # the theme is UI-side only
         # settings.json is a real file: each switch merges userSettings into
         # it (these win), and keys VSCodium writes itself -- e.g. the
         # llama-vscode menu's completion toggle -- survive.
@@ -159,12 +196,11 @@
         }) [ 1 2 3 4 5 ];
 
         userSettings = {
-          # Dark Modern recoloured from _palette.nix (Technonomicon's colours,
-          # shared with nvim and the desktop): Dark Reader's ground, flat
-          # surfaces with thin borders, blue for focus, and the row being
-          # chosen solid blue with dark text.
-          # VSCodium 1.126 calls it "Dark Modern" (the "Default " prefix is gone)
-          "workbench.colorTheme"           = "Dark Modern";
+          # Technonomicon's colours (_palette.nix, shared with nvim and the
+          # desktop) on the blank tnTheme: Dark Reader's ground, flat surfaces
+          # with thin borders, blue for focus, and the row being chosen solid
+          # blue with dark text.
+          "workbench.colorTheme"           = "Technonomicon";   # tnTheme above
           # flash labels: red tags with dark text, matches in teal
           "flash-vscode.labelBackgroundColor"         = c.error;
           "flash-vscode.labelColor"                   = c.bg;
@@ -332,7 +368,8 @@
           # blue, punctuation and operators grey; keywords, calls and
           # variables plain; no bold or italic. The more specific scope wins,
           # so the catch-alls can come first. Not keyed to a theme name: a
-          # renamed theme silently drops theme-keyed rules (it happened).
+          # renamed theme silently drops theme-keyed rules (it happened), and
+          # tnTheme has no rules of its own to out-rank these.
           "editor.tokenColorCustomizations".textMateRules = let
             rule = scope: settings: { inherit scope settings; };
           in [
