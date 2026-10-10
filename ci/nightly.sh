@@ -279,8 +279,18 @@ Write JSON to $WORK/plan.json, exactly this shape:
 - Usually 2-8 groups, ordered so earlier groups make sense on their own.
 - title: imperative, <= 72 chars, scope prefix like 'akmon:', 'kvasir:', 'shell:', 'flake:', 'ci:'.
 - body: 1-6 plain lines, what changed and why, written for the owner reading the log later.
-Only write plan.json; change nothing else." \
+Only write plan.json; change nothing else.
+Write plan.json yourself with the Write tool. Do not write a script to generate it: you cannot run scripts here, and nobody is around to approve one." \
     "Read,Write,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
+
+  # one retry: a missing or malformed plan would otherwise fail the night
+  if ! jq -e '.groups | length > 0' "$WORK/plan.json" > /dev/null 2>&1; then
+    note "first curation plan was missing or invalid; asked Claude again"
+    claude_do "$WORK/plan.json is missing or is not valid JSON of the shape {\"groups\": [{\"title\": \"...\", \"body\": \"...\", \"files\": [\"path\", ...]}]}. Write it now with the Write tool, directly: no scripts (you cannot run them). Group the paths in $WORK/files.txt (every path in exactly one group, usually 2-8 groups, titles <= 72 chars with a scope prefix like 'akmon:', bodies of 1-6 plain lines). Inspect the changes with git diff/log/show if you need to. Change nothing else." \
+      "Read,Write,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*)"
+  fi
+  jq -e '.groups | length > 0' "$WORK/plan.json" > /dev/null \
+    || { echo "no usable plan.json after a retry"; false; }
 
   log "curate: apply plan"
   git checkout -q -B curate origin/main
