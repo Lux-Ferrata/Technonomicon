@@ -386,9 +386,10 @@
             padding: 6px 10px;
             border-radius: 4px;
           }
+          /* the row being chosen: solid blue, dark text (as everywhere) */
           #entry:selected {
-            background-color: #${palette.base02};
-            color: #${palette.base0D};
+            background-color: #${palette.base0D};
+            color: #${palette.base00};
           }
           #text {
             color: #${palette.base05};
@@ -396,7 +397,7 @@
             font-weight: 600;
             padding-left: 8px;
           }
-          #text:selected { color: #${palette.base0D}; }
+          #text:selected { color: #${palette.base00}; }
         '';
       };
 
@@ -427,9 +428,10 @@
             input           = "${palette.base05}ff";
             placeholder     = "${palette.base03}ff";
             match           = "${palette.base0D}ff";
-            selection       = "${palette.base02}ff";
-            selection-text  = "${palette.base0D}ff";
-            selection-match = "${palette.base0E}ff";
+            # the row being chosen: solid blue, dark text (as everywhere)
+            selection       = "${palette.base0D}ff";
+            selection-text  = "${palette.base00}ff";
+            selection-match = "${palette.base00}ff";
             counter         = "${palette.base03}ff";
             border          = "${palette.base03}ff";
           };
@@ -459,7 +461,7 @@
       home.file.".config/ghostty/themes/tn".text = ''
         background = #${palette.base00}
         foreground = #${palette.base05}
-        selection-background = #${palette.base02}
+        selection-background = #${palette.base0D}
         selection-foreground = #${palette.base00}
         cursor-color = #${palette.base05}
         palette = 0=#${palette.base00}

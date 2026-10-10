@@ -7,6 +7,9 @@
 
     acLibrary = pkgs.callPackage ./_ac-library.nix { };
 
+    pal = import ./_palette.nix;   # Technonomicon's colours (also nvim)
+    c   = pal.roles;
+
     # Installed locally by home-manager, and on Akmon's VSCodium server through
     # remote.SSH.defaultExtensions (by ID, from Open VSX).
     editorExtensions = (with openVsx; [
@@ -31,7 +34,6 @@
       # (uiExtensions), which works on remote files too.
       vscodeMkt.tobias-z.vscode-harpoon
     ] ++ (with pkgs.vscode-extensions; [
-      arcticicestudio.nord-visual-studio-code
       vscodevim.vim
       # Every extension below is MIT/BSD0 and Open-VSX-clean. Pylance is
       # deliberately absent: it is unfree and refuses to run on VSCodium.
@@ -157,96 +159,239 @@
         }) [ 1 2 3 4 5 ];
 
         userSettings = {
-          "workbench.colorTheme"           = "Nord";
-          # flash labels in Nord: red tags with dark text, matches in frost
-          "flash-vscode.labelBackgroundColor"         = "#BF616A";
-          "flash-vscode.labelColor"                   = "#2E3440";
-          "flash-vscode.labelQuestionBackgroundColor" = "#5E81AC";
-          "flash-vscode.matchColor"                   = "#88C0D0";
+          # Dark Modern recoloured from _palette.nix (Technonomicon's colours,
+          # shared with nvim and the desktop): Dark Reader's ground, flat
+          # surfaces with thin borders, blue for focus, and the row being
+          # chosen solid blue with dark text.
+          "workbench.colorTheme"           = "Default Dark Modern";
+          # flash labels: red tags with dark text, matches in teal
+          "flash-vscode.labelBackgroundColor"         = c.error;
+          "flash-vscode.labelColor"                   = c.bg;
+          "flash-vscode.labelQuestionBackgroundColor" = c.accent;
+          "flash-vscode.matchColor"                   = c.info;
 
-          # Nord's selected row in dropdowns (quick fix, completion, command
-          # palette, context menus) is a barely-lighter grey. Make it solid
-          # frost (nord8) with dark text (nord0) so the active item is obvious.
-          #
-          # High-contrast Nord: the editor sits on a deeper night (#1E222A)
-          # than nord0, so plain text (nord6) is ~14:1 and every syntax
-          # colour below clears 8:1 (WCAG AAA). Line numbers are lifted from
-          # nord3, which nearly vanishes on the darker ground.
           "workbench.colorCustomizations" = let
-            sel = { bg = "#88C0D0"; fg = "#2E3440"; };
-            bg  = "#1E222A";
+            chosen = { bg = c.accent; fg = c.bg; };
+            b      = n: "#${pal.base16.${n}}";
+            alpha  = col: a: "${col}${a}";   # #RRGGBB + AA
           in {
-            "editor.background"                     = bg;
-            "editor.foreground"                     = "#ECEFF4";  # nord6
-            "editorGutter.background"               = bg;
-            "editorLineNumber.foreground"           = "#7B88A1";
-            "editorLineNumber.activeForeground"     = "#ECEFF4";
-            "panel.background"                      = bg;
-            "terminal.background"                   = bg;
-            "terminal.foreground"                   = "#ECEFF4";
-            "editorActionList.focusBackground"      = sel.bg;
-            "editorActionList.focusForeground"      = sel.fg;
-            "editorSuggestWidget.selectedBackground" = sel.bg;
-            "editorSuggestWidget.selectedForeground" = sel.fg;
-            "editorSuggestWidget.selectedIconForeground" = sel.fg;
-            "editorSuggestWidget.focusHighlightForeground" = sel.fg;
-            "quickInputList.focusBackground"        = sel.bg;
-            "quickInputList.focusForeground"        = sel.fg;
-            "quickInputList.focusIconForeground"    = sel.fg;
-            "list.activeSelectionBackground"        = sel.bg;
-            "list.activeSelectionForeground"        = sel.fg;
-            "list.activeSelectionIconForeground"    = sel.fg;
-            "list.focusHighlightForeground"         = sel.fg;
-            "menu.selectionBackground"              = sel.bg;
-            "menu.selectionForeground"              = sel.fg;
+            # ground, surfaces, borders
+            "focusBorder"                           = c.accent;
+            "foreground"                            = c.plain;
+            "descriptionForeground"                 = c.second;
+            "widget.border"                         = c.border;
+            "widget.shadow"                         = "#00000066";
+            "editor.background"                     = c.bg;
+            "editor.foreground"                     = c.plain;
+            "editorGutter.background"               = c.bg;
+            "sideBar.background"                    = c.bg;
+            "sideBar.border"                        = c.border;
+            "sideBarSectionHeader.background"       = c.bg;
+            "sideBarSectionHeader.border"           = c.border;
+            "panel.background"                      = c.bg;
+            "panel.border"                          = c.border;
+            "activityBar.background"                = c.bg;
+            "activityBar.border"                    = c.border;
+            "titleBar.activeBackground"             = c.bg;
+            "titleBar.inactiveBackground"           = c.bg;
+            "titleBar.border"                       = c.border;
+            "editorGroupHeader.tabsBackground"      = c.bg;
+            "editorGroup.border"                    = c.border;
+            "tab.activeBackground"                  = c.bg;
+            "tab.inactiveBackground"                = c.bg;
+            "tab.border"                            = c.border;
+            "statusBar.background"                  = c.surface;
+            "statusBar.foreground"                  = c.second;
+            "statusBar.border"                      = c.border;
+            "statusBar.noFolderBackground"          = c.surface;
+            "statusBar.debuggingBackground"         = c.warn;
+            "statusBar.debuggingForeground"         = c.bg;
+            "editorWidget.background"               = c.surface;
+            "editorWidget.border"                   = c.border;
+            "editorHoverWidget.background"          = c.surface;
+            "editorHoverWidget.border"              = c.border;
+            "quickInput.background"                 = c.surface;
+            "menu.background"                       = c.surface;
+            "menu.border"                           = c.border;
+            "notifications.background"              = c.surface;
+            "notifications.border"                  = c.border;
+            "peekViewEditor.background"             = c.surface;
+            "peekViewResult.background"             = c.surface;
+            "input.background"                      = c.bg;
+            "input.border"                          = c.border;
+            "dropdown.background"                   = c.surface;
+            "dropdown.border"                       = c.border;
+            "button.background"                     = c.accent;
+            "button.foreground"                     = c.bg;
+            "badge.background"                      = c.accent;
+            "badge.foreground"                      = c.bg;
+            "scrollbarSlider.background"            = alpha c.dim "33";
+            "scrollbarSlider.hoverBackground"       = alpha c.dim "55";
+            "scrollbarSlider.activeBackground"      = alpha c.dim "77";
+            # the text area
+            "editor.lineHighlightBackground"        = c.linehl;
+            "editor.lineHighlightBorder"            = c.linehl;
+            "editorLineNumber.foreground"           = c.dim;
+            "editorLineNumber.activeForeground"     = c.plain;
+            "editorCursor.foreground"               = c.plain;
+            "editor.selectionBackground"            = c.sel;
+            "editor.inactiveSelectionBackground"    = alpha c.sel "99";
+            "editor.selectionHighlightBackground"   = alpha c.sel "66";
+            "editor.wordHighlightBackground"        = "#00000000";
+            "editor.wordHighlightStrongBackground"  = "#00000000";
+            "editor.wordHighlightBorder"            = c.border;
+            # search hits: an orange outline and a see-through fill, so the
+            # token colours still show
+            "editor.findMatchBackground"            = alpha c.search "6B";
+            "editor.findMatchBorder"                = c.search;
+            "editor.findMatchHighlightBackground"   = alpha c.search "38";
+            "editor.findMatchHighlightBorder"       = alpha c.search "99";
+            "editorBracketMatch.background"         = "#00000000";
+            "editorBracketMatch.border"             = c.search;
+            "editorWhitespace.foreground"           = c.whitespace;
+            "editorIndentGuide.background1"         = c.whitespace;
+            "editorIndentGuide.activeBackground1"   = c.dim;
+            "editorInlayHint.foreground"            = c.dim;
+            "editorInlayHint.background"            = "#00000000";
+            "editorInlayHint.typeForeground"        = c.dim;
+            "editorInlayHint.typeBackground"        = "#00000000";
+            "editorInlayHint.parameterForeground"   = c.dim;
+            "editorInlayHint.parameterBackground"   = "#00000000";
+            "editorError.foreground"                = c.error;
+            "editorWarning.foreground"              = c.warn;
+            "editorInfo.foreground"                 = c.info;
+            "editorHint.foreground"                 = c.hint;
+            "editorGutter.addedBackground"          = c.add;
+            "editorGutter.modifiedBackground"       = c.change;
+            "editorGutter.deletedBackground"        = c.del;
+            "diffEditor.insertedTextBackground"     = alpha c.add "26";
+            "diffEditor.removedTextBackground"      = alpha c.del "26";
+            "editorLink.activeForeground"           = c.accent;
+            "textLink.foreground"                   = c.accent;
+            "textLink.activeForeground"             = c.accent;
+            # the terminal: Ghostty's colours
+            "terminal.background"                   = c.bg;
+            "terminal.foreground"                   = c.plain;
+            "terminalCursor.foreground"             = c.plain;
+            "terminal.selectionBackground"          = c.accent;
+            "terminal.selectionForeground"          = c.bg;
+            "terminal.ansiBlack"                    = c.bg;
+            "terminal.ansiRed"                      = b "base08";
+            "terminal.ansiGreen"                    = b "base0B";
+            "terminal.ansiYellow"                   = b "base0A";
+            "terminal.ansiBlue"                     = b "base0D";
+            "terminal.ansiMagenta"                  = b "base0E";
+            "terminal.ansiCyan"                     = b "base0C";
+            "terminal.ansiWhite"                    = c.plain;
+            "terminal.ansiBrightBlack"              = c.dim;
+            "terminal.ansiBrightRed"                = b "base08";
+            "terminal.ansiBrightGreen"              = b "base0B";
+            "terminal.ansiBrightYellow"             = b "base0A";
+            "terminal.ansiBrightBlue"               = b "base0D";
+            "terminal.ansiBrightMagenta"            = b "base0E";
+            "terminal.ansiBrightCyan"               = b "base0C";
+            "terminal.ansiBrightWhite"              = c.bright;
+            # The row being chosen in every dropdown and list (completion,
+            # quick fix, command palette, pickers, menus, settings selects):
+            # solid blue with dark text, in every state, since an unset one
+            # falls back to the theme's faint default. Matched letters are
+            # blue elsewhere and dark on the chosen row.
+            "editorActionList.focusBackground"      = chosen.bg;
+            "editorActionList.focusForeground"      = chosen.fg;
+            "editorSuggestWidget.background"        = c.surface;
+            "editorSuggestWidget.border"            = c.border;
+            "editorSuggestWidget.foreground"        = c.plain;
+            "editorSuggestWidget.highlightForeground" = c.accent;
+            "editorSuggestWidget.selectedBackground" = chosen.bg;
+            "editorSuggestWidget.selectedForeground" = chosen.fg;
+            "editorSuggestWidget.selectedIconForeground" = chosen.fg;
+            "editorSuggestWidget.focusHighlightForeground" = chosen.fg;
+            "quickInputList.focusBackground"        = chosen.bg;
+            "quickInputList.focusForeground"        = chosen.fg;
+            "quickInputList.focusIconForeground"    = chosen.fg;
+            "list.activeSelectionBackground"        = chosen.bg;
+            "list.activeSelectionForeground"        = chosen.fg;
+            "list.activeSelectionIconForeground"    = chosen.fg;
+            "list.inactiveSelectionBackground"      = c.sel;
+            "list.inactiveSelectionForeground"      = c.plain;
+            "list.focusBackground"                  = chosen.bg;
+            "list.focusForeground"                  = chosen.fg;
+            "list.focusHighlightForeground"         = chosen.fg;
+            "list.highlightForeground"              = c.accent;
+            "list.focusOutline"                     = c.accent;
+            "list.focusAndSelectionOutline"         = c.accent;
+            "list.inactiveFocusOutline"             = c.border;
+            "list.hoverBackground"                  = c.sel;
+            "list.hoverForeground"                  = c.plain;
+            "menu.selectionBackground"              = chosen.bg;
+            "menu.selectionForeground"              = chosen.fg;
           };
-          # Tonsky/Alabaster-style syntax on Nord: highlight what reading
-          # needs, not grammar. Comments are bright gold (~10:1) because
-          # they matter; strings, constants and *definitions* get a saturated
-          # Nord hue; keywords, calls, variables and punctuation are plain
-          # (nord6) text. All >= 8:1 on the editor background above. Later
-          # rules win, so the catch-all comes first and comments last.
-          "editor.tokenColorCustomizations"."[Nord]".textMateRules = let
+          # Tonsky's minimal highlighting, the same as nvim (_tn-nvim.lua):
+          # comments yellow, strings green, constants purple, *definitions*
+          # blue, punctuation and operators grey; keywords, calls and
+          # variables plain; no bold or italic. Every rule is keyed to the
+          # theme, and the more specific scope wins, so the catch-alls can
+          # come first.
+          "editor.tokenColorCustomizations"."[Default Dark Modern]".textMateRules = let
             rule = scope: settings: { inherit scope settings; };
-            plain = "#ECEFF4";  # nord6
           in [
             (rule [
-              "keyword" "storage" "keyword.operator" "punctuation"
-              "variable" "variable.language" "variable.parameter" "support"
-              "entity.name.function" "entity.name.type" "entity.name.tag"
-              "entity.name.namespace" "entity.other.attribute-name"
-              "entity.other.inherited-class" "meta.function-call"
-              "meta.decorator" "constant.other" "markup.inline.raw"
-            ] { foreground = plain; fontStyle = ""; })
-            (rule [ "string" "punctuation.definition.string" ]
-              { foreground = "#B5E689"; })  # nord14, saturated
+              "keyword" "storage" "variable" "variable.language"
+              "variable.parameter" "support" "entity.name.function"
+              "entity.name.type" "entity.name.tag" "entity.name.namespace"
+              "entity.other.attribute-name" "entity.other.inherited-class"
+              "meta.function-call" "meta.decorator" "constant.other"
+              "markup.inline.raw"
+              # word operators read as keywords (and, or, not, in, is, typeof)
+              "keyword.operator.logical" "keyword.operator.word"
+              "keyword.operator.expression" "keyword.operator.new"
+              "keyword.operator.wordlike"
+            ] { foreground = c.plain; fontStyle = ""; })
+            (rule [
+              "punctuation" "keyword.operator" "meta.brace"
+              "constant.character.escape" "constant.character.format.placeholder"
+              "storage.type.format" "punctuation.section.embedded"
+            ] { foreground = c.punct; fontStyle = ""; })
+            (rule [ "string" "punctuation.definition.string" "string.regexp" ]
+              { foreground = c.string; })
             (rule [
               "constant.numeric" "constant.language" "constant.character"
-              "constant.other.color" "keyword.other.unit" "support.constant"
-            ] { foreground = "#EBA2DE"; })  # nord15, saturated
+              "constant.other.color" "constant.other.symbol"
+              "keyword.other.unit" "support.constant"
+            ] { foreground = c.const; })
             (rule [
               "meta.function entity.name.function"
               "meta.function.definition entity.name.function"
               "meta.definition.function entity.name.function"
+              "meta.function support.function.magic"
               "entity.name.function.definition" "entity.name.class"
               "entity.name.type.class" "entity.name.type.struct"
               "entity.name.type.enum" "entity.name.type.interface"
               "entity.name.type.alias" "entity.name.type.typedef"
-              "entity.name.function.macro"
               # nix: the name on the left of `=` is the definition
               "entity.other.attribute-name.single.nix"
               "entity.other.attribute-name.multipart.nix"
-              "entity.name.section"
-            ] { foreground = "#7BDAF4"; })  # nord8, saturated
+              "entity.name.section" "markup.heading"
+            ] { foreground = c.def; fontStyle = ""; })
             (rule [
               "comment" "punctuation.definition.comment"
-              "string.quoted.docstring" "string.quoted.docstring punctuation"
+              # the quotes too: this must out-rank the string rule's
+              # punctuation.definition.string, so it names the same scope
+              "string.quoted.docstring"
+              "string.quoted.docstring punctuation.definition.string"
               "comment.block.documentation"
-            ] { foreground = "#FBC260"; fontStyle = ""; })  # gold, nord13's hue deepened
+            ] { foreground = c.comment; fontStyle = ""; })
+            (rule [ "invalid" "invalid.illegal" ] { foreground = c.error; })
+            (rule [ "markup.inserted" ] { foreground = c.add; })
+            (rule [ "markup.deleted" ] { foreground = c.del; })
+            (rule [ "markup.changed" ] { foreground = c.change; })
           ];
           # Language servers' semantic tokens would repaint variables, types
-          # and calls in colour on top of the rules above.
+          # and calls in colour on top of the rules above, and coloured
+          # bracket pairs are highlighting the post argues against.
           "editor.semanticHighlighting.enabled" = false;
+          "editor.bracketPairColorization.enabled" = false;
+          "editor.guides.bracketPairs"     = false;
           "editor.fontFamily"              = "'${config.tn.primary_font}', monospace";
           "editor.fontLigatures"           = true;
           "editor.fontSize"                = 14;
@@ -568,6 +713,19 @@
         jupyter-client nbformat cairosvg pillow pyperclip
       ];
 
+      # Definitions are blue, as in VSCodium, but these languages have no
+      # definition-only capture for them: Nix binding names (not attribute
+      # access) and Python class/def names. _tn-nvim.lua colours @tn.def.
+      xdg.configFile."nvim/after/queries/nix/highlights.scm".text = ''
+        ;; extends
+        (binding attrpath: (attrpath attr: (identifier) @tn.def))
+      '';
+      xdg.configFile."nvim/after/queries/python/highlights.scm".text = ''
+        ;; extends
+        (class_definition name: (identifier) @tn.def)
+        (function_definition name: (identifier) @tn.def)
+      '';
+
       programs.lazyvim = {
         enable = true;
 
@@ -590,20 +748,22 @@
             }
           '';
 
+          # Technonomicon's colours (_palette.nix, _tn-nvim.lua). mini.base16
+          # is nixpkgs' copy, loaded by path, so lazy.nvim clones nothing and
+          # the first start works offline.
           colorscheme = ''
             return {
-              "shaunsingh/nord.nvim",
-              priority = 1000,
-              config = function()
-                vim.g.nord_contrast               = true
-                vim.g.nord_borders                = false
-                vim.g.nord_disable_background     = false
-                vim.g.nord_cursorline_transparent  = false
-                vim.g.nord_italic                 = true
-                vim.g.nord_bold                   = false
-                require("nord").set()
-                ${builtins.readFile ./_nord-alabaster.lua}
-              end,
+              { dir = "${pkgs.vimPlugins.mini-base16}", name = "mini.base16", lazy = true },
+              {
+                "LazyVim/LazyVim",
+                opts = {
+                  colorscheme = function()
+                    require("lazy").load({ plugins = { "mini.base16" } })
+                    ${pal.lua}
+                    ${builtins.readFile ./_tn-nvim.lua}
+                  end,
+                },
+              },
             }
           '';
 

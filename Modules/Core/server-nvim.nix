@@ -12,7 +12,7 @@
       configure = {
         packages.rescue.start = with pkgs.vimPlugins; [
           flash-nvim
-          nord-nvim
+          mini-base16   # Technonomicon's colours, as on Kvasir
         ];
 
         customLuaRC = ''
@@ -24,11 +24,8 @@
           vim.opt.wrap      = true
           vim.opt.linebreak = true
 
-          vim.g.nord_contrast = true
-          vim.g.nord_italic   = true
-          vim.g.nord_bold     = false
-          require("nord").set()
-          ${builtins.readFile ./_nord-alabaster.lua}
+          ${(import ./_palette.nix).lua}
+          ${builtins.readFile ./_tn-nvim.lua}
 
           -- same `s` jump as LazyVim (no treesitter here, so no `S`)
           require("flash").setup()

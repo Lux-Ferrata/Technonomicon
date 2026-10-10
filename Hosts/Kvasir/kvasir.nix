@@ -54,7 +54,7 @@
 
         tn.full_name          = "xin";
         tn.email_address      = "git@ironshark.org";
-        tn.theme              = "nord";
+        tn.theme              = "tn";
         tn.primary_font       = "Atkinson Hyperlegible Mono Liga";
         tn.ui_font            = "Atkinson Hyperlegible Next";
         tn.scale              = 1;

@@ -124,7 +124,7 @@ sops _secrets.yaml
 Files prefixed with `_` are sourced by a module (configs, scripts, helpers), not imported on their own:
 - `_kanata.kbd` / `_kanata-console.kbd` — Kvasir's keyboard layout / Akmon's console layout
 - `_sync.nix` (the whole Syncthing topology), `_models.nix` (pinned LLM weights), `_llama-ondemand.nix` (wake-on-request servers)
-- `_tn-*.sh` / `_tn-*.py` — monitoring, report and usage scripts; `_nord-alabaster.lua` — the shared nvim syntax colours
+- `_tn-*.sh` / `_tn-*.py` — monitoring, report and usage scripts; `_palette.nix` — the colours (base16 scheme `tn` + roles) for the desktop, VSCodium and nvim; `_tn-nvim.lua` — nvim's colours from it
 - `_fcitx5-config`, `_gromit-mpx.cfg/.ini` — input method / screen annotation configs
 
 ### Kanata keyboard layout
