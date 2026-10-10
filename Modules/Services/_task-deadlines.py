@@ -1,33 +1,32 @@
-# Super Productivity deadlines -> Radicale calendars (task-deadlines.nix).
+# Vikunja due dates -> Radicale calendars (task-deadlines.nix).
 #
-# Reads the newest sync-data.json under $SP_DIR (the app's WebDAV sync file:
-# "pf_" + optional C (gzip, base64) / E (encrypted) flags + model version +
-# "__" + JSON {version: 2, state: {task: {entities}}, ...}; the state is the
-# full snapshot, rewritten on every upload). Every open task with a deadline
-# becomes an event: all-day for deadlineDay, a 30-minute slot for
-# deadlineWithTime. $CONFIG (JSON) names the calendars: projects listed under
-# a calendar go there, and so do the projects in its listed sidebar folders
-# (sub-folders included; a named project beats its folder); everything else
-# goes to the default one. Titles read "[Project] task" unless the calendar
-# is named after the project. Names match ignoring case. Each calendar is replaced by one PUT on its collection,
-# only when it differs from the last one (kept in $STATE_DIRECTORY). Any
-# format surprise exits non-zero, so the unit fails and alerts.
+# Reads $DB, the copy of Kvasir's Vikunja database that its backup timer
+# sends here through Syncthing (_sync.nix "Vikunja"), read-only. Every open
+# task with a due date becomes a 30-minute event at that time (Vikunja keeps
+# times in UTC). $CONFIG (JSON) names the calendars: a listed project sends
+# its tasks there, and so do all its sub-projects (the nearest listed one
+# wins); everything else goes to the default one. Archived projects and
+# deleted tasks are left out. Titles read "[Project] task" unless the
+# project is Inbox or the calendar is named after it. Names match ignoring
+# case. Each calendar is replaced by one PUT on its collection, only when it
+# differs from the last one (kept in $STATE_DIRECTORY). Any surprise exits
+# non-zero, so the unit fails and alerts.
 
 import base64
-import gzip
 import hashlib
 import json
 import os
 import re
+import sqlite3
 import sys
 import urllib.request
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import NoReturn
 
-SP_DIR = Path(os.environ["SP_DIR"])
+DB = Path(os.environ["DB"])
 # {"url": ".../xin/", "user", "default": {"collection", "name"},
-#  "calendars": {collection: {"name", "projects": [title, ...], "folders": [name, ...]}}}
+#  "calendars": {collection: {"name", "projects": [title, ...]}}}
 CONFIG = json.loads(Path(os.environ["CONFIG"]).read_text())
 PASSWORD = (Path(os.environ["CREDENTIALS_DIRECTORY"]) / "radicale").read_text().strip()
 STATE = Path(os.environ["STATE_DIRECTORY"])
@@ -38,32 +37,23 @@ def die(msg) -> NoReturn:
     sys.exit(1)
 
 
-def load_sync_file():
-    files = sorted(SP_DIR.rglob("sync-data.json"), key=lambda p: p.stat().st_mtime)
-    if not files:
-        print("task-deadlines: no sync-data.json yet (sync not set up); nothing to do")
+def load():
+    if not DB.exists():
+        print(f"task-deadlines: no {DB} yet (Kvasir hasn't sent one); nothing to do")
         sys.exit(0)
-    raw = files[-1].read_text()
-    m = re.match(r"pf_([CE]*)(\d+(?:\.\d+)?)__", raw)
-    if not m:
-        die(f"{files[-1]}: unknown prefix {raw[:20]!r}")
-    flags, body = m.group(1), raw[m.end():]
-    if "E" in flags:
-        die("sync file is encrypted; turn off encryption in Super Productivity's sync settings")
-    if "C" in flags:
-        body = gzip.decompress(base64.b64decode(body)).decode()
-    data = json.loads(body)
-    if data.get("version") == 3 or data.get("format") == "split":
-        die("sync uses the split-file format; turn off split/surgical sync files")
-    if data.get("version") != 2:
-        die(f"unsupported sync file version {data.get('version')!r}")
+    # immutable: never write a journal into the Syncthing folder
     try:
-        return (data["state"]["task"]["entities"],
-                data["state"]["project"]["entities"],
-                # sidebar folders; optional, only folder routing needs it
-                (data["state"].get("menuTree") or {}).get("projectTree") or [])
-    except (KeyError, TypeError):
-        die("no state.task/project.entities in the sync file")
+        con = sqlite3.connect(f"file:{DB}?mode=ro&immutable=1", uri=True)
+        con.row_factory = sqlite3.Row
+        projects = {r["id"]: dict(r) for r in con.execute(
+            "SELECT id, title, parent_project_id, is_archived FROM projects")}
+        tasks = [dict(r) for r in con.execute(
+            "SELECT id, title, project_id, due_date, created FROM tasks "
+            "WHERE NOT done AND deleted_at IS NULL "
+            "AND due_date IS NOT NULL AND due_date > '1970-01-02'")]
+    except sqlite3.Error as e:
+        die(f"{DB}: {e}")
+    return tasks, projects
 
 
 def esc(s):
@@ -84,26 +74,28 @@ def fold(line):
     return "\r\n".join(out)
 
 
-def utc(ms):
-    return datetime.fromtimestamp(ms / 1000, timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+def when(s):
+    # "2026-10-11 06:55:00" (UTC; sometimes with fractions or an offset)
+    try:
+        d = datetime.fromisoformat(str(s).replace(" ", "T"))
+    except ValueError:
+        die(f"unreadable date {s!r}")
+    return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+
+
+def utc(d):
+    return d.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
 def event(t, prefix):
-    uid = f"sp-deadline-{t['id']}@ironshark.org"
-    lines = ["BEGIN:VEVENT", f"UID:{uid}",
-             # fixed, so unchanged tasks give byte-identical events
-             f"DTSTAMP:{utc(t.get('created') or 0)}",
-             f"SUMMARY:{esc(prefix + (t.get('title') or '(untitled)'))}",
-             "TRANSP:TRANSPARENT"]
-    if t.get("deadlineWithTime"):
-        ms = t["deadlineWithTime"]
-        lines += [f"DTSTART:{utc(ms)}", f"DTEND:{utc(ms + 30 * 60 * 1000)}"]
-    else:
-        d = date.fromisoformat(t["deadlineDay"])
-        lines += [f"DTSTART;VALUE=DATE:{d:%Y%m%d}",
-                  f"DTEND;VALUE=DATE:{d + timedelta(days=1):%Y%m%d}"]
-    lines.append("END:VEVENT")
-    return lines
+    due = when(t["due_date"])
+    return ["BEGIN:VEVENT", f"UID:vikunja-deadline-{t['id']}@ironshark.org",
+            # fixed, so unchanged tasks give byte-identical events
+            f"DTSTAMP:{utc(when(t['created']))}",
+            f"SUMMARY:{esc(prefix + (t['title'] or '(untitled)'))}",
+            "TRANSP:TRANSPARENT",
+            f"DTSTART:{utc(due)}", f"DTEND:{utc(due + timedelta(minutes=30))}",
+            "END:VEVENT"]
 
 
 def put(collection, name, events):
@@ -132,64 +124,46 @@ def put(collection, name, events):
 
 
 def main():
-    tasks, projects, tree = load_sync_file()
-    title_of = {pid: p.get("title") or "" for pid, p in projects.items()
-                if isinstance(p, dict)}
+    tasks, projects = load()
     target = {}                         # project title -> collection
-    folder_target = {}                  # folder name -> collection
     for coll, cal in CONFIG["calendars"].items():
         for title in cal["projects"]:
             target[title.casefold()] = coll
-        for name in cal.get("folders", []):
-            folder_target[name.casefold()] = coll
-
-    # project id -> collection, from the folders it sits in (innermost wins)
-    by_folder, seen_folders = {}, set()
-
-    def walk(nodes, coll):
-        for n in nodes if isinstance(nodes, list) else []:
-            if not isinstance(n, dict):
-                continue
-            if n.get("k") == "f":
-                name = (n.get("name") or "").casefold()
-                seen_folders.add(name)
-                walk(n.get("children"), folder_target.get(name, coll))
-            elif n.get("k") == "p" and coll:
-                by_folder[n.get("id")] = coll
-    walk(tree, None)
-
-    for title in sorted(set(target) - {t.casefold() for t in title_of.values()}):
-        print(f"task-deadlines: no project named {title!r} (tn.taskDeadlines.calendars)",
-              file=sys.stderr)
-    for name in sorted(set(folder_target) - seen_folders):
-        print(f"task-deadlines: no folder named {name!r} (tn.taskDeadlines.calendars); "
-              f"folders: {sorted(seen_folders)}", file=sys.stderr)
+    titles = {(p["title"] or "").casefold() for p in projects.values()}
+    for title in sorted(set(target) - titles):
+        print(f"task-deadlines: no project named {title!r} (tn.taskDeadlines.calendars); "
+              f"projects: {sorted(titles)}", file=sys.stderr)
 
     default = CONFIG["default"]["collection"]
-    out = {coll: [] for coll in [default, *CONFIG["calendars"]]}
-    due = [t for t in tasks.values()
-           if isinstance(t, dict) and not t.get("isDone")
-           and (t.get("deadlineWithTime") or t.get("deadlineDay"))]
-
     names = {default: CONFIG["default"]["name"],
              **{c: cal["name"] for c, cal in CONFIG["calendars"].items()}}
 
-    def place(item):
-        pid = item.get("projectId") or ""
-        project = title_of.get(pid, "")
-        coll = target.get(project.casefold()) or by_folder.get(pid) or default
+    def route(pid):
+        # (collection, archived?) from the project and its parents
+        seen, archived = set(), False
+        while pid in projects and pid not in seen:
+            seen.add(pid)
+            p = projects[pid]
+            archived = archived or bool(p["is_archived"])
+            coll = target.get((p["title"] or "").casefold())
+            if coll:
+                return coll, archived
+            pid = p["parent_project_id"]
+        return default, archived
+
+    out = {coll: [] for coll in names}
+    for t in sorted(tasks, key=lambda t: t["id"]):
+        coll, archived = route(t["project_id"])
+        if archived:
+            continue
+        project = (projects.get(t["project_id"]) or {}).get("title") or ""
         # the calendar's name without a leading emoji ("🔒 Academics")
         bare = re.sub(r"^\W+", "", names[coll]).casefold()
         named = project.casefold() in ("", "inbox", bare)
-        return coll, ("" if named else f"[{project}] ")
+        out[coll].append(event(t, "" if named else f"[{project}] "))
 
-    for t in sorted(due, key=lambda t: t["id"]):
-        coll, prefix = place(t)
-        out[coll].append(event(t, prefix))
-
-    put(default, CONFIG["default"]["name"], out[default])
-    for coll, cal in CONFIG["calendars"].items():
-        put(coll, cal["name"], out[coll])
+    for coll, name in names.items():
+        put(coll, name, out[coll])
 
 
 main()
