@@ -364,7 +364,7 @@
             "menu.selectionForeground"              = chosen.fg;
           };
           # Tonsky's minimal highlighting, the same as nvim (_tn-nvim.lua):
-          # comments yellow, strings green, constants purple, *definitions*
+          # comments yellow, strings green, constants red, *definitions*
           # blue, punctuation and operators grey; keywords, calls and
           # variables plain; no bold or italic. The more specific scope wins,
           # so the catch-alls can come first. Not keyed to a theme name: a

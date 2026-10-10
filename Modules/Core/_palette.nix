@@ -15,7 +15,7 @@
 #   closest pair at 0.130), so none can be mistaken for another.
 # Highlighting follows Tonsky ("I am sorry, but everyone is getting syntax
 # highlighting wrong") and his Alabaster Dark: comments yellow, strings
-# green, constants purple, definitions blue, punctuation grey, keywords
+# green, constants red, definitions blue, punctuation grey, keywords
 # and everything else plain, no bold or italic.
 rec {
   # Contrast on base00, then OKLCH (L C h).
@@ -28,13 +28,13 @@ rec {
     base05 = "E8E6E3";  # text (Dark Reader)           14.0   .926 .005  78
     base06 = "F1F0ED";  #                              15.3
     base07 = "FBFAF8";  # brightest                    16.7
-    base08 = "F74A47";  # red: errors, deletions        5.0   .656 .210  26  Nord11
+    base08 = "F74A47";  # red: constants, errors, dels  5.0   .656 .210  26  Nord11
     base09 = "FA852F";  # orange: warnings, search      7.0   .734 .170  52  Nord12
     base0A = "ECCA6B";  # yellow: comments             11.0   .849 .121  90  Nord13
     base0B = "88CB71";  # green: strings, additions     9.0   .776 .140 138  Nord14
     base0C = "53D1D8";  # teal: info, terminal cyan     9.5   .794 .110 200  Nord7/8
     base0D = "69ABEF";  # blue: definitions, UI accent  7.2   .725 .120 251  Nord9
-    base0E = "D28DD4";  # purple: constants             7.1   .736 .125 326  Nord15
+    base0E = "D28DD4";  # purple: terminal magenta      7.1   .736 .125 326  Nord15
     base0F = "4684D6";  # deep blue                     4.6   .611 .141 256  Nord10
   };
 
@@ -53,7 +53,7 @@ rec {
     punct      = "#81929C";    # punctuation, operators 5.4  .650 .025 234
     comment    = s "base0A";
     string     = s "base0B";
-    const      = s "base0E";
+    const      = s "base08";   # red, as xin asked (was purple)
     def        = s "base0D";
     accent     = s "base0D";   # focus, active border, the row being chosen
     search     = s "base09";

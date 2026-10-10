@@ -3,7 +3,7 @@
 -- just before it. mini.base16 draws the whole interface from B, so floats,
 -- pickers and status lines match the desktop. Then the syntax is cut back to
 -- Tonsky's set, the same as VSCodium's: comments yellow, strings green,
--- constants purple, definitions blue, punctuation grey, everything else
+-- constants red, definitions blue, punctuation grey, everything else
 -- plain, and no bold or italic.
 require("mini.base16").setup({ palette = B, use_cterm = true })
 

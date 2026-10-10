@@ -76,7 +76,7 @@ Akmon has the same shell, plus its own versions of `rb`, `ak` and `overnight-now
 - Remote windows on Akmon via Open Remote-SSH. Akmon's server gets the same extensions from Open VSX.
 - VSCodeVim with **flash** on `s` (labels follow every keystroke), Harpoon on `<leader>h/H/1-5`, save on Esc.
 - **basedpyright** for Python: pyright's engine plus inlay hints, builtin docstrings and better auto-imports. Pylance won't run on VSCodium. Also ruff/black, clangd, rust-analyzer, nixd, LaTeX Workshop, LTeX+ (against Akmon's LanguageTool), and llama-vscode completion from the local models.
-- **One palette** (`_palette.nix`): Nord's hues, saturated, on Dark Reader's `#181A1B` and `#E8E6E3`. It covers the desktop (base16 scheme `tn`), VSCodium (Dark Modern, recoloured) and both nvims (mini.base16 + `_tn-nvim.lua`). Syntax follows Tonsky's minimal highlighting: comments yellow, strings green, constants purple, *definitions* blue, punctuation grey, everything else plain, no bold. The row being chosen in any list is solid blue with dark text.
+- **One palette** (`_palette.nix`): Nord's hues, saturated, on Dark Reader's `#181A1B` and `#E8E6E3`. It covers the desktop (base16 scheme `tn`), VSCodium (Dark Modern, recoloured) and both nvims (mini.base16 + `_tn-nvim.lua`). Syntax follows Tonsky's minimal highlighting: comments yellow, strings green, constants red, *definitions* blue, punctuation grey, everything else plain, no bold. The row being chosen in any list is solid blue with dark text.
 
 **Snippets** live in `snippets/<language>.json` (VS Code format, plain JSON). VSCodium's snippets folder is a live symlink to it, so "Configure Snippets" edits the repo. LazyVim loads the same files. They are added by hand, as needed.
 
