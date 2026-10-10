@@ -65,6 +65,37 @@ calendars (`task-deadlines.nix` → `calendar-push.nix`).
 - [ ] AstraDraw (`draw.`, launcher "Flowchart"): first login as `xin`,
       password sops `astradraw-admin-password`.
 
+## Theme: apps still outside the palette
+
+The palette lives in `Modules/Core/_palette.nix`: base16 plus roles (`bg
+surface sel dim punct plain comment string const def accent error warn …`).
+New consumers `import ./_palette.nix` and use the roles, never copied hex
+values. The rules are the same everywhere:
+- Only comments, strings, constants and definitions get color.
+- Punctuation is grey.
+- The row being chosen is solid blue with dark text.
+
+- [ ] **Obsidian:** a CSS snippet, or a small theme, from the roles:
+  - `--background-primary`/`-secondary` from bg/surface, `--text-normal` plain, `--text-muted` dim, `--interactive-accent` blue.
+  - Code blocks through CodeMirror's classes: `.cm-comment` yellow, `.cm-string` green, `.cm-number`/`.cm-atom` purple, `.cm-def` blue, keywords plain.
+
+  Create it in Obsidian (Appearance → CSS snippets) or with `obsidian-cli`, never with a shell write into `~/Grimoire`. A home-manager symlink in the vault would sync to the phone and Akmon.
+- [ ] **Starship prompt** (`Modules/Core/shell.nix`): the hardcoded `#539bf5`, `#768390` and nord green become ANSI names (`blue`, `bright-black`, `green`). The prompt then follows Ghostty's palette on both hosts (Akmon has no Tn-theme).
+- [ ] **delta**, and lazygit through it (`shell.nix`):
+  - Build a bat `.tmTheme` from the same TextMate rules as VSCodium (`programs.bat.themes.tn`), then set delta's `syntax-theme = "tn"`.
+  - `plus-style`/`minus-style` use green/red-tinted backgrounds.
+  - The built-in `ansi` theme would color keywords.
+- [ ] **fzf** (fzf.fish, `tn-snip`, the `*-menu` functions): `FZF_DEFAULT_OPTS --color=bg+:<blue>,fg+:<bg>,hl:<blue>,hl+:<bg>,pointer:<blue>,info:<dim>,border:<border>`, so the chosen row looks as it does everywhere else.
+- [ ] **sioyek** (`Modules/Knowledge/pdf.nix`): `dark_mode_background_color` becomes bg as floats (`0.094 0.102 0.106`), plus `custom_background_color`/`custom_text_color` and the highlight colors.
+- [ ] **fcitx5 candidate window** (`Modules/Core/utf.nix`, now `fcitx5-nord`): a `tn` classicui theme (`~/.local/share/fcitx5/themes/tn/theme.conf`) generated from the palette, with `Theme=tn`.
+- [ ] **GTK/libadwaita apps** (Nemo, file pickers, portals): `gtk.gtk3.extraCss`/`gtk4.extraCss` with `@define-color window_bg_color`, `view_bg_color`, `headerbar_bg_color`, `accent_bg_color` and `accent_color` from the roles. Qt keeps following `adwaita-dark` unless it moves to qt6ct with a palette.
+- [ ] **Linux console and tuigreet** (both hosts): `console.colors` set to the 16 ANSI colors from `_palette.nix`.
+- [ ] **Brave's own UI** (tabs, toolbar): Chromium's `BrowserThemeColor` policy set to bg. Add only that key; page colors stay Dark Reader's job.
+- [ ] **Akmon's btop** (`Modules/Core/server-usage.nix`, `color_theme = "nord"`): a `tn` btop theme from `_palette.nix`, like Kvasir's.
+- [ ] **yazi** (Tn-neovim): `programs.yazi.theme` from the roles, with the chosen row solid blue.
+- [ ] **OpenHabitTracker:** pick its closest dark theme in Settings (there's no config file to set).
+- Discord, Thunderbird, Anki and Zotero keep their built-in dark themes.
+
 ## Later
 
 - [ ] Immich machine learning on the GPU (CUDA build, compiled on Akmon) if the
