@@ -37,6 +37,8 @@
     programs.direnv = {
       enable = true;
       nix-direnv.enable = true;
+      # just "direnv: loading …/.envrc", not the long +AR +CC … variable list
+      settings.global.hide_env_diff = true;
     };
 
     home-manager.users.xin = {

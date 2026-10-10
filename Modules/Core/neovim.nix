@@ -329,6 +329,9 @@
           # the mono font carries the Nerd Font icons (eza/starship)
           "terminal.integrated.fontFamily" = "'${config.tn.primary_font}', monospace";
           "terminal.integrated.fontLigatures.enabled" = true;
+          # the first terminal (F4) opens in the active file's folder; after
+          # that F4 shows and hides the same one (`nt` for a separate window)
+          "terminal.integrated.cwd" = "\${fileDirname}";
           # let F4 and the harpoon jumps through instead of sending them to fish
           "terminal.integrated.commandsToSkipShell" = [
             "workbench.action.terminal.toggleTerminal"

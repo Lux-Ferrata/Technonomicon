@@ -298,6 +298,13 @@
         power-off = "bash /etc/scripts/clean-power-off.sh";
         restart   = "bash /etc/scripts/clean-reboot.sh";
       };
+      # a separate Ghostty window here, for long-running jobs (servers,
+      # watchers, Claude) that shouldn't live in an editor's terminal.
+      # Desktop only: on Akmon there is no display to open it on.
+      programs.fish.functions.nt = ''
+        ghostty --working-directory=$PWD &>/dev/null &
+        disown
+      '';
 
       home.file.".local/share/tn/bin/tn-show-keybindings" = {
         source     = tnShowKeybindings;

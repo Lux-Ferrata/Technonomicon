@@ -190,6 +190,19 @@
     # allowed; don't make each one be re-allowed here before `rb` works.
     programs.direnv.settings.whitelist.prefix = [ "/home/xin/Projects" ];
 
+    # Dev shells ready before `rb`/`eo` first enters a project (Kvasir does
+    # the same for its offline copy). Flakes without an .envrc root their
+    # shell under ${home}: /home/xin is wiped on boot, the roots must not be.
+    home-manager.users.xin.systemd.user = let
+      prewarm = import ./_prewarm-devshells.nix {
+        inherit pkgs lib;
+        roots = "${home}/.cache/devshells";
+      };
+    in {
+      services.prewarm-devshells = prewarm.services.prewarm-devshells;
+      timers.prewarm-devshells   = prewarm.timers.prewarm-devshells;
+    };
+
     # ── Syncthing hub (topology in _sync.nix) ────────────────────────────
     # Every synced folder lands in fast/srv/xin/<dir>. The dataset is made on
     # first boot rather than by hand; sanoid already snapshots fast/srv
