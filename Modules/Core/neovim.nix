@@ -247,7 +247,8 @@
           # Language servers' semantic tokens would repaint variables, types
           # and calls in colour on top of the rules above.
           "editor.semanticHighlighting.enabled" = false;
-          "editor.fontFamily"              = "'JetBrains Mono', monospace";
+          "editor.fontFamily"              = "'${config.tn.primary_font}', monospace";
+          "editor.fontLigatures"           = true;
           "editor.fontSize"                = 14;
           "editor.lineNumbers"             = "relative";
           "editor.minimap.enabled"         = false;
@@ -325,8 +326,9 @@
           "editor.formatOnSave"      = true;
           "editor.wordWrap"          = "on";
           "editor.renderLineHighlight" = "all";
-          # Nerd Font variant: eza/starship icons render instead of boxes
-          "terminal.integrated.fontFamily" = "'JetBrainsMono Nerd Font', monospace";
+          # the mono font carries the Nerd Font icons (eza/starship)
+          "terminal.integrated.fontFamily" = "'${config.tn.primary_font}', monospace";
+          "terminal.integrated.fontLigatures.enabled" = true;
           # let F4 and the harpoon jumps through instead of sending them to fish
           "terminal.integrated.commandsToSkipShell" = [
             "workbench.action.terminal.toggleTerminal"

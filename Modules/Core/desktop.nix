@@ -64,27 +64,26 @@
       TTYVTDisallocate = true;
     };
 
+    # Atkinson Hyperlegible everywhere: Next for text and UI (there is no
+    # serif, so it stands in for serif too), Mono with ligatures and Nerd
+    # Font icons for code (_atkinson-mono-liga.nix). The rest is coverage:
+    # CJK (Sarasa), emoji, math symbols, icons Atkinson lacks.
     fonts.packages = with pkgs; [
-      iosevka
-      iosevka-comfy.comfy-wide-motion
-      iosevka-comfy.comfy-wide-motion-duo
+      atkinson-hyperlegible-next
+      atkinson-hyperlegible-mono
+      (callPackage ./_atkinson-mono-liga.nix { })
       nerd-fonts.symbols-only
-      nerd-fonts.jetbrains-mono
-      jetbrains-mono
       sarasa-gothic
       noto-fonts
       noto-fonts-color-emoji
-      overpass
-      fira-code
-      fira-go
       julia-mono
       cm_unicode
     ];
 
     fonts.fontconfig.defaultFonts = {
-      serif      = [ "Noto Serif" ];
-      sansSerif  = [ "Noto Sans" ];
-      monospace  = [ "Iosevka" ];
+      serif      = [ config.tn.ui_font "Noto Serif" ];
+      sansSerif  = [ config.tn.ui_font "Noto Sans" ];
+      monospace  = [ config.tn.primary_font "Noto Sans Mono" ];
     };
 
     xdg.mime.defaultApplications = {
@@ -204,6 +203,9 @@
         "org/gnome/desktop/interface" = {
           color-scheme = "prefer-dark";
           gtk-theme = "Adwaita-dark";
+          font-name           = "${config.tn.ui_font} 11";
+          document-font-name  = "${config.tn.ui_font} 11";
+          monospace-font-name = "${config.tn.primary_font} 11";
         };
         "org/nemo/preferences" = {
           show-hidden-files = false;
@@ -221,6 +223,7 @@
       gtk = {
         enable = true;
         theme.name = "Adwaita-dark";
+        font = { name = config.tn.ui_font; size = 11; };
         iconTheme = {
           package = pkgs.adwaita-icon-theme;
           name    = "Adwaita";

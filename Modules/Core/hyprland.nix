@@ -320,7 +320,7 @@
         unselectable_bg_color=#${palette.base00}66
         selectable_bg_color=#${palette.base0D}22
         selectable_border_color=#${palette.base0D}88
-        label_font_family=JetBrainsMono Nerd Font
+        label_font_family=${nixosCfg.tn.primary_font}
 
         [mode_floating]
         label_color=#${palette.base00}ff
@@ -328,10 +328,10 @@
         unselectable_bg_color=#${palette.base00}44
         selectable_bg_color=#${palette.base0A}dd
         selectable_border_color=#${palette.base0A}ff
-        label_font_family=JetBrainsMono Nerd Font
+        label_font_family=${nixosCfg.tn.primary_font}
 
         [mode_bisect]
-        label_font_family=JetBrainsMono Nerd Font
+        label_font_family=${nixosCfg.tn.primary_font}
         pointer_color=#${palette.base08}dd
       '';
 
@@ -357,7 +357,7 @@
         };
         style = ''
           * {
-            font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+            font-family: "${nixosCfg.tn.primary_font}", monospace;
             font-size: 14px;
           }
           window {
@@ -400,7 +400,7 @@
         enable = true;
         settings = {
           main = {
-            font            = "JetBrainsMono Nerd Font:size=18";
+            font            = "${nixosCfg.tn.primary_font}:size=18";
             terminal        = "ghostty -e";
             icon-theme      = "Adwaita";
             # no filename: "youtube-music.desktop" would match "youtube"
@@ -931,7 +931,7 @@
             font_color       = rgba(${palette.base05}ff)
             check_color      = rgba(${palette.base0D}ff)
             fail_color       = rgba(${palette.base08}ff)
-            font_family      = JetBrainsMono Nerd Font
+            font_family      = ${nixosCfg.tn.primary_font}
             font_size        = 32
             placeholder_text = <span foreground="##${palette.base04}"> </span>
             dots_center      = true
@@ -1013,7 +1013,7 @@
                                   color: wsBtn.modelData === Hyprland.focusedWorkspace
                                       ? "#${palette.base00}" : "#${palette.base03}"
                                   font.pixelSize: 12
-                                  font.family: "JetBrains Mono"
+                                  font.family: "${nixosCfg.tn.primary_font}"
                                   font.bold: true
                               }
 
@@ -1031,7 +1031,7 @@
                       id: clockText
                       color: "#${palette.base05}"
                       font.pixelSize: 13
-                      font.family: "JetBrains Mono"
+                      font.family: "${nixosCfg.tn.primary_font}"
                       font.bold: true
 
                       Timer {
@@ -1056,7 +1056,7 @@
                           Text {
                               anchors.verticalCenter: parent.verticalCenter
                               font.pixelSize: 20
-                              font.family: "JetBrainsMono Nerd Font Mono"
+                              font.family: "${nixosCfg.tn.primary_font}"
                               color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "#${palette.base03}" : "#${palette.base05}"
                               text: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "󰸈" :
                                     (Pipewire.defaultAudioSink?.audio.volume ?? 0) > 0.66 ? "󰕾" :
@@ -1066,7 +1066,7 @@
                           Text {
                               anchors.verticalCenter: parent.verticalCenter
                               font.pixelSize: 12
-                              font.family: "JetBrains Mono"
+                              font.family: "${nixosCfg.tn.primary_font}"
                               color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "#${palette.base03}" : "#${palette.base05}"
                               text: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "mute" :
                                     Math.round((Pipewire.defaultAudioSink?.audio.volume ?? 0) * 100) + "%"
@@ -1148,7 +1148,7 @@
                       Text {
                           anchors.centerIn: parent
                           font.pixelSize: 18
-                          font.family: "JetBrainsMono Nerd Font Mono"
+                          font.family: "${nixosCfg.tn.primary_font}"
                           color: netWidget.connType === "none" ? "#${palette.base03}" : "#${palette.base05}"
                           text: netWidget.connType === "wifi" ? "󰤨" :
                                 netWidget.connType === "ethernet" ? "󰈀" : "󰤭"
@@ -1204,7 +1204,7 @@
                       Text {
                           anchors.verticalCenter: parent.verticalCenter
                           font.pixelSize: 14
-                          font.family: "JetBrainsMono Nerd Font Mono"
+                          font.family: "${nixosCfg.tn.primary_font}"
                           color: (UPower.displayDevice !== null
                               && UPower.displayDevice.state !== UPowerDeviceState.Charging
                               && UPower.displayDevice.percentage <= 0.20) ? "#${palette.base08}" : "#${palette.base05}"
@@ -1222,7 +1222,7 @@
                       Text {
                           anchors.verticalCenter: parent.verticalCenter
                           font.pixelSize: 12
-                          font.family: "JetBrains Mono"
+                          font.family: "${nixosCfg.tn.primary_font}"
                           color: (UPower.displayDevice !== null
                               && UPower.displayDevice.state !== UPowerDeviceState.Charging
                               && UPower.displayDevice.percentage <= 0.20) ? "#${palette.base08}" : "#${palette.base05}"
@@ -1286,7 +1286,7 @@
                                       text: notif.modelData.summary
                                       color: "#${palette.base05}"
                                       font.pixelSize: 13
-                                      font.family: "JetBrains Mono"
+                                      font.family: "${nixosCfg.tn.primary_font}"
                                       font.bold: true
                                       Layout.fillWidth: true
                                       elide: Text.ElideRight
@@ -1296,7 +1296,7 @@
                                       text: notif.modelData.body
                                       color: "#${palette.base04}"
                                       font.pixelSize: 12
-                                      font.family: "JetBrains Mono"
+                                      font.family: "${nixosCfg.tn.primary_font}"
                                       Layout.fillWidth: true
                                       wrapMode: Text.WordWrap
                                       visible: text.length > 0
