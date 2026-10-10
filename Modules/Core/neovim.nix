@@ -163,7 +163,8 @@
           # shared with nvim and the desktop): Dark Reader's ground, flat
           # surfaces with thin borders, blue for focus, and the row being
           # chosen solid blue with dark text.
-          "workbench.colorTheme"           = "Default Dark Modern";
+          # VSCodium 1.126 calls it "Dark Modern" (the "Default " prefix is gone)
+          "workbench.colorTheme"           = "Dark Modern";
           # flash labels: red tags with dark text, matches in teal
           "flash-vscode.labelBackgroundColor"         = c.error;
           "flash-vscode.labelColor"                   = c.bg;
@@ -329,10 +330,10 @@
           # Tonsky's minimal highlighting, the same as nvim (_tn-nvim.lua):
           # comments yellow, strings green, constants purple, *definitions*
           # blue, punctuation and operators grey; keywords, calls and
-          # variables plain; no bold or italic. Every rule is keyed to the
-          # theme, and the more specific scope wins, so the catch-alls can
-          # come first.
-          "editor.tokenColorCustomizations"."[Default Dark Modern]".textMateRules = let
+          # variables plain; no bold or italic. The more specific scope wins,
+          # so the catch-alls can come first. Not keyed to a theme name: a
+          # renamed theme silently drops theme-keyed rules (it happened).
+          "editor.tokenColorCustomizations".textMateRules = let
             rule = scope: settings: { inherit scope settings; };
           in [
             (rule [
