@@ -80,5 +80,14 @@
       akmon  = "Sioyek";
       mode   = "backup";
     };
+
+    # Kvasir's local Vikunja: a consistent copy its backup timer writes
+    # (Tn-vikunja); Akmon keeps the history in its snapshots
+    vikunja = {
+      label  = "Vikunja";
+      kvasir = "/home/xin/.local/share/vikunja-backup";
+      akmon  = "Vikunja";
+      mode   = "backup";
+    };
   };
 }

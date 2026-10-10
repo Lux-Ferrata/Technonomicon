@@ -61,6 +61,7 @@
       self.nixosModules.Tn-hosting
       self.nixosModules.Tn-office
       self.nixosModules.Tn-astradraw
+      self.nixosModules.Tn-openhabittracker
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";

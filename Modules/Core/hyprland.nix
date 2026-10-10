@@ -592,12 +592,6 @@
           })
 
           hl.window_rule({
-            name      = "super-productivity-workspace",
-            match     = { class = "superproductivity" },
-            workspace = 9,
-          })
-
-          hl.window_rule({
             name   = "portal-dialog-size",
             match  = { class = "xdg-desktop-portal-gtk" },
             float  = true,
@@ -693,7 +687,7 @@
             hl.exec_cmd("fcitx5 -d --replace")
             hl.exec_cmd("[workspace 8 silent] obsidian")
             -- hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
-            hl.exec_cmd("[workspace 9 silent] superproductivity")
+            hl.exec_cmd("[workspace 9 silent] flatpak run net.openhabittracker.OpenHabitTracker")
           end)
 
           -- Trackpad gestures. Three fingers sideways pans the scrolling

@@ -125,7 +125,8 @@ Every service is `<name>.ironshark.org`: an A record pointing at Akmon's tailnet
 | `keep.` | Karakeep (bookmarks with archives, tags from the local model) |
 | `cal.` | Radicale: staging for the generated calendars pushed to Google Calendar |
 | `draw.` | AstraDraw (Excalidraw with workspaces); launcher "Flowchart" |
-| `dav.` | WebDAV (Zotero attachments, Super Productivity sync) |
+| `habits.` | OpenHabitTracker sync server (the apps work offline) |
+| `dav.` | WebDAV (Zotero attachments) |
 | `vault.` | Vaultwarden (nightly backup of the Bitwarden cloud vault) |
 | `office.` | OpenCloud + Collabora |
 | `media.`, `audiobooks.`, `yt.`, `torrent.` | Media stack: Jellyfin, Audiobookshelf, Pinchflat, qBittorrent (placeholder layout, see TODO.md) |
@@ -136,7 +137,7 @@ Every service is `<name>.ironshark.org`: an A record pointing at Akmon's tailnet
 
 Also on Akmon:
 - a mail archive (mbsync, never deletes)
-- Super Productivity deadlines → Radicale → Google Calendar
+- Vikunja due dates (from Kvasir's backup copy) → Radicale → Google Calendar
 - Grimoire snapshots every 5 min
 - a NAS (Samba) and VMs (libvirt)
 - `gpu-lend`, which hands the GPU to a big job
@@ -194,7 +195,8 @@ Attachments sync over WebDAV: Zotero → Settings → Sync → Files → WebDAV,
 
 - Tailscale (+ Mullvad) always on; Taildrop with `send`
 - Syncthing-Fork: the Grimoire share, opened in Obsidian
-- Super Productivity (WebDAV sync to Akmon)
+- OpenHabitTracker (Google Play; syncs to `habits.`)
+- Vikunja app → Kvasir's Vikunja over the tailnet (while the laptop is up)
 - Capy Reader → Miniflux
 - Paperless and Karakeep apps
 
@@ -207,7 +209,7 @@ Open items from the services rollout are in [`TODO.md`](TODO.md).
 - [ ] Full disk encryption
 - [ ] Reference boot image
 - [x] wl-kbptr installed and bound (`Super+G`). Re-check whether upstream has released `--drag`.
-- [x] Calendar: Google Calendar is home; Radicale only stages generated calendars (Super Productivity deadlines) that are pushed to Google. This replaces the khal plan.
+- [x] Calendar: Google Calendar is home; Radicale only stages generated calendars (Vikunja due dates) that are pushed to Google. This replaces the khal plan.
 
 ### Not sure if it is worth actually making these changes
 - [ ] Switch Phone and Tablet to Graphene and Lineage OS?
@@ -219,5 +221,5 @@ Open items from the services rollout are in [`TODO.md`](TODO.md).
 ### Homelab
 - [ ] Hydrus picture and gif server (ML image recognition, search, and tagging); deferred
 - [x] LanguageTool server for Obsidian grammar and spell checking (`lt.ironshark.org`)
-- [x] Super Productivity with sync to Akmon
-- [ ] Super Productivity time tracking
+- [x] Tasks: Vikunja, local on Kvasir (offline), backed up to Akmon
+- [x] Habits: OpenHabitTracker with sync through Akmon

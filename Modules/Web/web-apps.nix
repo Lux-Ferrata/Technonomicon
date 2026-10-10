@@ -15,6 +15,7 @@
         calendar       = "google-calendar.svg";
         toggl          = "toggl.svg";
         syncthing      = "syncthing.svg";
+        vikunja        = "vikunja.svg";
         exercism       = "exercism.svg";
         amazon         = "amazon.svg";
         weather        = "weather.svg";
@@ -216,6 +217,17 @@
         terminal = false;
         keywords = [ "syncthing" "sync" "files" "backup" "kvasir" ];
         categories = [ "Application" "Network" ];
+      })
+
+      # Kvasir's own Vikunja (Tn-vikunja); works offline
+      (pkgs.makeDesktopItem {
+        name = "vikunja";
+        desktopName = "Tasks (Vikunja)";
+        exec = "${pkgs.brave}/bin/brave --app=http://localhost:3456/ --start-maximized";
+        icon = "${icons.vikunja}";
+        terminal = false;
+        keywords = [ "tasks" "vikunja" "todo" "projects" "kanban" ];
+        categories = [ "Application" "Office" ];
       })
 
       (pkgs.makeDesktopItem {

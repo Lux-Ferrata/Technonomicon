@@ -82,11 +82,12 @@ All shared modules are prefixed `Tn-` (Technonomicon); each host picks the ones 
 - `Tn-server`, `Tn-server-*`, `Tn-console-kanata` — Akmon's base: tailscale and sshd, mail relay, alerts (`tn-issue`), metrics, report mails, Claude's health review, `aku`, a rescue nvim, the console keyboard
 - `Tn-forgejo` (git + CI runner), `Tn-overnight` (overnight agents)
 
-**Services/** — Akmon's web services. Each sets `tn.web.vhosts.<name>`, which gives it `https://<name>.ironshark.org` (tailnet-only) and a DNS record. `Tn-server-web` provides nginx, the wildcard cert and the shared Postgres; the rest are one module per service (Grimoire, LanguageTool, Radicale + calendar push + task deadlines, WebDAV, Paperless, Immich, Karakeep, mail archive, Miniflux, Atuin, SearXNG, Vaultwarden, media, NAS, torrent, hosting, office, AstraDraw).
+**Services/** — Akmon's web services. Each sets `tn.web.vhosts.<name>`, which gives it `https://<name>.ironshark.org` (tailnet-only) and a DNS record. `Tn-server-web` provides nginx, the wildcard cert and the shared Postgres; the rest are one module per service (Grimoire, LanguageTool, Radicale + calendar push + task deadlines, WebDAV, Paperless, Immich, Karakeep, mail archive, Miniflux, Atuin, SearXNG, Vaultwarden, media, NAS, torrent, hosting, office, AstraDraw, OpenHabitTracker).
 
 **Knowledge/**
 - `Tn-learning` — hledger, fava, beancount, gnucash, visidata, anki, zotero (pinned input), foliate, rnote
-- `Tn-mind` — Obsidian, Super Productivity, pomodoro
+- `Tn-mind` — Obsidian, OpenHabitTracker (Flathub), pomodoro
+- `Tn-vikunja` — Kvasir's local Vikunja (tasks, offline), tailnet access, backup to Akmon
 - `Tn-pdf` — sioyek (inverse search into VSCodium)
 - `Tn-science` — julia, R, octave, maxima, gnuplot, gap, sage, lean4, quarto, geogebra
 - `Tn-scan` — scanner, `scan` / `multi-scan`, `paperless-add`

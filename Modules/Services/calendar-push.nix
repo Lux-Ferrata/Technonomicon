@@ -1,7 +1,7 @@
 { inputs, ... }: {
   # One-way push of generated Radicale calendars into Google Calendar, every
   # 5 minutes (vdirsyncer, as xin). Radicale is only the staging area for
-  # calendars Akmon writes (Super Productivity deadlines, task-deadlines.nix);
+  # calendars Akmon writes (Vikunja due dates, task-deadlines.nix);
   # hand-made calendars live in Google itself. Anything changed on the Google
   # side of a pushed calendar is reverted on the next run.
   #

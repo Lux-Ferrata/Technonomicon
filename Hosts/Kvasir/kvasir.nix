@@ -40,6 +40,7 @@
       # sage 10.9 from source AND runs its full doctest suite. Expect hours.
       self.nixosModules.Tn-science
       self.nixosModules.Tn-mind
+      self.nixosModules.Tn-vikunja
       self.nixosModules.Tn-provenance
       self.nixosModules.Tn-art
       self.nixosModules.Tn-utf
@@ -83,9 +84,8 @@
 
         networking.hostName = "Kvasir";
 
-        # Tasks: Super Productivity (Tn-mind), synced to Akmon over WebDAV.
-        # The old local Vikunja server's data stays in /var/lib/private/vikunja
-        # until removed by hand.
+        # Tasks: a local Vikunja (Tn-vikunja, backed up to Akmon). Habits:
+        # OpenHabitTracker (Tn-mind, syncs through Akmon).
 
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 

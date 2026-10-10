@@ -1,6 +1,6 @@
 { inputs, ... }: {
   # Radicale (CalDAV) at https://cal.ironshark.org, user xin: only the staging
-  # area for calendars Akmon generates (Super Productivity deadlines,
+  # area for calendars Akmon generates (Vikunja due dates,
   # task-deadlines.nix), which calendar-push.nix mirrors to Google Calendar.
   # Calendars are made and edited in Google itself, not here.
   # Radicale's own page (inspect/export): https://cal.ironshark.org/.web/
