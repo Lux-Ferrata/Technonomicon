@@ -25,6 +25,9 @@
         # anything to keep)
         CLEANUP_ARCHIVE_READ_DAYS = 30;
         CLEANUP_ARCHIVE_UNREAD_DAYS = 30;
+        # the scraped feeds below live on rss.ironshark.org, i.e. Akmon's
+        # tailnet IP, which Miniflux otherwise refuses to fetch
+        FETCHER_ALLOW_PRIVATE_NETWORKS = 1;
       };
     };
 
