@@ -31,6 +31,13 @@
     };
     systemd.tmpfiles.rules = [ "d ${media} 0750 ${cfg.user} ${cfg.group} -" ];
 
+    # /var is wiped on boot: keep the downloaded ML models (otherwise fetched
+    # again after every reboot) and the job queue
+    environment.persistence."/persist".directories = [
+      { directory = "/var/cache/immich";     user = cfg.user;      group = cfg.group;      mode = "0750"; }
+      { directory = "/var/lib/redis-immich"; user = "redis-immich"; group = "redis-immich"; mode = "0700"; }
+    ];
+
     tn.web.vhosts.photos = { port = cfg.port; maxBody = "50000m"; };   # videos
   };
 }

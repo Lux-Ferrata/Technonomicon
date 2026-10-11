@@ -41,6 +41,11 @@
       };
     };
 
+    # its task queue (Redis) would otherwise be emptied by every boot
+    environment.persistence."/persist".directories = [
+      { directory = "/var/lib/redis-paperless"; user = "redis-paperless"; group = "redis-paperless"; mode = "0700"; }
+    ];
+
     tn.web.vhosts.docs = { port = cfg.port; maxBody = "200m"; };
   };
 }

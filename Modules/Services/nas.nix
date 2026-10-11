@@ -43,7 +43,7 @@
               # binding, so it listens everywhere; the firewall (445 on
               # tailscale0 only) and "hosts allow" keep it tailnet-only
               "hosts allow"     = "100.64.0.0/10 fd7a:115c:a1e0::/48 127.0.0.1 ::1";
-              "hosts deny"      = "0.0.0.0/0";
+              "hosts deny"      = "ALL";   # 0.0.0.0/0 would leave IPv6 out
               security          = "user";
               "map to guest"    = "never";
               "server min protocol" = "SMB3";
