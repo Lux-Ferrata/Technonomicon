@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="apple-touch-icon" sizes="180x180" href="/typey-type/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/typey-type/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/typey-type/favicon-16x16.png">
+    <link rel="manifest" href="/typey-type/manifest.json">
+    <link rel="mask-icon" href="/typey-type/safari-pinned-tab.svg" color="#2e173b">
+    <link rel="shortcut icon" href="/typey-type/favicon.ico">
+    <!-- <style type="text/css">body{margin:40px auto;max-width:650px;line-height:1.6;font-size:18px;color:#444;padding:0 10px}h1,h2,h3{line-height:1.2}</style> -->
+    <meta name="msapplication-config" content="/typey-type/browserconfig.xml">
+    <meta name="theme-color" content="#2e173b">
+    <meta name="color-scheme" content="dark light">
+    <title>Typey Type for Stenographers</title>
+    <script type="module" crossorigin src="/typey-type/assets/index-DpKpr2OP.js"></script>
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/jsx-runtime-DTx1N6FR.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/exports-x114vsKC.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/Subheader-Cd8qUXf8.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/preload-helper-BvL3VQRJ.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/utils-h72Yj4NL.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/lessonIndexState-BQtcsJX7.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/dist-T8B_TQ-a.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/ErrorBoundary-CSZxh3f1.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/dist-LaYzrdvC.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/PseudoContentButton-BEg-Aq_i.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/prop-types-DcaO582l.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/lib-dB_0Dcas.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/use-reduced-motion-CZp4lbDq.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/DocumentTitle-BYrSYVhm.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/useAnnouncer-jMrIh8XR.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/Icon-CS7VBM8C.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/ClosingCross-zC1tT7zd.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/TypeyTypeIcon-g1HUo8TF.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/mapBriefToAmericanStenoKeys-DpccuzHI.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/mapBriefToPalantypeKeys-CvZ-WzoD.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/splitIntoStrokesDictsAndNamespaces-CEvnsczf.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/StrokesForWords-BMTx1kw8.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/OutboundLink-3Iyg5T3k.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/atomUtils-oZ96aQwQ.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/globalUserSettingsState-kvgTz5-S.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/updateFlashcardSetting-DZ6OH9Le.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/AppMethodsContext-FyeGtGa2.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/userSettingsState-DhPP11tf.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/params-Dj3MGESS.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/updateUserSetting-NdpHQOeZ.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/maxItems-BtpvniKC.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/utils-y2dwIlKs.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/confetti-CmKp__a0.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/debounce-BEb91cRj.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/formatters-BzwsMR4l.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/isNormalInteger-Bxh7_lJc.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/createStrokeHintForPhrase-B3ccI6a4.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/transformingDictionaries-DLPtSv0E.js">
+    <link rel="modulepreload" crossorigin href="/typey-type/assets/trimAndSumUniqMetWords-BH09VgGw.js">
+    <link rel="stylesheet" crossorigin href="/typey-type/assets/index-Bjn7C3Zw.css">
+  </head>
+  <body>
+    <noscript>
+      <div style="max-width:650px;margin:0 auto;">
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">Typey&nbsp;Type for Stenographers is a typing app designed specifically to help stenography students learn <abbr title='stenography'>steno</abbr> faster. The process of writing shorthand is called <strong>stenography</strong>. Stenography is the fastest way to type. Want to write over 200 words per minute? Grab yourself a fancy keyboard and start learning stenography!</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">Typey&nbsp;Type has typing drills to help you learn Plover theory and stenography and practicing typing. Typey&nbsp;Type embraces ideas of spaced repetitions and deliberate practice to teach steno effectively.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">Typey Type tracks your progress automatically without signing in.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">Practice any text you like. Paste in a word list to create a custom lesson using Plover theory, or paste in words and strokes to use your own theory and material.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">When you press keys together on a stenotype machine—like playing a piano chord—the software translates the key combination into meaningful words according to their phonetic sounds. <a href="http://www.openstenoproject.org/plover/">Plover is the world’s first free, open-source stenography program</a> that works cross-platform on Windows, macOS, and Linux operating systems.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">Loosely, a brief or outline is the specified combination of keys pressed together to produce a specific word or phrase. Strictly, a brief or abbreviation is a shortened outline form with fewer strokes than the phonetic outline.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">A stroke is a combination of keys held together and released to write a word or sound. A multi-stroke brief is a combination of strokes pressed in order to produce a word or phrase (usually of more syllables).</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">The first type of study session lets you discover new briefs by showing only a limited number of new words while revealing their strokes. Write these words slowly, concentrating on accuracy and forming good habits around how you stroke word parts. Focus on lessons with interesting words, especially top words for your needs (such as common English words for general usage or domain specific phrases for steno in particular industries).</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">The next type of study session helps you revise recently learned briefs by showing only words you’ve seen. Apply effort in recalling these briefs before showing strokes, and avoid fingerspelling or stroking out long, phonetic forms of words so you can memorise and rehearse the best brief for every word. Choose a lesson with the majority of words you’re interested in nailing first like the top 1000 words.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">The third type of study session is about building up your muscle memory and testing your skills. Write as fast and furiously as you can and aim for a high WPM score. Pick specific drills that focus on a certain kind of brief or many similar words so you can associate them together.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">The final type of study session lets you mimic real usage as closely as possible. Write as fast as you can without causing misstrokes. Explore stories that use real sentences.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">For an idea of how steno feels and works, you can install Plover and use its “arpeggiate” setting. This setting lets you use a QWERTY keyboard to write stenography. The trick is that you press each key separately and then press space bar to send the stroke. Usually a stenographer will press all keys together and release them together. Most QWERTY keyboards, however, are non-NKRO (N-key roll over), meaning only the first 6 keys held together will be noticed; later keys are ignored. Arpeggiate will let you explore steno, but is unrealistic.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">You need a true NKRO (N-key roll over) supported keyboard with key caps or key toppers, or a stenotype machine and software like Plover (free and open).</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">To write text for personal use, such as writing emails and instant messages, you could learn basic steno at ~40WPM within 3–6 months. To productively use steno to write most text at under 100WPM, it might take 6–18 months. For live dictation at 200WPM, it might take you 2 or more years. If you are learning stenography for ergonomic reasons and have injuries to manage, it could take longer.</p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">Typey&nbsp;Type depends on JavaScript for everything. JavaScript appears to be unavailable. You can try to enable it to use Typey Type or, if you want to practice stenography without JavaScript, I suggest you practice transcribing text from <a href="https://www.openstenoproject.org/learn-plover/home.html" target="_blank" rel="noopener noreferrer">Learn Plover!</a></p>
+        <p style="color:#3f264e;line-height:2;margin-bottom:1em;font:400 16px/1.6 'Overpass Mono', Consolas, 'Andale Mono', Monaco, 'Courier New', Courier, monospace;">Typey Type is made with <span aria-label="love" role="img">❤️</span> by <a href="https://didoesdigital.com/">DiDoesDigital</a>.</p>
+      </div>
+    </noscript>
+    <div id="root"></div>
+  </body>
+</html>
