@@ -53,11 +53,20 @@
     tnShowKeybindings = pkgs.writeShellScript "tn-show-keybindings"
       (builtins.readFile ../../bin/tn-show-keybindings);
 
-    # Needs node on PATH: math-snippets.js is JS (replacements may be
-    # functions), so it is eval'd rather than parsed.
-    tnShowSnippets = pkgs.writeShellScript "tn-show-snippets" ''
-      export PATH="${pkgs.nodejs}/bin:${pkgs.wofi}/bin:$PATH"
-      ${builtins.readFile ../../bin/tn-show-snippets}
+    # Snippet finder (bin/tn-snip). node evals math-snippets.js (JS, may hold
+    # functions); pylatexenc renders LaTeX to Unicode for searching; json5
+    # reads the VS Code snippet files. Only the bare launch is locked, and
+    # the lock rides along into the Ghostty window it execs.
+    tnSnip = let
+      py = pkgs.python3.withPackages (p: [ p.pylatexenc p.json5 ]);
+    in pkgs.writeShellScript "tn-snip" ''
+      export PATH="${pkgs.nodejs}/bin:${pkgs.fzf}/bin:$PATH"
+      export TN_SNIP="$0"
+      if [ "$#" -eq 0 ]; then
+        exec 9>"''${XDG_RUNTIME_DIR:-/tmp}/tn-snip.lock"
+        flock -n 9 || exit 0
+      fi
+      exec ${py}/bin/python3 ${../../bin/tn-snip} "$@"
     '';
 
     cleanWin = ''
@@ -71,30 +80,38 @@
         (.[0:1] | ascii_upcase) + .[1:];
     '';
 
-    winPicker = pkgs.writeShellScript "tn-win-picker" ''
-      CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
-        ${pkgs.jq}/bin/jq -r '
-          ${cleanWin}
-          map(select(.focusHistoryID != 0)) | sort_by(.focusHistoryID) |
-          .[] | [(.title | clean_title), (.class | clean_class), (.workspace.id | tostring), .address] | @tsv' | \
-        awk -F'\t' '{ printf "%-50s %-12s ws:%-2s  %s\n", $1, $2, $3, $4 }' | \
-        ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "window")
-      ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
-      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
-    '';
-
-    winPickerWs = pkgs.writeShellScript "tn-win-picker-ws" ''
+    # Window pickers in the Super+Space launcher's fuzzel (same theme,
+    # fzf-style fuzzy ranking), most recently focused first. fuzzel --index
+    # returns the chosen line number, so the address stays out of the list.
+    # Scopes: global (focus it anywhere), ws (this workspace), pull (windows
+    # on other workspaces, moved here and focused; `follow = false` keeps the
+    # view on this workspace).
+    pickWindow = scope: pkgs.writeShellScript "tn-win-picker-${scope}" ''
       WS_ID=$(${hyprlandPkg}/bin/hyprctl activeworkspace -j | ${pkgs.jq}/bin/jq '.id')
-      CHOICE=$(${hyprlandPkg}/bin/hyprctl clients -j | \
-        ${pkgs.jq}/bin/jq -r --argjson ws "$WS_ID" '
+      mapfile -t ROWS < <(${hyprlandPkg}/bin/hyprctl clients -j | \
+        ${pkgs.jq}/bin/jq -r --arg scope ${scope} --argjson ws "$WS_ID" '
           ${cleanWin}
-          map(select(.workspace.id == $ws and .focusHistoryID != 0)) | sort_by(.focusHistoryID) |
-          .[] | [(.title | clean_title), (.class | clean_class), .address] | @tsv' | \
-        awk -F'\t' '{ printf "%-50s %-12s  %s\n", $1, $2, $3 }' | \
-        ${pkgs.wofi}/bin/wofi --dmenu --no-sort -p "workspace window")
-      ADDR=$(echo "$CHOICE" | awk '{ print $NF }')
+          map(select(.focusHistoryID != 0 and (
+            $scope == "global" or
+            ($scope == "ws"   and .workspace.id == $ws) or
+            ($scope == "pull" and .workspace.id != $ws)))) |
+          sort_by(.focusHistoryID) |
+          .[] | [(.title | clean_title), (.class | clean_class), (.workspace.id | tostring), .address] | @tsv')
+      [ "''${#ROWS[@]}" -gt 0 ] || exit 0
+      IDX=$(printf '%s\n' "''${ROWS[@]}" | \
+        awk -F'\t' '{ printf "%-50.50s  %-12.12s  ws %s\n", $1, $2, $3 }' | \
+        ${pkgs.fuzzel}/bin/fuzzel --dmenu --index --width 80 \
+          --prompt "${if scope == "pull" then "pull here" else "window"} ❯ ") || exit 0
+      ADDR=$(printf '%s\n' "''${ROWS[$IDX]}" | cut -f4)
+      ${lib.optionalString (scope == "pull") ''
+        ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.window.move({ workspace = $WS_ID, window = 'address:$ADDR', follow = false }))"
+      ''}
       ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='address:$ADDR'}))"
     '';
+    winPicker   = pickWindow "global";
+    winPickerWs = pickWindow "ws";
+    winPickerPull = pickWindow "pull";
+
 
     # Focus the previously focused window: `ws` limits it to the active
     # workspace, `global` takes it from anywhere (switching workspace).
@@ -244,9 +261,12 @@
       mode = "0755";
       text = ''
         #!/usr/bin/env bash
-        CONN=$(${pkgs.networkmanager}/bin/nmcli -t -f DEVICE,TYPE,STATE,CONNECTION dev | grep ':connected:' | awk -F: '{print $4 " (" $2 ") on " $1}')
+        LINE=$(${pkgs.networkmanager}/bin/nmcli -t -f DEVICE,TYPE,STATE,CONNECTION dev | grep -m1 ':connected:')
+        CONN=$(printf '%s' "$LINE" | awk -F: '{print $4 " (" $2 ") on " $1}')
         [ -z "$CONN" ] && CONN="Not connected"
-        IP=$(${pkgs.networkmanager}/bin/nmcli -t -f IP4.ADDRESS dev show | awk -F: '$2 != "" {print $2}' | head -1)
+        # that device's address, not whichever device nmcli happens to list first
+        IP=""
+        [ -n "$LINE" ] && IP=$(${pkgs.networkmanager}/bin/nmcli -g IP4.ADDRESS dev show "''${LINE%%:*}" | head -1)
         [ -z "$IP" ] && IP="none"
         exec ${pkgs.libnotify}/bin/notify-send "Network" "$(printf '%s\nIP: %s' "$CONN" "$IP")"
       '';
@@ -270,6 +290,22 @@
 
       home.sessionPath = [ "$HOME/.local/share/tn/bin" ];
 
+      # Ending the session belongs to the desktop, not the shared shell, where
+      # these would also power off or reboot Akmon. logout ends just this
+      # Hyprland session.
+      programs.fish.shellAbbrs = {
+        logout    = "loginctl terminate-session $XDG_SESSION_ID";
+        power-off = "bash /etc/scripts/clean-power-off.sh";
+        restart   = "bash /etc/scripts/clean-reboot.sh";
+      };
+      # a separate Ghostty window here, for long-running jobs (servers,
+      # watchers, Claude) that shouldn't live in an editor's terminal.
+      # Desktop only: on Akmon there is no display to open it on.
+      programs.fish.functions.nt = ''
+        ghostty --working-directory=$PWD &>/dev/null &
+        disown
+      '';
+
       home.file.".local/share/tn/bin/tn-show-keybindings" = {
         source     = tnShowKeybindings;
         executable = true;
@@ -291,7 +327,7 @@
         unselectable_bg_color=#${palette.base00}66
         selectable_bg_color=#${palette.base0D}22
         selectable_border_color=#${palette.base0D}88
-        label_font_family=JetBrainsMono Nerd Font
+        label_font_family=${nixosCfg.tn.primary_font}
 
         [mode_floating]
         label_color=#${palette.base00}ff
@@ -299,15 +335,15 @@
         unselectable_bg_color=#${palette.base00}44
         selectable_bg_color=#${palette.base0A}dd
         selectable_border_color=#${palette.base0A}ff
-        label_font_family=JetBrainsMono Nerd Font
+        label_font_family=${nixosCfg.tn.primary_font}
 
         [mode_bisect]
-        label_font_family=JetBrainsMono Nerd Font
+        label_font_family=${nixosCfg.tn.primary_font}
         pointer_color=#${palette.base08}dd
       '';
 
-      home.file.".local/share/tn/bin/tn-show-snippets" = {
-        source     = tnShowSnippets;
+      home.file.".local/share/tn/bin/tn-snip" = {
+        source     = tnSnip;
         executable = true;
       };
 
@@ -328,7 +364,7 @@
         };
         style = ''
           * {
-            font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+            font-family: "${nixosCfg.tn.primary_font}", monospace;
             font-size: 14px;
           }
           window {
@@ -350,9 +386,10 @@
             padding: 6px 10px;
             border-radius: 4px;
           }
+          /* the row being chosen: solid blue, dark text (as everywhere) */
           #entry:selected {
-            background-color: #${palette.base02};
-            color: #${palette.base0D};
+            background-color: #${palette.base0D};
+            color: #${palette.base00};
           }
           #text {
             color: #${palette.base05};
@@ -360,7 +397,7 @@
             font-weight: 600;
             padding-left: 8px;
           }
-          #text:selected { color: #${palette.base0D}; }
+          #text:selected { color: #${palette.base00}; }
         '';
       };
 
@@ -371,7 +408,7 @@
         enable = true;
         settings = {
           main = {
-            font            = "JetBrainsMono Nerd Font:size=18";
+            font            = "${nixosCfg.tn.primary_font}:size=18";
             terminal        = "ghostty -e";
             icon-theme      = "Adwaita";
             # no filename: "youtube-music.desktop" would match "youtube"
@@ -391,9 +428,10 @@
             input           = "${palette.base05}ff";
             placeholder     = "${palette.base03}ff";
             match           = "${palette.base0D}ff";
-            selection       = "${palette.base02}ff";
-            selection-text  = "${palette.base0D}ff";
-            selection-match = "${palette.base0E}ff";
+            # the row being chosen: solid blue, dark text (as everywhere)
+            selection       = "${palette.base0D}ff";
+            selection-text  = "${palette.base00}ff";
+            selection-match = "${palette.base00}ff";
             counter         = "${palette.base03}ff";
             border          = "${palette.base03}ff";
           };
@@ -423,7 +461,7 @@
       home.file.".config/ghostty/themes/tn".text = ''
         background = #${palette.base00}
         foreground = #${palette.base05}
-        selection-background = #${palette.base02}
+        selection-background = #${palette.base0D}
         selection-foreground = #${palette.base00}
         cursor-color = #${palette.base05}
         palette = 0=#${palette.base00}
@@ -563,12 +601,6 @@
           })
 
           hl.window_rule({
-            name      = "habitica-workspace",
-            match     = { class = "brave-habitica.com__-Default" },
-            workspace = 9,
-          })
-
-          hl.window_rule({
             name   = "portal-dialog-size",
             match  = { class = "xdg-desktop-portal-gtk" },
             float  = true,
@@ -624,6 +656,14 @@
           })
 
           hl.window_rule({
+            name   = "tn-snippets-float",
+            match  = { class = "tn-snippets" },
+            float  = true,
+            size   = "1100 650",
+            center = true,
+          })
+
+          hl.window_rule({
             name   = "clipse-float",
             match  = { class = "clipse" },
             float  = true,
@@ -656,15 +696,19 @@
             hl.exec_cmd("fcitx5 -d --replace")
             hl.exec_cmd("[workspace 8 silent] obsidian")
             -- hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
-            hl.exec_cmd("[workspace 9 silent] ${pkgs.brave}/bin/brave --app=https://habitica.com --start-maximized")
+            hl.exec_cmd("[workspace 9 silent] flatpak run net.openhabittracker.OpenHabitTracker")
           end)
 
           -- Trackpad gestures. Three fingers sideways pans the scrolling
-          -- tape (window to window), four fingers switches workspace, three
-          -- fingers up toggles fullscreen.
+          -- tape (window to window); three fingers up/down switches
+          -- workspace, as does four fingers sideways.
           hl.gesture({ fingers = 3, direction = "horizontal", action = "scroll_move" })
+          hl.gesture({ fingers = 3, direction = "vertical",   action = "workspace" })
           hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
-          hl.gesture({ fingers = 3, direction = "up",         action = "fullscreen" })
+
+          -- Workspaces slide vertically, following the three-finger swipe.
+          -- Speed and curve are Hyprland's defaults; only the direction changes.
+          hl.animation({ leaf = "workspaces", enabled = true, speed = 8, bezier = "default", style = "slidevert" })
 
           hl.config({
             input = {
@@ -696,8 +740,8 @@
               -- still reads as "one window at a time" like monocle did, but
               -- with the whole workspace laid out on a tape behind it.
               column_width = 1.0,
-              -- SUPER+SHIFT+W cycles this list with `colresize +conf`, so a
-              -- two-entry list is exactly a full-width <-> half-width toggle.
+              -- What `colresize +conf/-conf` steps through. No key uses it
+              -- now: SUPER+SHIFT+W sets every column at once (below).
               explicit_column_widths = "0.5, 1.0",
               fullscreen_on_one_column = true,
               -- Focusing a window (incl. from the SUPER+B pickers) scrolls
@@ -763,7 +807,7 @@
           hl.bind(mainMod .. " + Return",      hl.dsp.exec_cmd("${vimEdit}"))
           hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&commandid=periodic-notes%3Aopen-daily-note&openmode=window'"))
           hl.bind(mainMod .. " + H",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-keybindings"))
-          hl.bind(mainMod .. " + SHIFT + H",  hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-snippets"))
+          hl.bind(mainMod .. " + SHIFT + H",  hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-snip"))
           hl.bind(mainMod .. " + X",          hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
           hl.bind(mainMod .. " + SHIFT + X",  hl.dsp.exec_cmd("${quickPaste}"))
           hl.bind(mainMod .. " + ALT + X",    hl.dsp.exec_cmd("${emojiPick}"))
@@ -849,11 +893,20 @@
 
           hl.bind(mainMod .. " + G",         hl.dsp.exec_cmd("wl-kbptr -o modes=floating,click -o mode_floating.source=detect"))
           hl.bind(mainMod .. " + SHIFT + G", hl.dsp.exec_cmd("wl-kbptr -o modes=tile,bisect"))
-          hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd("${winPickerWs}"))
-          hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPicker}"))
+          hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd("${winPicker}"))
+          hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPickerWs}"))
+          hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd("${winPickerPull}"))
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))
 
-          hl.bind(mainMod .. " + SHIFT + W", hl.dsp.layout("colresize +conf"))
+          -- Every column on this workspace to half width, or all back to
+          -- full. Judged by the focused column, so it agrees with
+          -- SUPER+ALT+left/right; no window or a floating one counts as full.
+          hl.bind(mainMod .. " + SHIFT + W", function()
+            local w     = hl.get_active_window()
+            local col   = w and type(w.layout) == "table" and w.layout.column
+            local width = type(col) == "table" and col.width or 1.0
+            colWidthAll(width > 0.75 and "0.5" or "1.0")()
+          end)
           hl.bind(mainMod .. " + ALT + W",   hl.dsp.layout("fit visible"))
           hl.bind(mainMod .. " + CTRL + W",  hl.dsp.layout("center"))
 
@@ -887,7 +940,7 @@
             font_color       = rgba(${palette.base05}ff)
             check_color      = rgba(${palette.base0D}ff)
             fail_color       = rgba(${palette.base08}ff)
-            font_family      = JetBrainsMono Nerd Font
+            font_family      = ${nixosCfg.tn.primary_font}
             font_size        = 32
             placeholder_text = <span foreground="##${palette.base04}"> </span>
             dots_center      = true
@@ -969,7 +1022,7 @@
                                   color: wsBtn.modelData === Hyprland.focusedWorkspace
                                       ? "#${palette.base00}" : "#${palette.base03}"
                                   font.pixelSize: 12
-                                  font.family: "JetBrains Mono"
+                                  font.family: "${nixosCfg.tn.primary_font}"
                                   font.bold: true
                               }
 
@@ -987,7 +1040,7 @@
                       id: clockText
                       color: "#${palette.base05}"
                       font.pixelSize: 13
-                      font.family: "JetBrains Mono"
+                      font.family: "${nixosCfg.tn.primary_font}"
                       font.bold: true
 
                       Timer {
@@ -1012,7 +1065,7 @@
                           Text {
                               anchors.verticalCenter: parent.verticalCenter
                               font.pixelSize: 20
-                              font.family: "JetBrainsMono Nerd Font Mono"
+                              font.family: "${nixosCfg.tn.primary_font}"
                               color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "#${palette.base03}" : "#${palette.base05}"
                               text: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "󰸈" :
                                     (Pipewire.defaultAudioSink?.audio.volume ?? 0) > 0.66 ? "󰕾" :
@@ -1022,7 +1075,7 @@
                           Text {
                               anchors.verticalCenter: parent.verticalCenter
                               font.pixelSize: 12
-                              font.family: "JetBrains Mono"
+                              font.family: "${nixosCfg.tn.primary_font}"
                               color: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "#${palette.base03}" : "#${palette.base05}"
                               text: (Pipewire.defaultAudioSink?.audio.muted ?? false) ? "mute" :
                                     Math.round((Pipewire.defaultAudioSink?.audio.volume ?? 0) * 100) + "%"
@@ -1058,7 +1111,9 @@
 
                       Process {
                           id: netStatusProc
-                          command: ["sh", "-c", "${pkgs.networkmanager}/bin/nmcli -t -f TYPE,STATE dev | grep ':connected' | head -1"]
+                          // exactly "connected": tun/loopback/bridge are always
+                          // "connected (externally)", which would hide a dropped Wi-Fi
+                          command: ["sh", "-c", "${pkgs.networkmanager}/bin/nmcli -t -f TYPE,STATE dev | ${pkgs.gawk}/bin/awk -F: '$2 == \"connected\" { print; exit }'"]
                           running: true
                           property bool gotData: false
                           onRunningChanged: if (running) gotData = false
@@ -1102,7 +1157,7 @@
                       Text {
                           anchors.centerIn: parent
                           font.pixelSize: 18
-                          font.family: "JetBrainsMono Nerd Font Mono"
+                          font.family: "${nixosCfg.tn.primary_font}"
                           color: netWidget.connType === "none" ? "#${palette.base03}" : "#${palette.base05}"
                           text: netWidget.connType === "wifi" ? "󰤨" :
                                 netWidget.connType === "ethernet" ? "󰈀" : "󰤭"
@@ -1158,7 +1213,7 @@
                       Text {
                           anchors.verticalCenter: parent.verticalCenter
                           font.pixelSize: 14
-                          font.family: "JetBrainsMono Nerd Font Mono"
+                          font.family: "${nixosCfg.tn.primary_font}"
                           color: (UPower.displayDevice !== null
                               && UPower.displayDevice.state !== UPowerDeviceState.Charging
                               && UPower.displayDevice.percentage <= 0.20) ? "#${palette.base08}" : "#${palette.base05}"
@@ -1176,7 +1231,7 @@
                       Text {
                           anchors.verticalCenter: parent.verticalCenter
                           font.pixelSize: 12
-                          font.family: "JetBrains Mono"
+                          font.family: "${nixosCfg.tn.primary_font}"
                           color: (UPower.displayDevice !== null
                               && UPower.displayDevice.state !== UPowerDeviceState.Charging
                               && UPower.displayDevice.percentage <= 0.20) ? "#${palette.base08}" : "#${palette.base05}"
@@ -1240,7 +1295,7 @@
                                       text: notif.modelData.summary
                                       color: "#${palette.base05}"
                                       font.pixelSize: 13
-                                      font.family: "JetBrains Mono"
+                                      font.family: "${nixosCfg.tn.primary_font}"
                                       font.bold: true
                                       Layout.fillWidth: true
                                       elide: Text.ElideRight
@@ -1250,7 +1305,7 @@
                                       text: notif.modelData.body
                                       color: "#${palette.base04}"
                                       font.pixelSize: 12
-                                      font.family: "JetBrains Mono"
+                                      font.family: "${nixosCfg.tn.primary_font}"
                                       Layout.fillWidth: true
                                       wrapMode: Text.WordWrap
                                       visible: text.length > 0
@@ -1262,9 +1317,10 @@
                                   onClicked: notif.modelData.dismiss()
                               }
 
+                              // expireTimeout is in seconds; interval is in ms
                               Timer {
                                   interval: notif.modelData.expireTimeout > 0
-                                      ? notif.modelData.expireTimeout : 3000
+                                      ? notif.modelData.expireTimeout * 1000 : 3000
                                   running: true
                                   onTriggered: notif.modelData.dismiss()
                               }

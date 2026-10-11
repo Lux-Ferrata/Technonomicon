@@ -1,0 +1,45 @@
+{
+  "Function with NumPy docstring": {
+    "prefix": "fn",
+    "description": "function skeleton: type hints + NumPy docstring",
+    "body": [
+      "def ${1:name}(${2:x}: ${3:np.ndarray}) -> ${4:np.ndarray}:",
+      "    \"\"\"${5:One-line summary.}",
+      "",
+      "    Parameters",
+      "    ----------",
+      "    ${2:x} : ${3:np.ndarray}",
+      "        ${6:Description.}",
+      "",
+      "    Returns",
+      "    -------",
+      "    ${4:np.ndarray}",
+      "        ${7:Description.}",
+      "",
+      "    Examples",
+      "    --------",
+      "    >>> ${1:name}(${8})",
+      "    \"\"\"",
+      "    $0"
+    ]
+  },
+  "Notebook cell": {
+    "prefix": "cell",
+    "description": "# %% cell marker: run in the Jupyter interactive window",
+    "body": ["# %% ${1:title}", "$0"]
+  },
+  "Matplotlib figure": {
+    "prefix": "fig",
+    "description": "plot skeleton: subplots, labels, legend, savefig",
+    "body": [
+      "fig, ax = plt.subplots(figsize=(${1:6}, ${2:4}))",
+      "ax.plot(${3:x}, ${4:y}, label=\"${5:data}\")",
+      "ax.set_xlabel(\"${6:x}\")",
+      "ax.set_ylabel(\"${7:y}\")",
+      "ax.legend()",
+      "fig.tight_layout()",
+      "fig.savefig(\"${8:figure}.pdf\")",
+      "$0"
+    ]
+  }
+}

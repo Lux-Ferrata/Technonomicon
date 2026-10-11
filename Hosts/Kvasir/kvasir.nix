@@ -17,20 +17,6 @@
       inputs.sops-nix.nixosModules.sops
       inputs.home-manager.nixosModules.home-manager
 
-      # throttled 0.12 (pulled in by the t480s hardware module above) added a
-      # dbus-next dependency that nixpkgs' package doesn't propagate yet, so
-      # the service crashes with a ModuleNotFoundError on startup. Patch it
-      # in until upstream catches up.
-      ({ ... }: {
-        nixpkgs.overlays = [
-          (final: prev: {
-            throttled = prev.throttled.overrideAttrs (old: {
-              pythonPath = old.pythonPath ++ [ final.python3Packages.dbus-next ];
-            });
-          })
-        ];
-      })
-
       self.nixosModules.Tn-user-settings
       self.nixosModules.Tn-theme
       self.nixosModules.Tn-nix
@@ -54,6 +40,7 @@
       # sage 10.9 from source AND runs its full doctest suite. Expect hours.
       self.nixosModules.Tn-science
       self.nixosModules.Tn-mind
+      self.nixosModules.Tn-vikunja
       self.nixosModules.Tn-provenance
       self.nixosModules.Tn-art
       self.nixosModules.Tn-utf
@@ -67,8 +54,9 @@
 
         tn.full_name          = "xin";
         tn.email_address      = "git@ironshark.org";
-        tn.theme              = "nord";
-        tn.primary_font       = "Iosevka";
+        tn.theme              = "tn";
+        tn.primary_font       = "Atkinson Hyperlegible Mono Liga";
+        tn.ui_font            = "Atkinson Hyperlegible Next";
         tn.scale              = 1;
         tn.quick_app_bindings = {};
         # tn.wallpaper_path  = "/home/xin/Projects/Technonomicon/.wallpapers/wallpaper.png";
@@ -97,9 +85,8 @@
 
         networking.hostName = "Kvasir";
 
-        # Tasks: Super Productivity (Tn-mind), synced to Akmon over WebDAV.
-        # The old local Vikunja server's data stays in /var/lib/private/vikunja
-        # until removed by hand.
+        # Tasks: a local Vikunja (Tn-vikunja, backed up to Akmon). Habits:
+        # OpenHabitTracker (Tn-mind, syncs through Akmon).
 
         services.logind.settings.Login.HandleLidSwitch = "suspend";
 
@@ -122,10 +109,6 @@
             };
             Install.WantedBy = [ "default.target" ];
           };
-          programs.fish.functions.send = ''
-            test (count $argv) -gt 0; or begin; echo "usage: send <files...>"; return 1; end
-            tailscale file cp $argv pixel-10-pro-xl:
-          '';
         };
 
         home-manager = {
@@ -151,7 +134,6 @@
               "uinput"
               "input"
               "dialout"
-              "plugdev"
               "networkmanager"
             ];
           };
