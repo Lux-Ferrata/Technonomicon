@@ -44,16 +44,10 @@
       notmuch
       isync
       msmtp
-      # CalDAV calendar stack
-      khal
-      vdirsyncer
+      # Calendars live in Google; Thunderbird (below) keeps the offline copy
       calcurse
       calendarPushLogin
     ];
-
-    # Radicale on Akmon (https://cal.ironshark.org) <-> ~/.local/share/calendars,
-    # read and edited with khal. Two-way; offline edits go up next time.
-    sops.secrets.radicale-password = { owner = "xin"; };
 
     home-manager.users.xin = {
       # ── Thunderbird: mail, calendar, RSS ───────────────────────────────
@@ -125,52 +119,6 @@
             "calendar.timezone.useSystemTimezone" = true;
           };
         };
-      };
-
-      xdg.configFile."vdirsyncer/config".text = ''
-        [general]
-        status_path = "~/.local/share/vdirsyncer/status/"
-
-        [pair radicale]
-        a = "radicale_remote"
-        b = "radicale_local"
-        collections = ["from a"]
-        metadata = ["color", "displayname"]
-
-        [storage radicale_remote]
-        type = "caldav"
-        url = "https://cal.ironshark.org/"
-        username = "xin"
-        password.fetch = ["command", "cat", "${config.sops.secrets.radicale-password.path}"]
-
-        [storage radicale_local]
-        type = "filesystem"
-        path = "~/.local/share/calendars/"
-        fileext = ".ics"
-      '';
-      xdg.configFile."khal/config".text = ''
-        [calendars]
-        [[radicale]]
-        path = ~/.local/share/calendars/*
-        type = discover
-      '';
-
-      systemd.user.services.vdirsyncer = {
-        Unit.Description = "Sync calendars with Radicale";
-        Service = {
-          Type = "oneshot";
-          # discover picks up calendars made elsewhere (InfCloud, phone)
-          ExecStart = "${pkgs.writeShellScript "vdirsyncer-sync" ''
-            yes | ${lib.getExe pkgs.vdirsyncer} discover >/dev/null
-            ${lib.getExe pkgs.vdirsyncer} metasync
-            ${lib.getExe pkgs.vdirsyncer} sync
-          ''}";
-        };
-      };
-      systemd.user.timers.vdirsyncer = {
-        Unit.Description = "Sync calendars with Radicale every 15 minutes";
-        Timer = { OnCalendar = "*:0/15"; OnStartupSec = "2min"; };
-        Install.WantedBy = [ "timers.target" ];
       };
     };
   };

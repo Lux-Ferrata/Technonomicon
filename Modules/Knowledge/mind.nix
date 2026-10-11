@@ -3,7 +3,13 @@
     environment.systemPackages = with pkgs; [
       obsidian
       pomodoro-gtk
-      super-productivity   # tasks; syncs to Akmon over WebDAV (Tn-webdav)
+    ];
+
+    # Habits, tasks and notes; works offline and syncs through Akmon
+    # (Tn-openhabittracker). Flathub only; the flatpak setup itself is in
+    # Tn-communication.
+    services.flatpak.packages = [
+      { appId = "net.openhabittracker.OpenHabitTracker"; origin = "flathub"; }
     ];
 
     xdg.mime.defaultApplications = {
