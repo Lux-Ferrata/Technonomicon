@@ -8,12 +8,12 @@
   let
     lagent = pkgs.writeShellApplication {
       name          = "lagent";
-      runtimeInputs = with pkgs; [ curl jq git coreutils gnused systemd pkgs-stable.aider-chat ];
+      runtimeInputs = with pkgs; [ curl jq git coreutils gnused gawk systemd file poppler-utils pandoc pkgs-stable.aider-chat ];
       text          = builtins.readFile ../../agents/lagent.sh;
     };
     overnight = pkgs.writeShellApplication {
       name          = "overnight";
-      runtimeInputs = with pkgs; [ curl jq git coreutils gnugrep gnused claude-code lagent ];
+      runtimeInputs = with pkgs; [ curl jq git coreutils gnugrep gnused claude-code lagent config.systemd.package ];
       # carries on past a failed task instead of dying (it reports instead)
       bashOptions   = [ "nounset" "pipefail" ];
       text          = builtins.readFile ../../agents/overnight.sh;

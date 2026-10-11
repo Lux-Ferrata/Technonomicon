@@ -11,7 +11,7 @@
     # Akmon's ID comes from its sops cert/key, so it survives reinstalls
     Akmon  = "ESFOH2J-SSO5QHZ-PPAZRYF-FKOMGQB-5HLWCBH-PCELXT5-FEGZQJ3-JMGH7Q5";
     Kvasir = "HCZVU5Z-ISVSPCK-4FP7HUF-K5AJSKO-H5VZFHL-WXHTZXJ-PFAMMDG-7TPOKAF";
-    # paired but shares no folders yet; on the tailnet, dials tcp://akmon:22000
+    # shares Grimoire with Akmon (the hub); on the tailnet, dials tcp://akmon:22000
     Phone  = "PSINF7M-32THNKX-OK7AG7M-FZLYAJU-MKV4RID-FJSH5EQ-AC6JNQ2-76PGJAR";
   };
 
@@ -78,6 +78,15 @@
       label  = "Sioyek";
       kvasir = "/home/xin/.local/share/sioyek";
       akmon  = "Sioyek";
+      mode   = "backup";
+    };
+
+    # Kvasir's local Vikunja: a consistent copy its backup timer writes
+    # (Tn-vikunja); Akmon keeps the history in its snapshots
+    vikunja = {
+      label  = "Vikunja";
+      kvasir = "/home/xin/.local/share/vikunja-backup";
+      akmon  = "Vikunja";
       mode   = "backup";
     };
   };

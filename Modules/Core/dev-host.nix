@@ -145,6 +145,30 @@
         exit 1
       '')
     ];
+    # Kvasir's Akmon helpers (Tn-dev-client), as they behave when already
+    # here, so the same commands work in an Akmon terminal: rb runs in
+    # place (direnv is already active), ak attaches the same shpool
+    # session locally, overnight-now starts the run directly. aku is a
+    # binary here already (Tn-server-usage).
+    home-manager.users.xin.programs.fish.functions = {
+      rb = ''
+        test (count $argv) -gt 0; or begin; echo "usage: rb <command...>"; return 1; end
+        $argv
+      '';
+      ak = ''
+        set -l name $argv[1]
+        set -l dir $HOME
+        set -l rel (string replace -- "$HOME/Projects/" "" $PWD)
+        if test "$rel" != "$PWD"
+          set dir $PWD
+          test -z "$name"; and set name (string split -m1 / -- $rel)[1]
+        end
+        test -z "$name"; and set name main
+        shpool attach -f -d $dir -- $name
+      '';
+      overnight-now = "systemctl --user start --no-block overnight; and echo 'started; follow with: journalctl --user -fu overnight'";
+    };
+
     systemd.packages           = [ pkgs.shpool ];
     systemd.user.sockets.shpool.wantedBy = [ "sockets.target" ];
     users.users.xin.linger     = true;
@@ -165,6 +189,19 @@
     # Projects arrive from Kvasir, where their .envrc files were already
     # allowed; don't make each one be re-allowed here before `rb` works.
     programs.direnv.settings.whitelist.prefix = [ "/home/xin/Projects" ];
+
+    # Dev shells ready before `rb`/`eo` first enters a project (Kvasir does
+    # the same for its offline copy). Flakes without an .envrc root their
+    # shell under ${home}: /home/xin is wiped on boot, the roots must not be.
+    home-manager.users.xin.systemd.user = let
+      prewarm = import ./_prewarm-devshells.nix {
+        inherit pkgs lib;
+        roots = "${home}/.cache/devshells";
+      };
+    in {
+      services.prewarm-devshells = prewarm.services.prewarm-devshells;
+      timers.prewarm-devshells   = prewarm.timers.prewarm-devshells;
+    };
 
     # ── Syncthing hub (topology in _sync.nix) ────────────────────────────
     # Every synced folder lands in fast/srv/xin/<dir>. The dataset is made on

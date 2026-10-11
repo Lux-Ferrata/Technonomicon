@@ -10,7 +10,7 @@
   system.autoUpgrade = {
     enable  = true;
     flake   = "git+http://127.0.0.1:3000/xin/Technonomicon.git?ref=working#Akmon";
-    upgrade = false;        # honour main's flake.lock, never update inputs here
+    upgrade = false;        # honour working's flake.lock, never update inputs here
     dates   = "Wed 05:30";  # the job starts 03:00; usually done long before.
                             # Before the 06:00 alert digest, which reports on it
     # reboot only when kernel/initrd/modules changed, and only at night

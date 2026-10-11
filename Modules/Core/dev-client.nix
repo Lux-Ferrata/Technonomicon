@@ -9,6 +9,16 @@
     # tailnet IP, not the name: nginx resolves upstreams once at start, and
     # at boot MagicDNS may not be up yet
     akmonIp = "100.122.244.58";
+    prewarm = import ./_prewarm-devshells.nix {
+      inherit pkgs lib;
+      roots = "$HOME/.cache/devshells";
+      # only while the cache/builders are there: otherwise this would
+      # build everything on the laptop
+      guard = ''
+        curl -sf -m 5 http://${akmonIp}:5000/nix-cache-info >/dev/null || {
+          echo "Akmon unreachable; skipping"; exit 0; }
+      '';
+    };
 
     # Exit 0 when <path> (default .) should be worked on on Akmon: it's a
     # synced project, Akmon answers within 2s, and Akmon has every change
@@ -137,11 +147,14 @@
 
         akmon_with_pw() {
           local drv out
+          # explicit returns: `deploy all` calls this inside `if`, where
+          # set -e is off, so a failed build would otherwise go on to switch
           step "Akmon: evaluating"
-          drv=$(nix eval --raw "$flake#nixosConfigurations.Akmon.config.system.build.toplevel.drvPath")
+          drv=$(nix eval --raw "$flake#nixosConfigurations.Akmon.config.system.build.toplevel.drvPath") || return 1
           step "Akmon: building on akmon"
-          nix copy --derivation --to ssh-ng://xin@akmon "$drv"
-          out=$(ssh xin@akmon "nix build --no-link --print-out-paths -L '$drv^out'")
+          nix copy --derivation --to ssh-ng://xin@akmon "$drv" || return 1
+          out=$(ssh xin@akmon "nix build --no-link --print-out-paths -L '$drv^out'") || return 1
+          [ -n "$out" ] || return 1
           if [ "$(ssh xin@akmon readlink -f /run/current-system)" = "$out" ]; then
             step "Akmon: already running this generation"; return 0
           fi
@@ -187,6 +200,31 @@
             [ "$a$k" = "✓✓" ]
             ;;
         esac
+      '';
+    };
+
+    # zoxide (`t`) learns directories per machine, so Akmon's terminals knew
+    # almost none. Each run copies the directories one side has and the
+    # other lacks (with their score), both ways; entries both know keep
+    # their own local ranking. zoxide-merge-in (Tn-shell) drops paths that
+    # don't exist on the receiving side.
+    zoxideSync = pkgs.writeShellApplication {
+      name = "zoxide-sync";
+      runtimeInputs = with pkgs; [ zoxide openssh gawk coreutils ];
+      text = ''
+        ssh -o BatchMode=yes -o ConnectTimeout=3 akmon true 2>/dev/null || exit 0
+        here=$(zoxide query -ls || true)
+        there=$(ssh akmon zoxide query -ls || true)
+        now=$(date +%s)
+        # lines of $1 whose path isn't in $2, as path|score|now
+        missing() {
+          awk -v now="$now" '
+            NR == FNR { sub(/^ *[0-9.]+ /, ""); have[$0] = 1; next }
+            { score = $1; sub(/^ *[0-9.]+ /, ""); if ($0 != "" && !($0 in have)) print $0 "|" score "|" now }
+          ' <(printf '%s\n' "$2") <(printf '%s\n' "$1")
+        }
+        missing "$here" "$there" | ssh akmon zoxide-merge-in
+        missing "$there" "$here" | zoxide-merge-in
       '';
     };
   in {
@@ -300,7 +338,16 @@
     };
 
     home-manager.users.xin = {
-      home.packages = [ akmonReady deploy tn-check grimoireCmds grimoireGit
+      systemd.user.services.zoxide-sync = {
+        Unit.Description = "Share zoxide directories with Akmon";
+        Service = { Type = "oneshot"; ExecStart = "${zoxideSync}/bin/zoxide-sync"; };
+      };
+      systemd.user.timers.zoxide-sync = {
+        Timer = { OnBootSec = "2min"; OnUnitActiveSec = "15min"; };
+        Install.WantedBy = [ "timers.target" ];
+      };
+
+      home.packages = [ akmonReady deploy tn-check grimoireCmds grimoireGit zoxideSync
         (pkgs.callPackage ./_stt.nix { })   # speech to text, Akmon's GPU or local CPU
         (pkgs.callPackage ./_tts.nix { })   # text to speech, local (Kokoro)
       ];
@@ -312,48 +359,10 @@
 
       # Offline readiness: while Akmon is reachable (its binary cache and
       # builders do the work), realise every project's dev environment here
-      # so `direnv`/`nix develop` work instantly with no network. nix-direnv
-      # roots what it builds under each project's .direnv; flakes without an
-      # .envrc get a profile root under ~/.cache/devshells.
-      systemd.user.services.prewarm-devshells = {
-        Unit.Description = "Pre-build ~/Projects dev shells for offline use";
-        Service = {
-          Type     = "oneshot";
-          Nice     = 19;
-          IOSchedulingClass = "idle";
-          Environment = [
-            "DIRENV_CONFIG=/etc/direnv"
-            "PATH=${lib.makeBinPath [ pkgs.nix pkgs.direnv pkgs.git pkgs.bash pkgs.coreutils pkgs.curl pkgs.gnugrep ]}"
-          ];
-          ExecStart = pkgs.writeShellScript "prewarm-devshells" ''
-            # only while the cache/builders are there: otherwise this would
-            # build everything on the laptop
-            curl -sf -m 5 http://${akmonIp}:5000/nix-cache-info >/dev/null || {
-              echo "Akmon unreachable; skipping"; exit 0; }
-            roots=$HOME/.cache/devshells; mkdir -p "$roots"
-            for d in "$HOME"/Projects/*/; do
-              name=$(basename "$d")
-              [ "$name" = Technonomicon ] && continue
-              if [ -f "$d/.envrc" ]; then
-                echo "== $name (direnv)"
-                direnv exec "$d" true || echo "   failed (not allowed, or the shell doesn't build)"
-              elif [ -f "$d/flake.nix" ] && nix flake show "$d" --json 2>/dev/null | grep -q '"devShells"'; then
-                echo "== $name (flake)"
-                nix develop "$d" --profile "$roots/$name" -c true || echo "   failed"
-              fi
-            done
-          '';
-        };
-      };
-      systemd.user.timers.prewarm-devshells = {
-        Unit.Description = "Pre-build ~/Projects dev shells for offline use";
-        Timer = {
-          OnBootSec        = "15min";
-          OnUnitActiveSec  = "3h";
-          Persistent       = true;
-        };
-        Install.WantedBy = [ "timers.target" ];
-      };
+      # so `direnv`/`nix develop` work instantly with no network.
+      # offline readiness: dev shells realised while Akmon can build them
+      systemd.user.services.prewarm-devshells = prewarm.services.prewarm-devshells;
+      systemd.user.timers.prewarm-devshells   = prewarm.timers.prewarm-devshells;
 
       programs.ssh = {
         enable              = true;
@@ -374,30 +383,6 @@
       };
 
       programs.fish.functions = {
-        # Queue a task for the overnight agents (Akmon, Tn-overnight):
-        #   overnight-add "Write tests for parser.py" [project|owner/repo] [details...]
-        # A name with a slash is a Forgejo repo (result: PR), a bare name a
-        # git project in ~/Projects (result: branch), none a research task.
-        overnight-add = ''
-          test (count $argv) -ge 1; or begin
-            echo "usage: overnight-add TITLE [PROJECT|OWNER/REPO] [DETAILS...]"; return 1
-          end
-          set -l body ""
-          if test (count $argv) -ge 2; and test -n "$argv[2]"
-            if string match -q "*/*" -- $argv[2]
-              set body "repo: $argv[2]"
-            else
-              set body "project: $argv[2]"
-            end
-          end
-          test (count $argv) -ge 3; and set body "$body"\n\n(string join " " -- $argv[3..])
-          set -l api https://git.ironshark.org/api/v1/repos/xin/agent-tasks
-          set -l tok (cat ~/.config/forgejo-token)
-          set -l label (curl -sf -H "Authorization: token $tok" "$api/labels" | jq '.[] | select(.name=="overnight") | .id')
-          jq -n --arg t "$argv[1]" --arg b (printf "%b" "$body") --argjson l "[$label]" '{title:$t, body:$b, labels:$l}' \
-            | curl -sf -X POST -H "Authorization: token $tok" -H "Content-Type: application/json" -d @- "$api/issues" \
-            | jq -r '"queued #\(.number): \(.html_url)"'
-        '';
         # Akmon's load (Tn-server-usage): btop live, `aku -s` one-screen
         # snapshot with pools + llama servers, `aku --week` the 7-day digest
         aku = "ssh -t akmon aku $argv";

@@ -52,12 +52,16 @@
       self.nixosModules.Tn-karakeep
       self.nixosModules.Tn-mail-archive
       self.nixosModules.Tn-miniflux
+      self.nixosModules.Tn-atuin
+      self.nixosModules.Tn-searxng
       self.nixosModules.Tn-vaultwarden
       self.nixosModules.Tn-media
       self.nixosModules.Tn-nas
       self.nixosModules.Tn-torrent
       self.nixosModules.Tn-hosting
       self.nixosModules.Tn-office
+      self.nixosModules.Tn-astradraw
+      self.nixosModules.Tn-openhabittracker
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";

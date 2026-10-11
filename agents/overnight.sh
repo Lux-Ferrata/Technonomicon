@@ -10,8 +10,9 @@
 # under research/.
 #
 # Containment: every task gets a throwaway clone under $WORKROOT. Claude runs
-# without any push credential, forge token or ssh agent; this script does
-# the pushing, PRs and issue comments afterwards. Nothing is ever merged.
+# without any push credential, forge token or ssh agent (its unit can't see
+# /run/secrets at all); this script does the pushing, PRs and issue comments
+# afterwards. Nothing is ever merged.
 set -uo pipefail
 
 API=http://127.0.0.1:3000/api/v1
@@ -157,15 +158,26 @@ $comments}
 
 How to work:
 - Your working directory is $dir ($([ "$kind" = code ] && echo "a fresh clone on branch $branch, based on $base" || echo "an empty scratch directory")). Never touch anything outside it and $out; never push, and never try to obtain credentials -- the calling script publishes your results.
-- Delegate the bulk work to the local models, then review it yourself: \`lagent ask 'question' < file\` (summaries, drafts, explanations; stdin is context) and \`lagent code DIR 'instruction' FILE...\` (aider edits files, never commits; review the diff with git diff, keep or discard). They are much weaker than you: give them small, concrete, well-scoped pieces; you own correctness. Do it yourself when delegating would be slower or riskier.
+- Delegate the bulk work to the local models, then review it yourself: \`lagent ask 'question' < file\` (summaries, drafts, explanations; stdin is context), \`lagent read FILE-OR-URL ['question']\` (reads a whole PDF/web page/document locally, in parts, and returns a summary or the answer with page refs: use it instead of reading long documents yourself), \`lagent search 'query'\` (web results from the local SearXNG) and \`lagent code DIR 'instruction' FILE...\` (aider edits files, never commits; review the diff with git diff, keep or discard). They are much weaker than you: give them small, concrete, well-scoped pieces; you own correctness. Do it yourself when delegating would be slower or riskier.
 - $([ "$kind" = code ] && echo "Commit finished, reviewed work on $branch in small commits with clear messages. Build/test it (respect the repo's CLAUDE.md, flake devShell, test commands) before committing. Leave unfinished or doubtful work out of the commits and describe it instead." || echo "This is a research/writing task: put the result in $out/notes.md as a well-structured markdown document with sources (URLs) for factual claims. You may use web search/fetch.")
 - You have about $((budget/60)) minutes. Stop in time to write the report.
 - Finally write $out/REPORT.md for the owner, who reads it in the morning: what you did, what the local models did, what you verified and how, what is left or uncertain. Be honest about failures; a clear 'could not do X because Y' beats a weak result."
 
-    ( cd "$dir" && timeout "$budget" claude -p "$prompt" --output-format text \
-        --add-dir "$out" \
-        --allowedTools "Read,Edit,Write,Glob,Grep,WebSearch,WebFetch,Bash" \
-        > "$out/claude.txt" 2>&1 ) || echo "(claude exited with $?)" >> "$out/claude.txt"
+    # Claude runs in a transient unit of its own: same user, network and
+    # tools, but the credentials on disk (forge and Claude tokens, signing
+    # and Syncthing keys, the Google calendar token) don't exist for it, so
+    # nothing it reads on the web or in an issue can get them out. The
+    # budget is RuntimeMaxSec: systemd stops it when time is up.
+    systemd-run --user --pipe --wait --collect --quiet \
+        -p PrivateUsers=yes \
+        -p InaccessiblePaths=/run/secrets -p InaccessiblePaths=-/run/secrets.d \
+        -p InaccessiblePaths=-/srv/xin/.syncthing -p InaccessiblePaths=-/srv/xin/.calendar-push \
+        -p WorkingDirectory="$dir" -p RuntimeMaxSec="$budget" \
+        -E PATH -E CLAUDE_CODE_OAUTH_TOKEN \
+        claude -p "$prompt" --output-format text \
+          --add-dir "$out" \
+          --allowedTools "Read,Edit,Write,Glob,Grep,WebSearch,WebFetch,Bash" \
+        > "$out/claude.txt" 2>&1 || echo "(claude exited with $?)" >> "$out/claude.txt"
   fi
 
   # ---- publish ----------------------------------------------------------
