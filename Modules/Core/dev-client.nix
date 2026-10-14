@@ -79,23 +79,18 @@
     grimoireGit = pkgs.runCommand "grimoire-git" { } ''
       mkdir -p $out/bin && ln -s ${grimoireCmds}/bin/grimoire-commit $out/bin/grimoire-git
     '';
-    # tn-pull: bring this checkout up to Forgejo's `working`, where Wednesday's
-    # CI job (ci/nightly.sh) pushes the flake update and Claude's fixes.
-    # Nothing else pulls them in, and a deploy from a stale checkout rolls
-    # Akmon back. Local commits and uncommitted edits are rebased on top
-    # (--autostash); on a conflict it undoes the rebase, says so and exits 1.
-    # Fetches over anonymous HTTPS (public on the tailnet), so the timer needs
-    # no ssh agent. Silent no-op when Akmon is away or nothing is new.
+    # deploy's first step: bring this checkout up to Forgejo's `working`,
+    # where Wednesday's CI job (ci/nightly.sh) pushes the flake update and
+    # Claude's fixes; deploying without them rolls Akmon back. Local commits
+    # and uncommitted edits are rebased on top (--autostash); on a conflict
+    # it undoes the rebase, says so and exits 1. A no-op when Akmon is away
+    # or nothing is new.
     tnPull = pkgs.writeShellApplication {
       name = "tn-pull";
-      runtimeInputs = [ pkgs.git pkgs.libnotify ];
+      runtimeInputs = [ pkgs.git ];
       text = ''
         cd "''${NH_OS_FLAKE:-''${NH_FLAKE:-$HOME/Projects/Technonomicon}}"
-        fail() {
-          echo "tn-pull: $1" >&2
-          notify-send -u critical "Technonomicon not updated" "$1" 2>/dev/null || true
-          exit 1
-        }
+        fail() { echo "tn-pull: $1" >&2; exit 1; }
         git fetch -q https://git.ironshark.org/xin/Technonomicon.git \
           +refs/heads/working:refs/remotes/origin/working 2>/dev/null || {
           echo "tn-pull: Forgejo unreachable; skipping" >&2; exit 0; }
@@ -385,18 +380,7 @@
         Install.WantedBy = [ "timers.target" ];
       };
 
-      # Wednesday's upgrade (pushed ~03:00-05:00) lands here within the hour,
-      # or soon after the laptop wakes (Persistent)
-      systemd.user.services.tn-pull = {
-        Unit.Description = "Rebase Technonomicon onto Forgejo's working";
-        Service = { Type = "oneshot"; ExecStart = "${tnPull}/bin/tn-pull"; };
-      };
-      systemd.user.timers.tn-pull = {
-        Timer = { OnCalendar = "hourly"; OnBootSec = "5min"; Persistent = true; };
-        Install.WantedBy = [ "timers.target" ];
-      };
-
-      home.packages = [ akmonReady deploy tn-check tnPull grimoireCmds grimoireGit zoxideSync
+      home.packages = [ akmonReady deploy tn-check grimoireCmds grimoireGit zoxideSync
         (pkgs.callPackage ./_stt.nix { })   # speech to text, Akmon's GPU or local CPU
         (pkgs.callPackage ./_tts.nix { })   # text to speech, local (Kokoro)
       ];
