@@ -211,6 +211,9 @@
           echo "deploy: nh args only apply to Kvasir; ignoring: $*" >&2
         fi
 
+        # never deploy behind Forgejo's working (e.g. Wednesday's upgrade)
+        ${tnPull}/bin/tn-pull || exit 1
+
         # the password up front, so a long build doesn't end at a prompt
         read -rsp "[sudo] password for $USER: " pw; echo
         # check it (and prime this terminal's sudo) before any build starts
