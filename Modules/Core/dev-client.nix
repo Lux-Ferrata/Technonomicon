@@ -385,7 +385,19 @@
         Install.WantedBy = [ "timers.target" ];
       };
 
-      home.packages = [ akmonReady deploy tn-check grimoireCmds grimoireGit zoxideSync
+      # Wednesday's upgrade lands in this checkout once the CI job is done
+      # (Persistent: after a missed run, at the next login); hourly catches
+      # fixes pushed to working from elsewhere
+      systemd.user.services.tn-pull = {
+        Unit.Description = "Rebase Technonomicon onto Forgejo's working";
+        Service = { Type = "oneshot"; ExecStart = "${tnPull}/bin/tn-pull"; };
+      };
+      systemd.user.timers.tn-pull = {
+        Timer = { OnCalendar = [ "Wed 05:45" "hourly" ]; OnBootSec = "5min"; Persistent = true; };
+        Install.WantedBy = [ "timers.target" ];
+      };
+
+      home.packages = [ akmonReady deploy tn-check tnPull grimoireCmds grimoireGit zoxideSync
         (pkgs.callPackage ./_stt.nix { })   # speech to text, Akmon's GPU or local CPU
         (pkgs.callPackage ./_tts.nix { })   # text to speech, local (Kokoro)
       ];
