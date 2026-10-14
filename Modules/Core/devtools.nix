@@ -50,7 +50,8 @@
       sqlite
       # JS / TypeScript
       nodejs
-      typescript-language-server
+      # 2026-10-14: unstable's pnpm-deps hash mismatches; from stable
+      pkgs-stable.typescript-language-server
       prettier
       # DAP Debug Adapters
       lldb
