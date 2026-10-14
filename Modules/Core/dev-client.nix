@@ -385,15 +385,14 @@
         Install.WantedBy = [ "timers.target" ];
       };
 
-      # Wednesday's upgrade lands in this checkout once the CI job is done
-      # (Persistent: after a missed run, at the next login); hourly catches
-      # fixes pushed to working from elsewhere
+      # Wednesday's upgrade (pushed ~03:00-05:00) lands here within the hour,
+      # or soon after the laptop wakes (Persistent)
       systemd.user.services.tn-pull = {
         Unit.Description = "Rebase Technonomicon onto Forgejo's working";
         Service = { Type = "oneshot"; ExecStart = "${tnPull}/bin/tn-pull"; };
       };
       systemd.user.timers.tn-pull = {
-        Timer = { OnCalendar = [ "Wed 05:45" "hourly" ]; OnBootSec = "5min"; Persistent = true; };
+        Timer = { OnCalendar = "hourly"; OnBootSec = "5min"; Persistent = true; };
         Install.WantedBy = [ "timers.target" ];
       };
 
