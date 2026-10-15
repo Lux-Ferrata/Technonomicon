@@ -37,7 +37,31 @@
         echo "token copied to Akmon"
       '';
     };
+
+    # aerc's Google OAuth2 logins (Pima): `mail-oauth login <address>` once,
+    # then aerc runs `mail-oauth token <address>` for each connection
+    mailOauth = pkgs.writers.writePython3Bin "mail-oauth" {
+      flakeIgnore = [ "E501" ];
+    } (builtins.readFile ./_mail-oauth.py);
+
+    # aerc on the same Gmail mailboxes as Thunderbird (labels are folders,
+    # so either client sees what the other did). Gmail files sent mail
+    # itself, so no copy-to.
+    aercGmail = auth: {
+      enable = true;
+      extraAccounts = {
+        copy-to  = "";
+        default  = "INBOX";
+        postpone = "[Gmail]/Drafts";
+        archive  = "[Gmail]/All Mail";
+      };
+    } // auth;
   in {
+    # aerc reads these as xin: the ironshark app password and the OAuth client
+    sops.secrets.smtp-password              = { owner = "xin"; };
+    sops.secrets.google-oauth-client-id     = { owner = "xin"; };
+    sops.secrets.google-oauth-client-secret = { owner = "xin"; };
+
     environment.systemPackages = with pkgs; [
       # TUI email stack
       aerc
@@ -47,11 +71,13 @@
       # Calendars live in Google; Thunderbird (below) keeps the offline copy
       calcurse
       calendarPushLogin
+      mailOauth
+      w3m   # aerc's text/html filter
     ];
 
     home-manager.users.xin = {
       # ── Thunderbird: mail, calendar ────────────────────────────────────
-      # Gmail signs in with OAuth2 in Thunderbird's own window on first
+      # Gmail and Pima sign in with OAuth2 in Thunderbird's own window on first
       # start. "Archive" is Akmon's permanent copy (Tn-mail-archive), read-only
       # and full-text searchable; its password is sops mail-archive-password.
       # Calendars: the Google ones below (offline cache on; one Google login
@@ -62,17 +88,23 @@
           primary     = true;
           address     = "xin@ironshark.org";
           userName    = "xin@ironshark.org";
-          realName    = config.tn.full_name;
+          realName    = "";   # bare address in From, no display name
           flavor      = "gmail.com";
           thunderbird.enable = true;
+          # aerc: the Workspace app password (also Akmon's mail relay/archive)
+          passwordCommand = "cat ${config.sops.secrets.smtp-password.path}";
+          aerc = aercGmail {};
         };
         # Pima Community College (Google Workspace): OAuth2 like the above
         pima = {
           address     = "kfanning2@mail.pima.edu";
           userName    = "kfanning2@mail.pima.edu";
-          realName    = config.tn.full_name;
+          realName    = "";   # bare address in From, no display name
           flavor      = "gmail.com";
           thunderbird.enable = true;
+          # aerc: OAuth2 (`mail-oauth login kfanning2@mail.pima.edu` once)
+          passwordCommand = "${lib.getExe mailOauth} token kfanning2@mail.pima.edu";
+          aerc = aercGmail { imapAuth = "oauthbearer"; smtpAuth = "oauthbearer"; };
         };
         archive = {
           address  = "archive@ironshark.org";   # never sends; just names the account
@@ -113,6 +145,22 @@
         "🔒 Academics"  = google "c_07612d4356b2fe10dcf5330759186b2a6c8aba1d209dac0d1eb37590ddde2949@group.calendar.google.com" { color = "#d06b64"; readOnly = true; };
         "Holidays in United States" = google "en.usa#holiday@group.v.calendar.google.com" { color = "#16a765"; readOnly = true; };
         "Pima Honors Program" = google "c_3dvc4bkp9meoi57miql7demous@group.calendar.google.com" { color = "#b99aff"; readOnly = true; };
+      };
+
+      programs.aerc = {
+        enable = true;
+        extraConfig = {
+          # accounts.conf is generated into the store; it holds commands, not
+          # passwords
+          general.unsafe-accounts-conf = true;
+          filters = {
+            "text/plain"  = "colorize";
+            "text/html"   = "! html";
+            "text/calendar" = "calendar";
+            "message/delivery-status" = "colorize";
+            "message/rfc822" = "colorize";
+          };
+        };
       };
 
       programs.thunderbird = {
