@@ -7,7 +7,7 @@
   # were; its edits arrive within ~15 min of it coming back.
   #
   # Every project lands in the default "🔒 Projects" calendar, titled
-  # "[Project] task". Projects (with all their sub-projects) that should
+  # "task [Project]". Projects (with all their sub-projects) that should
   # stand out get their own calendar: make an empty Google calendar (Claude
   # can, with the calendar-push token), then
   #   tn.taskDeadlines.calendars.<label> = { name = "..."; projects = [ "<title>" ]; google = "<calendar id>"; };

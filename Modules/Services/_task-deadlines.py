@@ -6,7 +6,7 @@
 # times in UTC). $CONFIG (JSON) names the calendars: a listed project sends
 # its tasks there, and so do all its sub-projects (the nearest listed one
 # wins); everything else goes to the default one. Archived projects and
-# deleted tasks are left out. Titles read "[Project] task" unless the
+# deleted tasks are left out. Titles read "task [Project]" unless the
 # project is Inbox or the calendar is named after it. Names match ignoring
 # case. Each calendar is replaced by one PUT on its collection, only when it
 # differs from the last one (kept in $STATE_DIRECTORY). Any surprise exits
@@ -87,12 +87,12 @@ def utc(d):
     return d.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
 
-def event(t, prefix):
+def event(t, suffix):
     due = when(t["due_date"])
     return ["BEGIN:VEVENT", f"UID:vikunja-deadline-{t['id']}@ironshark.org",
             # fixed, so unchanged tasks give byte-identical events
             f"DTSTAMP:{utc(when(t['created']))}",
-            f"SUMMARY:{esc(prefix + (t['title'] or '(untitled)'))}",
+            f"SUMMARY:{esc((t['title'] or '(untitled)') + suffix)}",
             "TRANSP:TRANSPARENT",
             f"DTSTART:{utc(due)}", f"DTEND:{utc(due + timedelta(minutes=30))}",
             "END:VEVENT"]
@@ -160,7 +160,7 @@ def main():
         # the calendar's name without a leading emoji ("🔒 Academics")
         bare = re.sub(r"^\W+", "", names[coll]).casefold()
         named = project.casefold() in ("", "inbox", bare)
-        out[coll].append(event(t, "" if named else f"[{project}] "))
+        out[coll].append(event(t, "" if named else f" [{project}]"))
 
     for coll, name in names.items():
         put(coll, name, out[coll])
