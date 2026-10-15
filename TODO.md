@@ -41,7 +41,6 @@ calendars (`task-deadlines.nix` → `calendar-push.nix`).
 
 - [ ] Phone: accept the Grimoire share in Syncthing-Fork, open it in Obsidian.
 - [ ] Phone: Paperless and Karakeep apps (`docs.` / `keep.ironshark.org`).
-- [ ] LanguageTool in Obsidian and the Brave extension → `https://lt.ironshark.org`.
 - [ ] Karakeep: make the first (admin) account, add the Brave extension.
 - [ ] Immich: first login, then Administration → External Libraries.
 - [x] Google Drive: run `gdrive-login` once on Kvasir.
@@ -75,11 +74,6 @@ values. The rules are the same everywhere:
 - Punctuation is grey.
 - The row being chosen is solid blue with dark text.
 
-- [ ] **Obsidian:** a CSS snippet, or a small theme, from the roles:
-  - `--background-primary`/`-secondary` from bg/surface, `--text-normal` plain, `--text-muted` dim, `--interactive-accent` blue.
-  - Code blocks through CodeMirror's classes: `.cm-comment` yellow, `.cm-string` green, `.cm-number`/`.cm-atom` purple, `.cm-def` blue, keywords plain.
-
-  Create it in Obsidian (Appearance → CSS snippets) or with `obsidian-cli`, never with a shell write into `~/Grimoire`. A home-manager symlink in the vault would sync to the phone and Akmon.
 - [ ] **Starship prompt** (`Modules/Core/shell.nix`): the hardcoded `#539bf5`, `#768390` and nord green become ANSI names (`blue`, `bright-black`, `green`). The prompt then follows Ghostty's palette on both hosts (Akmon has no Tn-theme).
 - [ ] **delta**, and lazygit through it (`shell.nix`):
   - Build a bat `.tmTheme` from the same TextMate rules as VSCodium (`programs.bat.themes.tn`), then set delta's `syntax-theme = "tn"`.
