@@ -720,6 +720,8 @@
               sensitivity               = 0,
               touchpad = {
                 natural_scroll      = true,
+                -- Two-finger scrolling at half libinput's speed (default 1.0)
+                scroll_factor       = 0.5,
                 disable_while_typing = true,
                 drag_lock           = false,
               },
