@@ -50,18 +50,26 @@
     ];
 
     home-manager.users.xin = {
-      # ── Thunderbird: mail, calendar, RSS ───────────────────────────────
+      # ── Thunderbird: mail, calendar ────────────────────────────────────
       # Gmail signs in with OAuth2 in Thunderbird's own window on first
       # start. "Archive" is Akmon's permanent copy (Tn-mail-archive), read-only
       # and full-text searchable; its password is sops mail-archive-password.
       # Calendars: the Google ones below (offline cache on; one Google login
-      # in Thunderbird's window on first start). Feeds live in the "Feeds"
-      # account.
+      # in Thunderbird's window on first start). RSS lives in Miniflux
+      # (Tn-miniflux), not here.
       accounts.email.accounts = {
         ironshark = {
           primary     = true;
           address     = "xin@ironshark.org";
           userName    = "xin@ironshark.org";
+          realName    = config.tn.full_name;
+          flavor      = "gmail.com";
+          thunderbird.enable = true;
+        };
+        # Pima Community College (Google Workspace): OAuth2 like the above
+        pima = {
+          address     = "kfanning2@mail.pima.edu";
+          userName    = "kfanning2@mail.pima.edu";
           realName    = config.tn.full_name;
           flavor      = "gmail.com";
           thunderbird.enable = true;
@@ -111,7 +119,6 @@
         enable = true;
         profiles.default = {
           isDefault    = true;
-          feedAccounts.Feeds = {};
           settings = {
             "mail.shell.checkDefaultClient"  = false;
             "datareporting.healthreport.uploadEnabled" = false;
