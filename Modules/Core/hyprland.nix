@@ -210,15 +210,28 @@
       ${pkgs.wtype}/bin/wtype -- "$VALUE"
     '';
 
-    # Same flow as quick paste, over every fully-qualified emoji ("😀 grinning
-    # face"), so the picker searches by name. The list is built once from the
-    # Unicode data instead of being fetched at runtime.
-    emojiList = pkgs.runCommand "tn-emoji-list" { } ''
-      sed -n 's/^[^#]*; fully-qualified *# \([^ ]*\) E[0-9.]* \(.*\)$/\1 \2/p' \
-        ${pkgs.unicode-emoji}/share/unicode/emoji/emoji-test.txt > $out
+    # Super+Shift+S: type a query, it opens as a SearXNG search in Brave (the
+    # same engine as the address bar); something that looks like an address
+    # opens directly.
+    webSearch = pkgs.writeShellScript "tn-web-search" ''
+      Q=$(${pkgs.fuzzel}/bin/fuzzel --dmenu --lines 0 --prompt "search ❯ " < /dev/null)
+      [ -z "$Q" ] && exit 0
+      case "$Q" in
+        http://*|https://*)      URL=$Q ;;
+        *" "*)                   URL= ;;
+        *.*[a-z][a-z]|*.*[a-z][a-z]/*) URL="https://$Q" ;;
+        *)                       URL= ;;
+      esac
+      [ -z "$URL" ] && URL="https://search.ironshark.org/search?q=$(${pkgs.jq}/bin/jq -rn --arg q "$Q" '$q|@uri')"
+      exec brave "$URL"
     '';
+
+    # rofimoji in fuzzel (fast, same theme as the launcher): searches names
+    # and keywords, most-used first; neutral skin tone, no extra prompt.
     emojiPick = pkgs.writeShellScript "tn-emoji-pick" ''
-      EMOJI=$(${pkgs.wofi}/bin/wofi --dmenu --insensitive -p "emoji" < ${emojiList} | cut -d' ' -f1)
+      EMOJI=$(PATH=${pkgs.fuzzel}/bin:$PATH ${pkgs.rofimoji}/bin/rofimoji --selector fuzzel --action print \
+        --skin-tone neutral --prompt "emoji" \
+        --selector-args "--width 60")
       [ -z "$EMOJI" ] && exit 0
       printf '%s' "$EMOJI" | ${pkgs.wl-clipboard}/bin/wl-copy
       # let focus return to the previous window, then paste from the clipboard.
@@ -694,6 +707,9 @@
             hl.exec_cmd("hyprsunset")
             hl.exec_cmd("${pkgs.hyprpolkitagent}/libexec/hyprpolkitagent")
             hl.exec_cmd("fcitx5 -d --replace")
+            -- windowless, so Bitwarden stays unlocked for the session
+            -- (BackgroundModeEnabled, Tn-web-browsers); Super+S opens a window
+            hl.exec_cmd("brave --no-startup-window")
             hl.exec_cmd("[workspace 8 silent] obsidian")
             -- hl.exec_cmd("env QT_QPA_PLATFORM=xcb plover")
             hl.exec_cmd("[workspace 9 silent] flatpak run net.openhabittracker.OpenHabitTracker")
@@ -720,8 +736,8 @@
               sensitivity               = 0,
               touchpad = {
                 natural_scroll      = true,
-                -- Two-finger scrolling at half libinput's speed (default 1.0)
-                scroll_factor       = 0.5,
+                -- Two-finger scrolling at about a third of libinput's speed (default 1.0)
+                scroll_factor       = 0.35,
                 disable_while_typing = true,
                 drag_lock           = false,
               },
@@ -798,6 +814,7 @@
           hl.bind(mainMod .. " + Space",      hl.dsp.exec_cmd("fuzzel"))
           hl.bind(mainMod .. " + T",          hl.dsp.exec_cmd(terminal))
           hl.bind(mainMod .. " + S",          hl.dsp.exec_cmd("brave"))
+          hl.bind(mainMod .. " + SHIFT + S",  hl.dsp.exec_cmd("${webSearch}"))
           hl.bind(mainMod .. " + D",          hl.dsp.window.close())
           hl.bind(mainMod .. " + SHIFT + D",  hl.dsp.exec_cmd("${pkillMenu}"))
           hl.bind(mainMod .. " + Q",          hl.dsp.exec_cmd("hyprlock"))
@@ -895,8 +912,8 @@
 
           hl.bind(mainMod .. " + G",         hl.dsp.exec_cmd("wl-kbptr -o modes=floating,click -o mode_floating.source=detect"))
           hl.bind(mainMod .. " + SHIFT + G", hl.dsp.exec_cmd("wl-kbptr -o modes=tile,bisect"))
-          hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd("${winPicker}"))
-          hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPickerWs}"))
+          hl.bind(mainMod .. " + B",         hl.dsp.exec_cmd("${winPickerWs}"))
+          hl.bind(mainMod .. " + SHIFT + B", hl.dsp.exec_cmd("${winPicker}"))
           hl.bind(mainMod .. " + ALT + B",   hl.dsp.exec_cmd("${winPickerPull}"))
           hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd("${winPull}"))
 

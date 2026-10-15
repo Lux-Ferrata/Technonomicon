@@ -236,7 +236,7 @@
       '';
     };
 
-    # zoxide (`t`) learns directories per machine, so Akmon's terminals knew
+    # zoxide (`te`) learns directories per machine, so Akmon's terminals knew
     # almost none. Each run copies the directories one side has and the
     # other lacks (with their score), both ways; entries both know keep
     # their own local ranking. zoxide-merge-in (Tn-shell) drops paths that

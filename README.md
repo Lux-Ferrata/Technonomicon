@@ -51,7 +51,7 @@ nh os switch                     # plain local switch, if ever needed
 | `ak [name]` | Persistent shell on Akmon (shpool), named after the current project; reconnects by itself |
 | `rb <cmd>` | Run one command on Akmon in the same directory, with the project's direnv env |
 | `aku` | Akmon's load (btop); `aku -s` snapshot, `aku --week` digest |
-| `t <dir>` / `ti` | zoxide jump / interactive |
+| `te <dir>` / `tei` | zoxide jump / interactive |
 | `send <files>` | Taildrop to the phone |
 | `overnight-add "task" [project]` | Queue work for the overnight agents; `overnight-now` starts a run |
 | `lagent ask/read/search/code` | Hand work to the local models on Akmon (see below) |
@@ -92,7 +92,7 @@ Hyprland (Lua config, permanent scrolling layout), Quickshell bar, Ghostty, gree
 | Key | Action |
 |---|---|
 | `Super+Space` | App launcher (fuzzel) |
-| `Super+B` / `Super+Shift+B` / `Super+Alt+B` | Window picker: all windows / this workspace / pull one here from another workspace (fuzzel, fuzzy) |
+| `Super+B` / `Super+Shift+B` / `Super+Alt+B` | Window picker: this workspace / all windows / pull one here from another workspace (fuzzel, fuzzy) |
 | `Super+Shift+W` | Every column on the workspace to half width, or all back to full |
 | 3 fingers | Sideways scrolls the window tape; up/down switches workspace |
 | `Super+Shift+H` | Snippet finder |
