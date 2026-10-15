@@ -10,6 +10,13 @@
     pal = import ./_palette.nix;   # Technonomicon's colours (also nvim)
     c   = pal.roles;
 
+    # VSCodeVim: j/k and the arrows move by screen line through wrapped
+    # text (gj/gk). A count does too, so `5j` is five screen lines.
+    visualLines = map ({ k, g }: { before = [ k ]; after = [ "g" g ]; }) [
+      { k = "j"; g = "j"; } { k = "k"; g = "k"; }
+      { k = "<Down>"; g = "j"; } { k = "<Up>"; g = "k"; }
+    ];
+
     # VSCodium's theme: a blank canvas with no token rules of its own. A
     # built-in theme's specific selectors (Dark Modern's keyword.control,
     # support.function) out-rank the catch-all rules in userSettings, so
@@ -136,6 +143,13 @@
       # dispatches must go through `hyprctl eval "hl.dispatch(...)"`.
       hyprctl eval "hl.dispatch(hl.dsp.focus({window='class:^md.obsidian.Obsidian$'}))"
     '';
+
+    # ThePrimeagen's motion drills on their own: a clean nvim (no LazyVim)
+    # with only the plugin, straight into its menu
+    vimBeGood = pkgs.writeShellScriptBin "vim-be-good" ''
+      exec ${pkgs.neovim}/bin/nvim --clean \
+        --cmd "set rtp^=${pkgs.vimPlugins.vim-be-good}" -c VimBeGood
+    '';
   in {
 
     # Compilers, language servers, formatters and the rest of the headless
@@ -145,6 +159,7 @@
       previewImage
       openInGhostty
       openInObsidian
+      vimBeGood
       imv
       ghostty
       # File Management
@@ -201,6 +216,9 @@
           # with thin borders, blue for focus, and the row being chosen solid
           # blue with dark text.
           "workbench.colorTheme"           = "Technonomicon";   # tnTheme above
+          # flash.nvim's labels (lowercase only), so digits, capitals and
+          # symbols always extend the search instead of jumping
+          "flash-vscode.labelKeys" = "asdfghjklqwertyuiopzxcvbnm";
           # flash labels: red tags with dark text, matches in teal
           "flash-vscode.labelBackgroundColor"         = c.error;
           "flash-vscode.labelColor"                   = c.bg;
@@ -289,6 +307,9 @@
             "editorIndentGuide.background1"         = c.whitespace;
             "editorIndentGuide.activeBackground1"   = c.dim;
             "editorInlayHint.foreground"            = c.dim;
+            # suggestions well below the operators' grey, so they never read
+            # as code
+            "editorGhostText.foreground"            = c.ghost;
             "editorInlayHint.background"            = "#00000000";
             "editorInlayHint.typeForeground"        = c.dim;
             "editorInlayHint.typeBackground"        = "#00000000";
@@ -565,10 +586,17 @@
           # Keep the active line centred: more surrounding lines than half a
           # screen pins the cursor to the middle (like scrolloff=999), and
           # scrolling past the last line lets that hold at the end of a file.
-          # Applies to mouse clicks too, not just keyboard moves.
           "editor.cursorSurroundingLines"      = 999;
-          "editor.cursorSurroundingLinesStyle" = "all";
+          # "default": keyboard moves only, so a mouse click or drag-select
+          # stays where it is (the next key press re-centres)
+          "editor.cursorSurroundingLinesStyle" = "default";
           "editor.scrollBeyondLastLine"        = true;
+          # VSCodium can't keep undo across restarts; the nearest thing is
+          # Local History (Timeline view, "Local History: Find Entry to
+          # Restore"), which snapshots every save -- and every <Esc> saves.
+          # Keep far more than the default 50 per file.
+          "workbench.localHistory.maxFileEntries" = 1000;
+          "workbench.localHistory.mergeWindow"    = 5;
           "editor.renderWhitespace"            = "all";
 
           # cSpell checks code, strings and identifiers by default. In code it
@@ -600,7 +628,7 @@
           # `s` is flash, as in LazyVim: type as many characters as you like,
           # labels follow every keystroke, press one to jump (Enter takes
           # the nearest match). Visual `s` extends the selection instead.
-          "vim.normalModeKeyBindingsNonRecursive" = [
+          "vim.normalModeKeyBindingsNonRecursive" = visualLines ++ [
             { before = [ "s" ]; commands = [ "flash-vscode.start" ]; }
             { before = [ "<Esc>" ]; after = [ "<Esc>" ]; commands = [ "workbench.action.files.saveFiles" ]; }
             # Harpoon, on LazyVim's harpoon-extra keys: H pins the file,
@@ -619,7 +647,7 @@
           "vim.insertModeKeyBindingsNonRecursive" = [
             { before = [ "<Esc>" ]; after = [ "<Esc>" ]; commands = [ "workbench.action.files.saveFiles" ]; }
           ];
-          "vim.visualModeKeyBindingsNonRecursive" = [
+          "vim.visualModeKeyBindingsNonRecursive" = visualLines ++ [
             { before = [ "s" ]; commands = [ "flash-vscode.startSelection" ]; }
           ];
         };
@@ -741,6 +769,12 @@
 
     home-manager.users.xin = {
       imports = [ inputs.lazyvim.homeManagerModules.default ];
+
+      xdg.desktopEntries.vim-be-good = {
+        name = "Vim Be Good"; genericName = "Vim motion practice";
+        icon = "${../Web/icons/vim-be-good.svg}";
+        exec = "vim-be-good"; terminal = true; categories = [ "Game" "Education" ];
+      };
 
       # image.nvim's magick luarock, from nix instead of luarocks
       programs.neovim.extraLuaPackages = ps: [ ps.magick ];
@@ -1063,6 +1097,13 @@
             vim.keymap.set("n", "<leader>t", function()
               vim.fn.jobstart({ "open-in-ghostty", vim.fn.expand("%:p") })
             end, { desc = "Open in Ghostty" })
+
+            -- Ctrl+V pastes the clipboard (Ghostty passes it through as a raw
+            -- ^V, which vim reads as "insert the next key literally"). <C-o>
+            -- inserts it as typed, without re-indenting. Normal-mode Ctrl+V
+            -- stays visual block.
+            vim.keymap.set("i", "<C-v>", "<C-r><C-o>+", { desc = "Paste clipboard" })
+            vim.keymap.set("c", "<C-v>", "<C-r>+",      { desc = "Paste clipboard" })
 
             vim.keymap.set("i", "<C-BS>", "<C-w>", { desc = "Delete word before cursor" })
             vim.keymap.set("i", "<C-h>", "<C-w>", { desc = "Delete word before cursor" })

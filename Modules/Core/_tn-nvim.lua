@@ -140,6 +140,8 @@ for kind, col in pairs({ Error = P.error, Warn = P.warn, Info = P.info, Hint = P
   hl("DiagnosticUnderline" .. kind, { undercurl = true, sp = col })
 end
 hl("LspInlayHint", { fg = P.dim })   -- dim text, no box
+-- suggestions well below the operators' grey, so they never read as code
+each({ "BlinkCmpGhostText", "ComplHint", "NeoCodeiumSuggestion" }, { fg = P.ghost })
 
 each({ "GitSignsAdd", "MiniDiffSignAdd", "Added", "@diff.plus" }, { fg = P.add })
 each({ "GitSignsChange", "MiniDiffSignChange", "Changed", "@diff.delta" }, { fg = P.change })

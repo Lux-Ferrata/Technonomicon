@@ -50,7 +50,8 @@ rec {
     linehl     = "#1D1F22";    # current-line band          .238 .006 258
     border     = "#31363B";    # borders, separators   1.4  .330 .012 250
     whitespace = "#3B4046";    # whitespace dots, guides 1.7 .370 .012 250
-    punct      = "#81929C";    # punctuation, operators 5.4  .650 .025 234
+    punct      = "#96A8B2";    # punctuation, operators 7.1  .720 .025 234
+    ghost      = "#64747E";    # inline suggestions    3.6  .550 .025 234
     comment    = s "base0A";
     string     = s "base0B";
     const      = s "base08";   # red, as xin asked (was purple)
