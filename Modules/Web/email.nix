@@ -38,6 +38,42 @@
       '';
     };
 
+    # The Google calendars, for Thunderbird and khal. The 🔒 ones are generated
+    # on Akmon (task-deadlines.nix) and read-only.
+    calendars = {
+      "Kevin Fanning" = { id = "xin@ironshark.org"; color = "#9fe1e7"; primary = true; };
+      "Class Times"   = { id = "c_7882cd8419d72b633223f39c5eb2ae061710ba6c9eebb5a6d76a7ab0541641dd@group.calendar.google.com"; color = "#cca6ac"; };
+      "Office Hours"  = { id = "c_bdaf0ac3c8f5e55db5da6d91ba1ad5ff8a1971189ebc857e9d10bcf8aeecde1e@group.calendar.google.com"; color = "#fa573c"; };
+      "School"        = { id = "c_7faad55430eba0e6927d955fbd7fd36a45143b418a037ce674f02fee647eb2d7@group.calendar.google.com"; color = "#b99aff"; };
+      "🔒 Projects"   = { id = "c_f200476eb0cdab5c8901fffc8b6b2359a3af29c94aab81b222e6703b66b180a5@group.calendar.google.com"; color = "#9fc6e7"; readOnly = true; };
+      "🔒 Academics"  = { id = "c_07612d4356b2fe10dcf5330759186b2a6c8aba1d209dac0d1eb37590ddde2949@group.calendar.google.com"; color = "#d06b64"; readOnly = true; };
+      "Holidays in United States" = { id = "en.usa#holiday@group.v.calendar.google.com"; vdirId = "cln2stbjc4hmgrrcd5i62ua0ctp6utbg5pr2sor1dhimsp31e8n6errfctm6abj3dtmg@virtual"; color = "#16a765"; readOnly = true; };
+      "Pima Honors Program" = { id = "c_3dvc4bkp9meoi57miql7demous@group.calendar.google.com"; color = "#b99aff"; readOnly = true;
+                                # not in the account's CalDAV calendar list, so vdirsyncer can't reach it
+                                khal = false; };
+    };
+    # vdirsyncer's Google API lists some calendars under another ID
+    vdirId   = c: c.vdirId or c.id;
+    khalCals = lib.filterAttrs (_: c: c.khal or true) calendars;
+    calData  = "${config.users.users.xin.home}/.local/share/google-calendars";
+    calState = "${config.users.users.xin.home}/.local/state/vdirsyncer";
+
+    # ikhal between two syncs; the first run signs in to Google (browser)
+    tnCal = pkgs.writeShellApplication {
+      name = "tn-cal";
+      runtimeInputs = with pkgs; [ khal vdirsyncer coreutils ];
+      text = ''
+        if [ ! -f "${calState}/google-token" ]; then
+          echo "First run: sign in to Google as xin@ironshark.org in the browser."
+          yes | vdirsyncer discover >/dev/null
+          systemctl --user start vdirsyncer.timer || true
+        fi
+        vdirsyncer sync >/dev/null 2>&1 || echo "offline: showing the local copy" >&2
+        ikhal
+        vdirsyncer sync >/dev/null 2>&1 || true
+      '';
+    };
+
     # aerc's Google OAuth2 logins (Pima): `mail-oauth login <address>` once,
     # then aerc runs `mail-oauth token <address>` for each connection
     mailOauth = pkgs.writers.writePython3Bin "mail-oauth" {
@@ -47,9 +83,10 @@
     # aerc on the same Gmail mailboxes as Thunderbird (labels are folders,
     # so either client sees what the other did). Gmail files sent mail
     # itself, so no copy-to.
-    aercGmail = auth: {
+    aercGmail = address: auth: {
       enable = true;
       extraAccounts = {
+        from     = address;   # no display name, as in Thunderbird
         copy-to  = "";
         default  = "INBOX";
         postpone = "[Gmail]/Drafts";
@@ -57,7 +94,8 @@
       };
     } // auth;
   in {
-    # aerc reads these as xin: the ironshark app password and the OAuth client
+    # aerc and vdirsyncer read these as xin: the ironshark app password and
+    # the OAuth client
     sops.secrets.smtp-password              = { owner = "xin"; };
     sops.secrets.google-oauth-client-id     = { owner = "xin"; };
     sops.secrets.google-oauth-client-secret = { owner = "xin"; };
@@ -68,8 +106,10 @@
       notmuch
       isync
       msmtp
-      # Calendars live in Google; Thunderbird (below) keeps the offline copy
-      calcurse
+      # Calendars live in Google; Thunderbird and khal (below) keep offline copies
+      khal
+      vdirsyncer
+      tnCal
       calendarPushLogin
       mailOauth
       w3m   # aerc's text/html filter
@@ -93,7 +133,7 @@
           thunderbird.enable = true;
           # aerc: the Workspace app password (also Akmon's mail relay/archive)
           passwordCommand = "cat ${config.sops.secrets.smtp-password.path}";
-          aerc = aercGmail {};
+          aerc = aercGmail "xin@ironshark.org" {};
         };
         # Pima Community College (Google Workspace): OAuth2 like the above
         pima = {
@@ -104,7 +144,7 @@
           thunderbird.enable = true;
           # aerc: OAuth2 (`mail-oauth login kfanning2@mail.pima.edu` once)
           passwordCommand = "${lib.getExe mailOauth} token kfanning2@mail.pima.edu";
-          aerc = aercGmail { imapAuth = "oauthbearer"; smtpAuth = "oauthbearer"; };
+          aerc = aercGmail "kfanning2@mail.pima.edu" { imapAuth = "oauthbearer"; smtpAuth = "oauthbearer"; };
         };
         archive = {
           address  = "archive@ironshark.org";   # never sends; just names the account
@@ -122,29 +162,86 @@
         };
       };
       # Google Calendar is where calendars live; Thunderbird keeps an offline
-      # copy. The 🔒 ones are generated on Akmon (task-deadlines.nix) and
-      # read-only. Attribute names are the names shown in Thunderbird.
+      # copy. Attribute names are the names shown in Thunderbird.
       accounts.calendar.basePath = ".local/share/hm-calendars";   # unused: remote only
-      accounts.calendar.accounts = let
-        google = id: { color, readOnly ? false, primary ? false }: {
-          inherit primary;
-          remote = {
-            type     = "caldav";
-            url      = "https://apidata.googleusercontent.com/caldav/v2/${
-              lib.replaceStrings [ "@" "#" ] [ "%40" "%23" ] id}/events/";
-            userName = "xin@ironshark.org";
-          };
-          thunderbird = { enable = true; inherit color readOnly; };
+      accounts.calendar.accounts = lib.mapAttrs (_: c: {
+        primary = c.primary or false;
+        remote = {
+          type     = "caldav";
+          url      = "https://apidata.googleusercontent.com/caldav/v2/${
+            lib.replaceStrings [ "@" "#" ] [ "%40" "%23" ] c.id}/events/";
+          userName = "xin@ironshark.org";
         };
-      in {
-        "Kevin Fanning" = google "xin@ironshark.org" { color = "#9fe1e7"; primary = true; };
-        "Class Times"   = google "c_7882cd8419d72b633223f39c5eb2ae061710ba6c9eebb5a6d76a7ab0541641dd@group.calendar.google.com" { color = "#cca6ac"; };
-        "Office Hours"  = google "c_bdaf0ac3c8f5e55db5da6d91ba1ad5ff8a1971189ebc857e9d10bcf8aeecde1e@group.calendar.google.com" { color = "#fa573c"; };
-        "School"        = google "c_7faad55430eba0e6927d955fbd7fd36a45143b418a037ce674f02fee647eb2d7@group.calendar.google.com" { color = "#b99aff"; };
-        "🔒 Projects"   = google "c_f200476eb0cdab5c8901fffc8b6b2359a3af29c94aab81b222e6703b66b180a5@group.calendar.google.com" { color = "#9fc6e7"; readOnly = true; };
-        "🔒 Academics"  = google "c_07612d4356b2fe10dcf5330759186b2a6c8aba1d209dac0d1eb37590ddde2949@group.calendar.google.com" { color = "#d06b64"; readOnly = true; };
-        "Holidays in United States" = google "en.usa#holiday@group.v.calendar.google.com" { color = "#16a765"; readOnly = true; };
-        "Pima Honors Program" = google "c_3dvc4bkp9meoi57miql7demous@group.calendar.google.com" { color = "#b99aff"; readOnly = true; };
+        thunderbird = { enable = true; inherit (c) color; readOnly = c.readOnly or false; };
+      }) calendars;
+
+      # khal: the same calendars in the terminal (ikhal, or "Calendar" in the
+      # launcher). vdirsyncer keeps a local copy in sync with Google every
+      # 15 minutes and around each `tn-cal`; the first `tn-cal` signs in.
+      xdg.configFile."vdirsyncer/config".text = ''
+        [general]
+        status_path = "${calState}/status/"
+
+        [pair google]
+        a = "google_local"
+        b = "google_remote"
+        collections = [${lib.concatMapStringsSep ", " (c: ''"${vdirId c}"'') (lib.attrValues khalCals)}]
+        conflict_resolution = "b wins"
+
+        [storage google_local]
+        type = "filesystem"
+        path = "${calData}/"
+        fileext = ".ics"
+
+        [storage google_remote]
+        type = "google_calendar"
+        token_file = "${calState}/google-token"
+        client_id.fetch = ["command", "cat", "${config.sops.secrets.google-oauth-client-id.path}"]
+        client_secret.fetch = ["command", "cat", "${config.sops.secrets.google-oauth-client-secret.path}"]
+      '';
+      xdg.configFile."khal/config".text = ''
+        [calendars]
+        ${lib.concatStrings (lib.mapAttrsToList (name: c: ''
+          [[${name}]]
+          path = '${calData}/${vdirId c}'   # quoted: '#' starts a comment
+          color = '${c.color}'
+          readonly = ${if c.readOnly or false then "True" else "False"}
+        '') khalCals)}
+        [default]
+        default_calendar = Kevin Fanning
+        highlight_event_days = True
+
+        [locale]
+        timeformat = %H:%M
+        dateformat = %Y-%m-%d
+        longdateformat = %Y-%m-%d
+        datetimeformat = %Y-%m-%d %H:%M
+        longdatetimeformat = %Y-%m-%d %H:%M
+        firstweekday = 0
+      '';
+      systemd.user.services.vdirsyncer = {
+        Unit = {
+          Description = "Sync khal's calendars with Google";
+          ConditionPathExists = "${calState}/google-token";   # after the first tn-cal
+        };
+        Service = { Type = "oneshot"; ExecStart = "${lib.getExe pkgs.vdirsyncer} sync"; };
+      };
+      systemd.user.timers.vdirsyncer = {
+        Unit.Description = "Sync khal's calendars with Google";
+        Timer = { OnCalendar = "*:0/15"; Persistent = true; };
+        Install.WantedBy = [ "timers.target" ];
+      };
+
+      # Super+Space: "Mail" and "Calendar", in a terminal
+      xdg.desktopEntries = {
+        aerc = {
+          name = "Mail"; genericName = "aerc"; icon = "${./icons/mail.svg}";
+          exec = "aerc"; terminal = true; categories = [ "Network" "Email" ];
+        };
+        tn-cal = {
+          name = "Calendar"; genericName = "khal"; icon = "${./icons/calendar.svg}";
+          exec = "tn-cal"; terminal = true; categories = [ "Office" "Calendar" ];
+        };
       };
 
       programs.aerc = {

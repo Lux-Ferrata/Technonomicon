@@ -58,7 +58,7 @@ def login(address):
             self.end_headers()
             self.wfile.write(b"Signed in; you can close this tab.")
 
-        def log_message(self, *_):
+        def log_message(self, format, *args):
             pass
 
     server = http.server.HTTPServer(("127.0.0.1", 0), Handler)

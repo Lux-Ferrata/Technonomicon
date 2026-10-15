@@ -20,11 +20,13 @@
         LISTEN_ADDR = "127.0.0.1:${toString port}";
         BASE_URL    = "https://rss.ironshark.org/";
         POLLING_FREQUENCY = 30;      # minutes
-        # read and unread entries both go 30 days after they arrive, so no
-        # backlog builds up; starred entries are never removed (star
-        # anything to keep)
-        CLEANUP_ARCHIVE_READ_DAYS = 30;
+        # read entries go a day after they arrive, unread ones after 30, so
+        # no backlog builds up; starred entries are never removed (star
+        # anything to keep). Cleanup runs hourly so "a day" stays close to
+        # 24 h (Miniflux counts from fetch time and only takes whole days).
+        CLEANUP_ARCHIVE_READ_DAYS = 1;
         CLEANUP_ARCHIVE_UNREAD_DAYS = 30;
+        CLEANUP_FREQUENCY_HOURS = 1;
         # the scraped feeds below live on rss.ironshark.org, i.e. Akmon's
         # tailnet IP, which Miniflux otherwise refuses to fetch
         FETCHER_ALLOW_PRIVATE_NETWORKS = 1;
