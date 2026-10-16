@@ -1,6 +1,6 @@
 { inputs, ... }: {
   # Vikunja (tasks), local-first on Kvasir: works offline at
-  # http://localhost:3456 (the "Tasks (Vikunja)" launcher), and over the
+  # http://localhost:3456 (the "Vikunja Desktop" app), and over the
   # tailnet at https://kvasir.tail607809.ts.net while the laptop is up
   # (phone: the Vikunja app, or CalDAV at /dav/ with a CalDAV token).
   # SQLite + attachments live in /var/lib/private/vikunja (DynamicUser).
@@ -28,6 +28,11 @@
     state  = "/var/lib/private/vikunja";
     dest   = "/home/xin/.local/share/vikunja-backup";
   in {
+    # the official app, logged in to http://localhost:3456: it signs in
+    # through the browser (OAuth, back via vikunja-desktop://) and renews
+    # with a token, not the cookie, so the same-site issue below never arises
+    environment.systemPackages = [ pkgs.vikunja-desktop ];
+
     sops.secrets.vikunja-password = {};
     sops.secrets.vikunja-secret   = {};
     # read by systemd (root) for EnvironmentFile, so the DynamicUser needn't;
@@ -99,7 +104,13 @@
         Restart         = "on-failure";
         RestartSec      = 30;
       };
-      script = "${pkgs.tailscale}/bin/tailscale serve --bg --https=443 http://127.0.0.1:${toString proxy}";
+      # wait: a switch that restarts tailscaled starts this alongside it, and
+      # serve fails ("unexpected state: NoState") until the backend is up;
+      # bounded, so an offline boot or switch doesn't hang (Restart retries)
+      script = ''
+        ${pkgs.tailscale}/bin/tailscale wait --timeout 60s
+        ${pkgs.tailscale}/bin/tailscale serve --bg --https=443 http://127.0.0.1:${toString proxy}
+      '';
     };
 
     # exists before Syncthing looks for it
