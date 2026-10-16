@@ -97,9 +97,8 @@
             ($scope == "pull" and .workspace.id != $ws)))) |
           sort_by(.focusHistoryID) |
           .[] | [(.title | clean_title), (.class | clean_class), (.workspace.id | tostring), .address] | @tsv')
-      [ "''${#ROWS[@]}" -gt 0 ] || exec ${pkgs.libnotify}/bin/notify-send -t 1500 \
-        "${if scope == "ws" then "No other windows on this workspace" else "No other windows"}"
-      IDX=$(printf '%s\n' "''${ROWS[@]}" | \
+      # No other windows: still open fuzzel, empty, so the key visibly did something
+      IDX=$({ [ "''${#ROWS[@]}" -gt 0 ] && printf '%s\n' "''${ROWS[@]}"; } | \
         awk -F'\t' '{ printf "%-50.50s  %-12.12s  ws %s\n", $1, $2, $3 }' | \
         ${pkgs.fuzzel}/bin/fuzzel --dmenu --index --width 80 \
           --prompt "${if scope == "pull" then "pull here" else "window"} ❯ ") || exit 0
