@@ -16,10 +16,12 @@
     };
 
     # Element (Matrix) and Slack from nixpkgs: their wrappers honour
-    # NIXOS_OZONE_WL, so both run native on Wayland
+    # NIXOS_OZONE_WL, so both run native on Wayland. No Secret Service runs
+    # here, so Element keeps its database key in the basic store (as Brave
+    # does) instead of stopping at "unsupported keyring"
     environment.systemPackages = with pkgs; [
       newsflash
-      element-desktop
+      (element-desktop.override { commandLineArgs = "--password-store=basic"; })
       slack
     ];
   };
