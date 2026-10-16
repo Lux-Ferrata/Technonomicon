@@ -81,6 +81,10 @@
       "IPFSCompanionEnabled" = false;
 
       "RestoreOnStartup" = 5;
+      # Keep running with no window open (started at login by Tn-hyprland),
+      # so extensions -- Bitwarden's unlocked vault -- live for the whole
+      # session instead of dying with the last window.
+      "BackgroundModeEnabled" = true;
       # Memory Saver off: with 40 GB of RAM, discarding idle tabs only buys a
       # reload when you return to them; background tabs are throttled anyway.
       "HighEfficiencyModeEnabled" = false;
@@ -112,6 +116,8 @@
         "emhhlhigmokehndjjmgnailciakdmoba;https://clients2.google.com/service/update2/crx" # 101weiqiLocalizer
         "mnjggcdmjocbbbhaepdhchncahnbgone;https://clients2.google.com/service/update2/crx" # SponsorBlock
         "cjnmckjndlpiamhfimnnjmnckgghkjbl;https://clients2.google.com/service/update2/crx" # Competitive Companion
+        "fcoeoabgfenejglbffodgkkbkcdhcgfn;https://clients2.google.com/service/update2/crx" # Claude
+        "oldceeleldhonbafppcapldpdifcinji;https://clients2.google.com/service/update2/crx" # LanguageTool (Akmon's, below)
         # enhanced-h264ify: YouTube only. Kaby Lake has no AV1 (or VP8)
         # decoder, so by default this blocks VP8/VP9/AV1 and YouTube serves
         # H.264, which the GPU decodes (up to 1080p, the panel's size).
@@ -134,6 +140,7 @@
             "keyMappings" = ''
               unmapAll
               map <c-f> LinkHints.activateMode
+              map <c-s-f> LinkHints.activateModeToOpenInNewForegroundTab
               map <c-t> Vomnibar.activateInNewTab
               map <c-n> Vomnibar.activate
             '';
@@ -158,6 +165,12 @@
       "3rdparty".extensions."cjpalhdlnbpafiamejdnhcphjbkeiagm".toOverwrite.filterLists = [
         "user-filters"
       ];
+      # LanguageTool checks against Akmon's server (Tn-languagetool), never
+      # languagetool.org; its base URL includes /v2.
+      "3rdparty".extensions."oldceeleldhonbafppcapldpdifcinji" = {
+        apiServerUrl = "https://lt.ironshark.org/v2";
+        disablePrivacyConfirmation = true;
+      };
     };
 
   };

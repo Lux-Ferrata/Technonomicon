@@ -15,8 +15,12 @@
       overrides."com.discordapp.Discord".Environment.TZ = "America/Phoenix";
     };
 
+    # Element (Matrix) and Slack from nixpkgs: their wrappers honour
+    # NIXOS_OZONE_WL, so both run native on Wayland
     environment.systemPackages = with pkgs; [
       newsflash
+      element-desktop
+      slack
     ];
   };
 }
