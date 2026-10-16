@@ -75,7 +75,7 @@ All shared modules are prefixed `Tn-` (Technonomicon); each host picks the ones 
 - `Tn-hyprland` — Hyprland (Lua config, scrolling layout), Quickshell bar and notifications, hypridle/hyprlock, pickers and keybindings, Ghostty
 - `Tn-neovim` — LazyVim, VSCodium (primary editor, on trial) and `eo`, Yazi
 - `Tn-devtools` — compilers, language servers, formatters, debuggers, aider (both hosts)
-- `Tn-shell` — fish, xonsh (scripting only), atuin, carapace, zoxide (`t`/`ti`), direnv, starship, git, CLI tools (both hosts)
+- `Tn-shell` — fish, xonsh (scripting only), atuin, carapace, zoxide (`te`/`tei`), direnv, starship, git, CLI tools (both hosts)
 - `Tn-network`, `Tn-nix` (nix settings, nh, nix-index), `Tn-sound`, `Tn-theme`, `Tn-utf` (locales, fcitx5), `Tn-print`, `Tn-virtualization`, `Tn-user-settings` (the `tn.*` options)
 - `Tn-dev-client` / `Tn-dev-host` — "Akmon is the dev box": `eo`, `rb`, `ak`, Syncthing, LLM endpoints with offline fallbacks, `deploy`, `tn-check`
 - `Tn-build-client` / `Tn-build-host` — remote builds and Akmon's signed cache (harmonia)

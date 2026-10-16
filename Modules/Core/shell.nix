@@ -137,9 +137,16 @@
             eza --icons --oneline --group-directories-first --color=always
           '';
 
+          # direnv first, so its "loading …" line comes before the listing
+          # (its own PWD hook would run after this one; it then has nothing
+          # left to do)
           __tn_auto_ls = {
             onVariable = "PWD";
-            body = "status is-interactive; and eza --icons --oneline --group-directories-first --color=always";
+            body = ''
+              status is-interactive; or return
+              direnv export fish | source
+              eza --icons --oneline --group-directories-first --color=always
+            '';
           };
 
           tnc = "cd ~/Projects/Technonomicon; and claude $argv";
@@ -300,11 +307,11 @@
         };
       };
 
-      # `t foo` jumps, `ti` picks — z is an awkward reach on Colemak-DH
+      # `te foo` jumps, `tei` picks — z is an awkward reach on Colemak-DH
       programs.zoxide = {
         enable = true;
         enableFishIntegration = true;
-        options = [ "--cmd" "t" ];
+        options = [ "--cmd" "te" ];
       };
 
       programs.carapace = {
