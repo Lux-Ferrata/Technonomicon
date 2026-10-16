@@ -397,7 +397,7 @@ Material: $WORK/notes (facts from the run, include every problem), $WORK/curated
 
 Structure: one-line verdict; what changed this week grouped like the curated commits; package upgrades worth knowing about (skip noise); anything pinned or fixed and why; evaluation warnings fixed and any left over; a two-or-three-sentence paragraph on Akmon's usage this week (what it mostly did, anything unusual: sustained high load, pool growth, reboots, gaps, failed units; the full table is appended after your text, so don't repeat it); problems needing attention. End with exactly:
 To update Kvasir:  cd ~/Projects/Technonomicon && git pull && deploy kvasir
-Akmon:             updates itself from working at 05:30 today
+Akmon:             updates itself from working right after this mail
 $([ "$MODE" = live ] || echo "Start with a line saying this was a DRY RUN and nothing was pushed.")" \
   "Read,Write,Bash(git log:*),Bash(git show:*)" || true
 

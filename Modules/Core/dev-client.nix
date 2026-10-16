@@ -79,6 +79,36 @@
     grimoireGit = pkgs.runCommand "grimoire-git" { } ''
       mkdir -p $out/bin && ln -s ${grimoireCmds}/bin/grimoire-commit $out/bin/grimoire-git
     '';
+    # deploy's first step: bring this checkout up to Forgejo's `working`,
+    # where Wednesday's CI job (ci/nightly.sh) pushes the flake update and
+    # Claude's fixes; deploying without them rolls Akmon back. Local commits
+    # and uncommitted edits are rebased on top (--autostash); on a conflict
+    # it undoes the rebase, says so and exits 1. A no-op when Akmon is away
+    # or nothing is new.
+    tnPull = pkgs.writeShellApplication {
+      name = "tn-pull";
+      runtimeInputs = [ pkgs.git ];
+      text = ''
+        cd "''${NH_OS_FLAKE:-''${NH_FLAKE:-$HOME/Projects/Technonomicon}}"
+        fail() { echo "tn-pull: $1" >&2; exit 1; }
+        git fetch -q https://git.ironshark.org/xin/Technonomicon.git \
+          +refs/heads/working:refs/remotes/origin/working 2>/dev/null || {
+          echo "tn-pull: Forgejo unreachable; skipping" >&2; exit 0; }
+        git merge-base --is-ancestor origin/working HEAD && exit 0
+        [ "$(git branch --show-current)" = working ] \
+          || fail "not on the working branch; pull origin/working by hand"
+        gd=$(git rev-parse --git-dir)
+        [ -e "$gd/rebase-merge" ] || [ -e "$gd/rebase-apply" ] || [ -e "$gd/MERGE_HEAD" ] \
+          && fail "a rebase or merge is in progress; finish it first"
+        if git rebase -q --autostash origin/working; then
+          echo "tn-pull: rebased onto origin/working ($(git log -1 --format='%h %s' origin/working))"
+        else
+          git rebase --abort 2>/dev/null || true
+          fail "rebase onto origin/working conflicts; resolve it by hand (git rebase origin/working)"
+        fi
+      '';
+    };
+
     # deploy <akmon|kvasir|all> [nh args]: Akmon is evaluated here, built and
     # switched there; Kvasir is built on Akmon too when it's reachable (the
     # whole closure, not just what distributed builds would hand over) and
@@ -176,6 +206,9 @@
           echo "deploy: nh args only apply to Kvasir; ignoring: $*" >&2
         fi
 
+        # never deploy behind Forgejo's working (e.g. Wednesday's upgrade)
+        ${tnPull}/bin/tn-pull || exit 1
+
         # the password up front, so a long build doesn't end at a prompt
         read -rsp "[sudo] password for $USER: " pw; echo
         # check it (and prime this terminal's sudo) before any build starts
@@ -203,7 +236,7 @@
       '';
     };
 
-    # zoxide (`t`) learns directories per machine, so Akmon's terminals knew
+    # zoxide (`te`) learns directories per machine, so Akmon's terminals knew
     # almost none. Each run copies the directories one side has and the
     # other lacks (with their score), both ways; entries both know keep
     # their own local ranking. zoxide-merge-in (Tn-shell) drops paths that

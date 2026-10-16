@@ -411,7 +411,9 @@
             echo
             echo "Known noise is filtered by tn.alerts.ignore (Modules/Core/server-alerts.nix)."
           } > ${dir}/daily.txt 2>&1
-          subject="daily: $( [ -n "$failednow" ] && echo "$(echo "$failednow" | wc -l) failed, " )$nerr distinct errors"
+          # if/fi, not &&: with nothing failed, `[ ] && echo` returns 1, the
+          # assignment takes it, and set -e ended every quiet day's digest here
+          subject="daily: $(if [ -n "$failednow" ]; then echo "$(echo "$failednow" | wc -l) failed, "; fi)$nerr distinct errors"
           ${if cfg.reportCommand == null then ''
             ${mail} "$subject" < ${dir}/daily.txt
           '' else ''
