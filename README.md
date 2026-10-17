@@ -76,7 +76,7 @@ Akmon has the same shell, plus its own versions of `rb`, `ak` and `overnight-now
 - Remote windows on Akmon via Open Remote-SSH. Akmon's server gets the same extensions from Open VSX.
 - VSCodeVim with **flash** on `s` (labels follow every keystroke), Harpoon on `<leader>h/H/1-5`, save on Esc.
 - **basedpyright** for Python: pyright's engine plus inlay hints, builtin docstrings and better auto-imports. Pylance won't run on VSCodium. Also ruff/black, clangd, rust-analyzer, nixd, LaTeX Workshop, LTeX+ (against Akmon's LanguageTool), and llama-vscode completion from the local models.
-- **One palette** (`_palette.nix`): Nord's hues, saturated, on Dark Reader's `#181A1B` and `#E8E6E3`. It covers the desktop (base16 scheme `tn`), VSCodium (Dark Modern, recoloured) and both nvims (mini.base16 + `_tn-nvim.lua`). Syntax follows Tonsky's minimal highlighting: comments yellow, strings green, constants red, *definitions* blue, punctuation grey, everything else plain, no bold. The row being chosen in any list is solid blue with dark text.
+- **One palette** (`_palette.nix`): Nord's hues, saturated, on a dark grey ground (`#252728`, text `#E8E6E3`) that Dark Reader matches. It covers the desktop (base16 scheme `tn`), VSCodium (Dark Modern, recoloured) and both nvims (mini.base16 + `_tn-nvim.lua`). Syntax follows Tonsky's minimal highlighting: comments yellow, strings green, constants red, *definitions* blue, punctuation grey, everything else plain, no bold. The row being chosen in any list is solid blue with dark text.
 
 **Snippets** live in `snippets/<language>.json` (VS Code format, plain JSON). VSCodium's snippets folder is a live symlink to it, so "Configure Snippets" edits the repo. LazyVim loads the same files. They are added by hand, as needed.
 
@@ -159,6 +159,10 @@ Also on Akmon:
 
 sops-nix with age keys (`.sops.yaml`), all in `_secrets.yaml`. Machines decrypt with their SSH host key. Edit with `sops _secrets.yaml`. Service passwords are generated straight into it.
 
+## Before reinstalling or changing machines
+
+- Dark Reader: export its settings (Advanced → Export settings) and store them in sops with `sops set _secrets.yaml '["dark-reader-settings"]' "$(jq -c . FILE | jq -Rs .)"`, then commit, so the new install gets the current site lists.
+
 ## Post-install steps
 
 ### Kvasir
@@ -166,6 +170,7 @@ sops-nix with age keys (`.sops.yaml`), all in `_secrets.yaml`. Machines decrypt 
 - `direnv allow` in each new project (Akmon trusts `~/Projects` automatically).
 - `gdrive-login` once, for the rclone Google Drive mount.
 - NewsFlash → Miniflux: an API token in NewsFlash's settings (imperative).
+- Dark Reader: its colours can't be set by policy. Import `~/.config/dark-reader-settings.json` (sops `dark-reader-settings`, site lists included) via Dark Reader settings → Advanced → Import settings, so web pages use the palette's ground and text. It's only as fresh as the last export (see "Before reinstalling or changing machines"); update its colours whenever `base00`/`base05` in `_palette.nix` change.
 - atuin: `atuin register` on one machine, then `atuin login -k <key from atuin key>` on the other. The account password is sops `atuin-password`.
 
 ### Zotero: move data out of home root
