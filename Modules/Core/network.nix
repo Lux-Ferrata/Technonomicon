@@ -88,6 +88,12 @@
       gnupg.agent = {
         enable = true;
         enableSSHSupport = true;
+        # the SSH key's PIN holds for a working day (4 h idle, 12 h at most)
+        # instead of 30 min / 2 h, so builds over ssh to Akmon don't re-ask
+        settings = {
+          default-cache-ttl-ssh = 14400;
+          max-cache-ttl-ssh     = 43200;
+        };
       };
     };
 

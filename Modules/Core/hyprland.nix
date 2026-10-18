@@ -97,11 +97,12 @@
             ($scope == "pull" and .workspace.id != $ws)))) |
           sort_by(.focusHistoryID) |
           .[] | [(.title | clean_title), (.class | clean_class), (.workspace.id | tostring), .address] | @tsv')
-      [ "''${#ROWS[@]}" -gt 0 ] || exit 0
-      IDX=$(printf '%s\n' "''${ROWS[@]}" | \
+      # No other windows: still open fuzzel, empty, so the key visibly did something
+      IDX=$({ [ "''${#ROWS[@]}" -gt 0 ] && printf '%s\n' "''${ROWS[@]}"; } | \
         awk -F'\t' '{ printf "%-50.50s  %-12.12s  ws %s\n", $1, $2, $3 }' | \
         ${pkgs.fuzzel}/bin/fuzzel --dmenu --index --width 80 \
           --prompt "${if scope == "pull" then "pull here" else "window"} ❯ ") || exit 0
+      [ "''${#ROWS[@]}" -gt 0 ] || exit 0
       ADDR=$(printf '%s\n' "''${ROWS[$IDX]}" | cut -f4)
       ${lib.optionalString (scope == "pull") ''
         ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.window.move({ workspace = $WS_ID, window = 'address:$ADDR', follow = false }))"
@@ -267,6 +268,7 @@
       libnotify
       satty
       wf-recorder
+      (callPackage ./_call-rec.nix { hyprland = hyprlandPkg; })   # call-rec: screen + both sides of a call
       nwg-look
     ];
 

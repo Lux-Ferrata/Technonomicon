@@ -57,6 +57,12 @@
       };
     };
 
+    # Secret Service for Electron apps (Element's database key): the login
+    # keyring unlocks with the greetd password. gpg-agent stays the SSH agent
+    services.gnome.gnome-keyring.enable = true;
+    services.gnome.gcr-ssh-agent.enable = false;
+    security.pam.services.greetd.enableGnomeKeyring = true;
+
     systemd.services.greetd.serviceConfig = {
       Type = "idle";
       TTYReset = true;
