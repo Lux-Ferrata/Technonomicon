@@ -186,13 +186,18 @@
               --format=png --output-file "$workdir/page-001.png" || true
           fi
 
-          shopt -s nullglob
-          pages=("$workdir"/page-*.png)
-          shopt -u nullglob
+          # scanimage creates the output file before the scan starts, so a
+          # failed scan leaves an empty PNG behind; only non-empty ones count.
+          pages=()
+          for p in "$workdir"/page-*.png; do
+            [ -s "$p" ] && pages+=("$p")
+          done
 
           if [ ''${#pages[@]} -eq 0 ]; then
             echo "scan: the scanner produced no pages" >&2
             [ "$source" = "ADF" ] && echo "      (is there paper in the feeder?)" >&2
+            echo "      A jam or open cover stops the whole scanner, flatbed included:" >&2
+            echo "      clear it and press Stop/Exit on the printer's panel." >&2
             exit 1
           fi
 

@@ -16,10 +16,12 @@
     };
 
     # Element (Matrix) and Slack from nixpkgs: their wrappers honour
-    # NIXOS_OZONE_WL, so both run native on Wayland
+    # NIXOS_OZONE_WL, so both run native on Wayland. Electron doesn't detect
+    # a keyring under Hyprland, so Element is pointed at gnome-keyring
+    # (Tn-desktop) for its database key
     environment.systemPackages = with pkgs; [
       newsflash
-      element-desktop
+      (element-desktop.override { commandLineArgs = "--password-store=gnome-libsecret"; })
       slack
     ];
   };

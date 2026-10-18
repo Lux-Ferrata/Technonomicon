@@ -1,6 +1,16 @@
 { inputs, ... }: {
   flake.nixosModules.Tn-web-browsers = { pkgs, config, ... }: {
 
+    # Dark Reader's settings, site lists included (so in sops, not plain):
+    # its colours can't be set by policy, so they're imported by hand from
+    # here (Dark Reader settings → Advanced → Import settings). Its ground
+    # and text are _palette.nix's base00/base05; change them together.
+    sops.secrets.dark-reader-settings = {
+      owner = "xin";
+      mode  = "0400";
+      path  = "/home/xin/.config/dark-reader-settings.json";
+    };
+
     # Replace `brave` globally so *every* launch path — systemPackages, the
     # PWA desktop entries in web-apps.nix, keybinds — goes through our wrapper.
     # The wrapper rewrites the profile's exit_type to "Normal" before each
@@ -22,7 +32,7 @@
               "--disable-features=OutdatedBuildDetector,UseChromeOSDirectVideoDecoder,BraveNews,BraveRewards,BraveWallet,WebRtcAllowInputVolumeAdjustment"
               "--ozone-platform=wayland"
               "--hide-crash-restore-bubble"
-              "--password-store=basic"
+              "--password-store=gnome-libsecret"
               # fcitx5 (Pinyin) over Wayland's text-input-v3
               "--enable-wayland-ime"
               "--wayland-text-input-version=3"
