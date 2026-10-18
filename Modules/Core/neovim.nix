@@ -212,7 +212,7 @@
 
         userSettings = {
           # Technonomicon's colours (_palette.nix, shared with nvim and the
-          # desktop) on the blank tnTheme: Dark Reader's ground, flat surfaces
+          # desktop) on the blank tnTheme: the palette's ground, flat surfaces
           # with thin borders, blue for focus, and the row being chosen solid
           # blue with dark text.
           "workbench.colorTheme"           = "Technonomicon";   # tnTheme above
