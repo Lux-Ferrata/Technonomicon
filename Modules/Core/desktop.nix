@@ -84,6 +84,12 @@
       noto-fonts-color-emoji
       julia-mono
       cm_unicode
+      # Times New Roman for academic papers, and only it: the rest of
+      # corefonts (Arial, Verdana...) would pull web pages that name them
+      # away from Atkinson.
+      (runCommand "times-new-roman" { } ''
+        install -Dm644 -t $out/share/fonts/truetype ${corefonts}/share/fonts/truetype/Times_New_Roman*.ttf
+      '')
     ];
 
     fonts.fontconfig.defaultFonts = {
