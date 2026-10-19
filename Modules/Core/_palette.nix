@@ -20,7 +20,8 @@
 # Highlighting follows Tonsky ("I am sorry, but everyone is getting syntax
 # highlighting wrong") and his Alabaster Dark: comments yellow, strings
 # green, constants red, definitions blue, punctuation grey, keywords
-# and everything else plain, no bold or italic.
+# and everything else plain, no bold or italic. One departure, xin's:
+# operators (- = + ...) are yellow like comments.
 rec {
   # Contrast on base00, then OKLCH (L C h).
   base16 = {
@@ -54,9 +55,10 @@ rec {
     linehl     = "#2A2C2F";    # current-line band          .293 .006 258
     border     = "#3F444A";    # borders, separators   1.4  .385 .012 250
     whitespace = "#4A4F55";    # whitespace dots, guides 1.7 .425 .012 250
-    punct      = "#9CAEB8";    # punctuation, operators 6.5  .739 .025 234
+    punct      = "#9CAEB8";    # punctuation            6.5  .739 .025 234
     ghost      = "#687983";    # inline suggestions    3.3  .565 .025 234
     comment    = s "base0A";
+    operator   = s "base0A";   # - = + etc. like comments, as xin asked
     string     = s "base0B";
     const      = s "base08";   # red, as xin asked (was purple)
     def        = s "base0D";

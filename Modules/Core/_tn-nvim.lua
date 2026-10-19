@@ -3,8 +3,8 @@
 -- just before it. mini.base16 draws the whole interface from B, so floats,
 -- pickers and status lines match the desktop. Then the syntax is cut back to
 -- Tonsky's set, the same as VSCodium's: comments yellow, strings green,
--- constants red, definitions blue, punctuation grey, everything else
--- plain, and no bold or italic.
+-- constants red, definitions blue, punctuation grey, operators yellow
+-- like comments, everything else plain, and no bold or italic.
 require("mini.base16").setup({ palette = B, use_cterm = true })
 
 local function hl(name, spec) vim.api.nvim_set_hl(0, name, spec) end
@@ -39,11 +39,11 @@ each({
   "@constant", "@constant.macro",   -- ALL_CAPS names are variables
 }, { fg = P.plain })
 each({
-  "Delimiter", "Operator", "Special", "SpecialChar",
-  "@operator", "@punctuation", "@punctuation.bracket",
+  "Delimiter", "Special", "SpecialChar", "@punctuation", "@punctuation.bracket",
   "@punctuation.delimiter", "@punctuation.special", "@tag.delimiter",
   "@string.escape", "@character.special",
 }, { fg = P.punct })
+each({ "Operator", "@operator" }, { fg = P.operator })
 each({
   "Comment", "SpecialComment", "Todo", "@comment", "@comment.documentation",
   "@string.documentation", "@comment.todo", "@comment.note",
@@ -140,7 +140,7 @@ for kind, col in pairs({ Error = P.error, Warn = P.warn, Info = P.info, Hint = P
   hl("DiagnosticUnderline" .. kind, { undercurl = true, sp = col })
 end
 hl("LspInlayHint", { fg = P.dim })   -- dim text, no box
--- suggestions well below the operators' grey, so they never read as code
+-- suggestions well below the punctuation grey, so they never read as code
 each({ "BlinkCmpGhostText", "ComplHint", "NeoCodeiumSuggestion" }, { fg = P.ghost })
 
 each({ "GitSignsAdd", "MiniDiffSignAdd", "Added", "@diff.plus" }, { fg = P.add })

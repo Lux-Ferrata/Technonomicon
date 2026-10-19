@@ -16,7 +16,8 @@
     # the accent and --color-*), so overriding those recolours the whole app;
     # the triple class beats Minimal's ".theme-dark.<scheme>" rules. Code
     # follows the rest of the system: comments yellow, strings green,
-    # constants red, definitions blue, punctuation grey, the rest plain; and
+    # constants red, definitions blue, punctuation grey, operators yellow,
+    # the rest plain; and
     # the row being chosen (quick switcher, command palette, suggestions,
     # menus) is solid blue with dark text.
     # Accent #6EB0F4 as Obsidian's HSL: 210 86% 69%.
@@ -54,7 +55,7 @@
         --code-property: ${r.plain};
         --code-tag: ${r.plain};
         --code-important: ${r.error};
-        --code-operator: ${r.punct};
+        --code-operator: ${r.operator};
         --code-punctuation: ${r.punct};
       }
 

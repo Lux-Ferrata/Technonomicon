@@ -386,8 +386,8 @@
           };
           # Tonsky's minimal highlighting, the same as nvim (_tn-nvim.lua):
           # comments yellow, strings green, constants red, *definitions*
-          # blue, punctuation and operators grey; keywords, calls and
-          # variables plain; no bold or italic. The more specific scope wins,
+          # blue, punctuation grey, operators yellow like comments; keywords,
+          # calls and variables plain; no bold or italic. The more specific scope wins,
           # so the catch-alls can come first. Not keyed to a theme name: a
           # renamed theme silently drops theme-keyed rules (it happened), and
           # tnTheme has no rules of its own to out-rank these.
@@ -407,10 +407,11 @@
               "keyword.operator.wordlike"
             ] { foreground = c.plain; fontStyle = ""; })
             (rule [
-              "punctuation" "keyword.operator" "meta.brace"
+              "punctuation" "meta.brace"
               "constant.character.escape" "constant.character.format.placeholder"
               "storage.type.format" "punctuation.section.embedded"
             ] { foreground = c.punct; fontStyle = ""; })
+            (rule [ "keyword.operator" ] { foreground = c.operator; fontStyle = ""; })
             (rule [ "string" "punctuation.definition.string" "string.regexp" ]
               { foreground = c.string; })
             (rule [
