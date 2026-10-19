@@ -63,6 +63,18 @@
         boot.kernelModules = [ "uinput" ];
         boot.kernelPackages = pkgs.linuxPackages;
         boot.blacklistedKernelModules = [ "wacom" ];
+
+        # The T480s Thunderbolt controller (NHI 8086:15bf) is stuck in safe
+        # mode (old NVM firmware), so its driver can only fail the ICM
+        # handshake on resume -- which looks to be what hung 3 of 4 suspends
+        # (Oct 2026). The module can't be blacklisted: typec (USB-C) depends
+        # on it and loads it anyway. So let it bind, then release the
+        # controller at once. The port's USB 3.1 controller and charging are
+        # separate devices. Updating the NVM (fwupd) is the real fix, and
+        # needs this rule off.
+        services.udev.extraRules = ''
+          ACTION=="bind", SUBSYSTEM=="pci", DRIVER=="thunderbolt", ATTR{vendor}=="0x8086", ATTR{device}=="0x15bf", RUN+="${pkgs.runtimeShell} -c 'echo %k > /sys/bus/pci/drivers/thunderbolt/unbind'"
+        '';
         boot.loader = {
           systemd-boot.enable = true;
           efi.canTouchEfiVariables = true;

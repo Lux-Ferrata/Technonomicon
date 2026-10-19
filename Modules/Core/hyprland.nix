@@ -953,10 +953,6 @@
         '';
 
         ".config/hypr/hyprlock.conf".text = ''
-          general {
-            disable_loading_bar = true
-          }
-
           background {
             path        = "${wallpaperPath}"
             color       = rgba(${palette.base00}ff)
@@ -975,7 +971,6 @@
             check_color      = rgba(${palette.base0D}ff)
             fail_color       = rgba(${palette.base08}ff)
             font_family      = ${nixosCfg.tn.primary_font}
-            font_size        = 32
             placeholder_text = <span foreground="##${palette.base04}"> </span>
             dots_center      = true
             rounding         = 0
