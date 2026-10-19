@@ -28,21 +28,22 @@
       mode   = "twoway";
       # .git is synced on purpose (only one machine is active at a time).
       # Build outputs and per-machine envs are not: each host keeps its own
-      # build cache.
+      # build cache. (?d): these may be deleted with their parent, or
+      # removing a project leaves the other side stuck at <100%.
       ignorePatterns = [
         # git + Forgejo are its sync; syncing it scrambled Akmon once already
         "/Technonomicon"
-        ".direnv"
-        "result"
-        "result-*"
-        "target"
-        "node_modules"
-        "dist-newstyle"
-        ".stack-work"
-        "zig-out"
-        ".zig-cache"
-        "__pycache__"
-        ".venv"
+        "(?d).direnv"
+        "(?d)result"
+        "(?d)result-*"
+        "(?d)target"
+        "(?d)node_modules"
+        "(?d)dist-newstyle"
+        "(?d).stack-work"
+        "(?d)zig-out"
+        "(?d).zig-cache"
+        "(?d)__pycache__"
+        "(?d).venv"
       ];
     };
 
