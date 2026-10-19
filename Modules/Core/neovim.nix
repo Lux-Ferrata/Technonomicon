@@ -847,8 +847,13 @@
               ft = "markdown",
               dependencies = { "nvim-lua/plenary.nvim" },
               opts = {
+                -- ~/Grimoire holds four separate vaults; links resolve
+                -- only inside one, so each is its own workspace
                 workspaces = {
-                  { name = "Grimoire", path = "~/Grimoire" },
+                  { name = "Personal", path = "~/Grimoire/Personal" },
+                  { name = "Wiki",     path = "~/Grimoire/Wiki" },
+                  { name = "Anki",     path = "~/Grimoire/Anki" },
+                  { name = "Legacy",   path = "~/Grimoire/Legacy" },
                 },
                 follow_url_func = function(url)
                   vim.fn.jobstart({ "xdg-open", url })

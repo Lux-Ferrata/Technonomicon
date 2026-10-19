@@ -41,7 +41,6 @@
       self.nixosModules.Tn-science
       self.nixosModules.Tn-mind
       self.nixosModules.Tn-vikunja
-      self.nixosModules.Tn-provenance
       self.nixosModules.Tn-art
       self.nixosModules.Tn-utf
       self.nixosModules.Tn-virtualization

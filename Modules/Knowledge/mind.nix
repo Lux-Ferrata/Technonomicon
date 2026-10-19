@@ -82,6 +82,11 @@
         color: ${r.bg};
       }
     '';
+
+    # JupyMD's kernel and notebook converter, with the usual science stack
+    jupymdPython = pkgs.python3.withPackages (ps: with ps; [
+      ipykernel jupytext numpy scipy sympy matplotlib pandas
+    ]);
   in {
     environment.systemPackages = with pkgs; [
       obsidian
@@ -118,17 +123,24 @@
         Type=Application
       '';
 
-      # The snippet is copied in, not symlinked: the vault syncs to the phone
+      # The snippet is copied in, not symlinked: the vaults sync to the phone
       # and Akmon, where a /nix/store link would dangle. .obsidian/snippets
       # isn't part of the note index, and Obsidian reloads a changed snippet
-      # by itself. It is switched on in Appearance -> CSS snippets ("technonomicon"),
-      # with the accent colour set to the palette's blue.
+      # by itself. ~/Grimoire holds several vaults side by side; each switches
+      # it on in Appearance -> CSS snippets ("technonomicon").
       home.activation.obsidianSnippet = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-        dir="$HOME/Grimoire/.obsidian/snippets"
-        if [ -d "$HOME/Grimoire/.obsidian" ] && ! ${pkgs.diffutils}/bin/cmp -s ${snippet} "$dir/technonomicon.css"; then
-          run install -Dm644 ${snippet} "$dir/technonomicon.css"
-        fi
+        for vault in "$HOME"/Grimoire/*/.obsidian; do
+          [ -d "$vault" ] || continue
+          if ! ${pkgs.diffutils}/bin/cmp -s ${snippet} "$vault/snippets/technonomicon.css"; then
+            run install -Dm644 ${snippet} "$vault/snippets/technonomicon.css"
+          fi
+        done
       '';
+
+      # JupyMD (python blocks in Personal notes) at the path its settings
+      # name as toolingPython, so the env can change without touching the
+      # vault. force: it replaces the hand-made nix out-link that was there.
+      home.file.".local/state/jupymd/python" = { source = jupymdPython; force = true; };
     };
   };
 }

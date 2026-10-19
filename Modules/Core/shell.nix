@@ -193,6 +193,10 @@
           tnr = "cd ~/Projects/Technonomicon; and claude --resume $argv";
           grc = "cd ~/Grimoire; and claude $argv";
           grr = "cd ~/Grimoire; and claude --resume $argv";
+          # discussions with Claude live in the Wiki vault (`wc` would
+          # shadow coreutils' word count)
+          wic = "cd ~/Grimoire/Wiki; and claude $argv";
+          wir = "cd ~/Grimoire/Wiki; and claude --resume $argv";
 
           ca = ''
             clear

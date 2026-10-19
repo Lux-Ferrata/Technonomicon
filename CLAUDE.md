@@ -91,7 +91,6 @@ All shared modules are prefixed `Tn-` (Technonomicon); each host picks the ones 
 - `Tn-pdf` — sioyek (inverse search into VSCodium)
 - `Tn-science` — julia, R, octave, maxima, gnuplot, gap, sage, lean4, quarto, geogebra
 - `Tn-scan` — scanner, `scan` / `multi-scan`, `paperless-add`
-- `Tn-provenance` — signed, timestamped snapshots of flagged Grimoire notes
 
 **Web/**
 - `Tn-web-browsers` — Brave (wrapper, flags, policy)

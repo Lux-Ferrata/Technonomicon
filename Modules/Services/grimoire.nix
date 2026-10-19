@@ -55,8 +55,8 @@
       '';
     };
 
-    # any git command on the vault, with Forgejo push access (vault-review
-    # diffs, tags and pushes through this; Kvasir's grimoire-git ssh's here)
+    # any git command on the vault, with Forgejo push access (history,
+    # tags and pushes go through this; Kvasir's grimoire-git ssh's here)
     vaultGit = pkgs.writeShellApplication {
       name = "grimoire-git";
       runtimeInputs = with pkgs; [ git openssh ];
