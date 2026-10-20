@@ -238,7 +238,15 @@
 
         case "$target" in
           akmon)  akmon_with_pw; push_working ;;
-          kvasir) kvasir "$@"; push_working ;;
+          kvasir)
+            kvasir "$@"
+            # nh's --dry / -n (alone or in a cluster like -na) switches nothing
+            dry=0
+            for arg in "$@"; do
+              case "$arg" in --dry|-n*|-[!-]*n*) dry=1 ;; esac
+            done
+            [ $dry = 1 ] || push_working
+            ;;
           all)
             # the server first: Kvasir's builds go through it
             if akmon_with_pw; then a="✓"; else a="✗"; fi
