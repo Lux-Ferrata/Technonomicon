@@ -37,7 +37,7 @@ Removing friction is precisely what this section exists to prevent.
 
 ## Building and deploying
 
-Deploying goes through `deploy` (Tn-dev-client) on Kvasir. It asks for the sudo password up front, so xin runs it:
+Deploying goes through `deploy` (Tn-dev-client) on Kvasir. It asks for the sudo password up front, so xin runs it. It rebases onto Forgejo's `working` first and pushes `working` back after a successful switch, so committed work reaches Forgejo when xin deploys:
 
 ```bash
 deploy akmon     # evaluate here, build on Akmon, switch Akmon over ssh
