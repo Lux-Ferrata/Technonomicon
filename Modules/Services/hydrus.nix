@@ -11,9 +11,10 @@
   #   hydrus-api.  -> 127.0.0.1:45869  the Client API, for Hydrus Companion
   #                                    (browser) and Hydrus Web (phone)
   # Tailnet-only like every vhost; the noVNC page has no login of its own.
-  # The Client API is off until it's turned on in the GUI (services >
-  # manage services > client api: port 45869, "allow non-local
-  # connections"), and each app gets an access key there.
+  # The Client API is off until it's turned on in the GUI (services > edit
+  # > client api: port 45869, "allow non-local connections", "support
+  # CORS" for Hydrus Web), and each app gets an access key in services >
+  # review > client api.
   #
   # The database and the files it holds live in /srv/hydrus (snapshotted by
   # sanoid). The image runs as uid 1000 = xin and never chowns its db
