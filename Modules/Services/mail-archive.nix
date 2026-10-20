@@ -84,9 +84,14 @@
         description = "Pull mail into the archive";
         after    = [ "network-online.target" "zfs-mount.service" ];
         wants    = [ "network-online.target" ];
-        unitConfig.RequiresMountsFor = [ root ];
+        # Gmail times out now and then (every week or two): retry quietly,
+        # and only fail (and mail) once the retries are used up
+        unitConfig = { RequiresMountsFor = [ root ]; StartLimitIntervalSec = "10min"; StartLimitBurst = 3; };
         serviceConfig = {
           Type  = "oneshot";
+          Restart     = "on-failure";
+          RestartSec  = 60;
+          RestartMode = "direct";   # no failed state between tries, so no OnFailure
           User  = user;
           Group = user;
           LoadCredential = lib.mapAttrsToList (n: a: "${n}:${config.sops.secrets.${a.passwordSecret}.path}") cfg.accounts;
