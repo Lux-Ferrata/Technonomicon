@@ -5,8 +5,9 @@ by meaning rather than just trigger, with a preview of the full skeleton.
 Look-up only -- nothing is inserted. Sources are re-read on every launch, so
 a newly added snippet shows up straight away:
 
-  math    ~/Grimoire/math-snippets.js (Latex Suite; read-only here -- it is
-          JS, may hold functions, and vault edits go through Obsidian)
+  math    ~/Grimoire/Personal/math-snippets.js (Latex Suite; read-only
+          here -- it is JS, may hold functions, and vault edits go
+          through Obsidian)
   <lang>  ~/Projects/Technonomicon/snippets/<lang>.json, one per language
           (VS Code format, shared with VSCodium and LazyVim; Ctrl-E edits)
 
@@ -27,7 +28,7 @@ import json5
 from pylatexenc.latex2text import LatexNodes2Text
 
 HOME = Path.home()
-LATEX_FILE = HOME / "Grimoire/math-snippets.js"
+LATEX_FILE = HOME / "Grimoire/Personal/math-snippets.js"
 SNIPPET_DIR = HOME / "Projects/Technonomicon/snippets"
 CACHE = Path(os.environ.get("XDG_RUNTIME_DIR", "/tmp")) / "tn-snip.json"
 # the Nix wrapper (which supplies node, fzf and the Python deps) sets this, so
