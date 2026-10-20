@@ -44,7 +44,7 @@ calendars (`task-deadlines.nix` → `calendar-push.nix`).
 - [ ] Karakeep: make the first (admin) account, add the Brave extension.
 - [ ] Immich: first login, then Administration → External Libraries.
 - [ ] Hydrus (`hydrus.ironshark.org`): first run; services → manage services → client api (port 45869, allow non-local connections), an access key each for Hydrus Companion (Brave, from its GitHub release) and Hydrus Web (phone, `hydrus-api.ironshark.org`); import folders → `/opt/hydrus/inbox`, delete files after successful import.
-- [ ] Phone: accept the "Hydrus Inbox" share in Syncthing-Fork (e.g. into Pictures/Hydrus Inbox).
+- [ ] Phone: accept the "Hydrus_Inbox" share in Syncthing-Fork (e.g. into Pictures/Hydrus_Inbox).
 - [x] Google Drive: run `gdrive-login` once on Kvasir.
 - [ ] Delete the old Web-type OAuth client in the Google console.
 

@@ -19,7 +19,7 @@
   # sanoid). The image runs as uid 1000 = xin and never chowns its db
   # folder, hence the owner below.
   #
-  # Inbox: the Syncthing folder "Hydrus Inbox" (Kvasir ~/Hydrus Inbox, the
+  # Inbox: the Syncthing folder "Hydrus_Inbox" (Kvasir ~/Hydrus_Inbox, the
   # phone, Akmon /srv/xin/HydrusInbox) is mounted at /opt/hydrus/inbox. A
   # Hydrus import folder on that path, set to delete files after a
   # successful import, empties it, and the deletions sync back.

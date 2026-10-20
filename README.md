@@ -122,7 +122,7 @@ Every service is `<name>.ironshark.org`: an A record pointing at Akmon's tailnet
 | `lt.` | LanguageTool (VSCodium LTeX+, Obsidian, Brave) |
 | `docs.` | Paperless-ngx |
 | `photos.` | Immich (search by description, faces, text) |
-| `hydrus.`, `hydrus-api.` | Hydrus: collected images by exact tags (noVNC GUI; Client API for Hydrus Companion / Hydrus Web); inbox = Syncthing "Hydrus Inbox" |
+| `hydrus.`, `hydrus-api.` | Hydrus: collected images by exact tags (noVNC GUI; Client API for Hydrus Companion / Hydrus Web); inbox = Syncthing "Hydrus_Inbox" |
 | `keep.` | Karakeep (bookmarks with archives, tags from the local model) |
 | `cal.` | Radicale: staging for the generated calendars pushed to Google Calendar |
 | `draw.` | AstraDraw (Excalidraw with workspaces); launcher "Flowchart" |

@@ -94,8 +94,8 @@
     # Drop images here from the laptop or the phone; Hydrus (Tn-hydrus)
     # imports them and deletes them, and the deletions sync back
     hydrus-inbox = {
-      label  = "Hydrus Inbox";
-      kvasir = "/home/xin/Hydrus Inbox";
+      label  = "Hydrus_Inbox";
+      kvasir = "/home/xin/Hydrus_Inbox";
       akmon  = "HydrusInbox";   # no spaces: srv-xin's install -d is unquoted
       mode   = "twoway";
       extraDevices = [ "Phone" ];
