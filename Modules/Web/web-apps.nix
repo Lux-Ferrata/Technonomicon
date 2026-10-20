@@ -45,6 +45,7 @@
         opencloud      = "file-document-multiple.svg";
         vaultwarden    = "vaultwarden.svg";
         flowchart      = "sitemap-outline.svg";
+        hydrus         = "hydrus.svg";
       };
 
       # one launcher entry per Akmon service with a web UI (tailnet-only).
@@ -352,6 +353,7 @@
       (akmon "office"     "Office"            "office"     "/" icons.opencloud      [ "office" "opencloud" "documents" "files" "word" "spreadsheet" "collabora" ])
       (akmon "draw"       "Flowchart"         "draw"       "/" icons.flowchart      [ "flowchart" "diagram" "whiteboard" "excalidraw" "astradraw" "drawing" ])
       (akmon "photos"     "Photos"            "photos"     "/" icons.immich         [ "photos" "immich" "pictures" "images" "gallery" ])
+      (akmon "hydrus"     "Hydrus"            "hydrus"     "/vnc.html" icons.hydrus [ "hydrus" "images" "art" "references" "screenshots" "tags" ])
       (akmon "media"      "Jellyfin"          "media"      "/" icons.jellyfin       [ "jellyfin" "media" "movies" "tv" "shows" ])
       (akmon "audiobooks" "Audiobooks"        "audiobooks" "/" icons.audiobookshelf [ "audiobooks" "audiobookshelf" "podcasts" "books" ])
       (akmon "docs"       "Paperless"         "docs"       "/" icons.paperless      [ "paperless" "documents" "scans" "receipts" ])

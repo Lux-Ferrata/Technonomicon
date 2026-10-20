@@ -43,6 +43,8 @@ calendars (`task-deadlines.nix` → `calendar-push.nix`).
 - [ ] Phone: Paperless and Karakeep apps (`docs.` / `keep.ironshark.org`).
 - [ ] Karakeep: make the first (admin) account, add the Brave extension.
 - [ ] Immich: first login, then Administration → External Libraries.
+- [ ] Hydrus (`hydrus.ironshark.org`): first run; services → manage services → client api (port 45869, allow non-local connections), an access key each for Hydrus Companion (Brave, from its GitHub release) and Hydrus Web (phone, `hydrus-api.ironshark.org`); import folders → `/opt/hydrus/inbox`, delete files after successful import.
+- [ ] Phone: accept the "Hydrus Inbox" share in Syncthing-Fork (e.g. into Pictures/Hydrus Inbox).
 - [x] Google Drive: run `gdrive-login` once on Kvasir.
 - [ ] Delete the old Web-type OAuth client in the Google console.
 
@@ -95,7 +97,7 @@ values. The rules are the same everywhere:
 - [ ] Immich machine learning on the GPU (CUDA build, compiled on Akmon) if the
       library grows enough for it to matter.
 - [ ] Karakeep: turn off sign-ups once the account exists (`DISABLE_SIGNUPS`).
-- [ ] Hydrus, if exact tag-based image search turns out to be missing.
+- [ ] Hydrus ML auto-tagging (a tagger, e.g. WD14, feeding tags through the Client API) if hand tagging gets slow.
 - [ ] BBDB-style people hub: Google Contacts -> Radicale (CardDAV, vdirsyncer
       google_contacts); a nightly generator keeps Obsidian `People/` notes with
       contact fields plus a marked, generated block of email threads (archive
