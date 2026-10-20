@@ -58,10 +58,10 @@
     };
 
     # Secret Service for Electron apps (Element's database key): the login
-    # keyring unlocks with the greetd password. gpg-agent stays the SSH agent
+    # keyring unlocks with the greetd password (via the login PAM stack).
+    # gpg-agent stays the SSH agent
     services.gnome.gnome-keyring.enable = true;
     services.gnome.gcr-ssh-agent.enable = false;
-    security.pam.services.greetd.enableGnomeKeyring = true;
 
     systemd.services.greetd.serviceConfig = {
       Type = "idle";
@@ -84,6 +84,12 @@
       noto-fonts-color-emoji
       julia-mono
       cm_unicode
+      # Times New Roman for academic papers, and only it: the rest of
+      # corefonts (Arial, Verdana...) would pull web pages that name them
+      # away from Atkinson.
+      (runCommand "times-new-roman" { } ''
+        install -Dm644 -t $out/share/fonts/truetype ${corefonts}/share/fonts/truetype/Times_New_Roman*.ttf
+      '')
     ];
 
     fonts.fontconfig.defaultFonts = {

@@ -246,6 +246,15 @@
       esac
     '';
 
+    # Capture a fleeting note in the Personal vault from anywhere: QuickAdd's
+    # "Fleeting" prompt. It opens inside the Personal window, so bring that
+    # window forward (Hyprland ignores Obsidian's own activation request);
+    # with Obsidian closed, xdg-open starts it on this workspace instead.
+    fleetingCapture = pkgs.writeShellScript "tn-fleeting-capture" ''
+      ${hyprlandPkg}/bin/hyprctl eval "hl.dispatch(hl.dsp.focus({window='title:^.* - Personal - Obsidian.*$'}))" >/dev/null 2>&1 || true
+      ${pkgs.xdg-utils}/bin/xdg-open 'obsidian://quickadd?vaultName=Personal&choice=Fleeting'
+    '';
+
   in {
 
     programs.hyprland.enable = true;
@@ -823,10 +832,10 @@
           hl.bind(mainMod .. " + SHIFT + Q",  hl.dsp.exec_cmd("${pkgs.systemd}/bin/systemd-run --user --no-block --collect /etc/scripts/clean-power-off.sh"))
           hl.bind(mainMod .. " + F",          hl.dsp.exec_cmd("ghostty -e yazi $HOME"))
           hl.bind(mainMod .. " + ALT + F",    hl.dsp.exec_cmd("nemo"))
-          hl.bind(mainMod .. " + 0",          hl.dsp.exec_cmd("ghostty --title=grimoire-inbox -e nvim $HOME/Grimoire/Inbox.md"))
+          hl.bind(mainMod .. " + 0",          hl.dsp.exec_cmd("${fleetingCapture}"))
           hl.bind(mainMod .. " + SHIFT + 0",  hl.dsp.exec_cmd("ghostty --title=technonomicon -e nvim $HOME/Projects/Technonomicon/README.md"))
           hl.bind(mainMod .. " + Return",      hl.dsp.exec_cmd("${vimEdit}"))
-          hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&commandid=periodic-notes%3Aopen-daily-note&openmode=window'"))
+          hl.bind(mainMod .. " + E",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Personal&commandid=periodic-notes%3Aopen-daily-note&openmode=window'"))
           hl.bind(mainMod .. " + H",          hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-show-keybindings"))
           hl.bind(mainMod .. " + SHIFT + H",  hl.dsp.exec_cmd("$HOME/.local/share/tn/bin/tn-snip"))
           hl.bind(mainMod .. " + X",          hl.dsp.exec_cmd("ghostty --class=clipse -e clipse"))
@@ -845,9 +854,13 @@
           hl.bind(mainMod .. " + ALT + G",    hl.dsp.exec_cmd("${pkgs.brave}/bin/brave --app=https://gemini.google.com/app --start-maximized"))
           hl.bind(mainMod .. " + C",          hl.dsp.exec_cmd("qalculate-gtk"))
           hl.bind(mainMod .. " + ALT + C",    hl.dsp.exec_cmd("geogebra"))
-          hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Grimoire&filepath=Home.md&openmode=window'"))
+          hl.bind(mainMod .. " + N",          hl.dsp.exec_cmd("xdg-open 'obsidian://advanced-uri?vault=Personal&filepath=Home.md&openmode=window'"))
           hl.bind(mainMod .. " + ALT + N",    hl.dsp.exec_cmd("obsidian"))
           hl.bind(mainMod .. " + ALT + A",    hl.dsp.exec_cmd("anki"))
+          -- Claude in the Wiki vault (discussions); a fresh session each
+          -- time, since the Wiki's index.md is the memory (W is taken by
+          -- "fit visible")
+          hl.bind(mainMod .. " + ALT + K",    hl.dsp.exec_cmd("ghostty --title=wiki-claude --working-directory=$HOME/Grimoire/Wiki -e claude"))
           hl.bind(mainMod .. " + Print",      hl.dsp.exec_cmd("${colorPick}"))
 
           -- Focus: left/right walks the scroll order, up/down walks the
@@ -940,10 +953,6 @@
         '';
 
         ".config/hypr/hyprlock.conf".text = ''
-          general {
-            disable_loading_bar = true
-          }
-
           background {
             path        = "${wallpaperPath}"
             color       = rgba(${palette.base00}ff)
@@ -962,7 +971,6 @@
             check_color      = rgba(${palette.base0D}ff)
             fail_color       = rgba(${palette.base08}ff)
             font_family      = ${nixosCfg.tn.primary_font}
-            font_size        = 32
             placeholder_text = <span foreground="##${palette.base04}"> </span>
             dots_center      = true
             rounding         = 0
