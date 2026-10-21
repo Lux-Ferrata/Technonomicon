@@ -11,7 +11,7 @@
   # Libraries are added in each app's UI on first run. Files are group
   # `media` (xin and the three services), setgid, so everyone can read and
   # write what the others add.
-  flake.nixosModules.Tn-media = { config, lib, pkgs, ... }:
+  flake.nixosModules.Tn-media = { config, lib, pkgs, pkgs-stable, ... }:
   let
     root = config.tn.media.root;
     dirs = [ "video" "music" "audiobooks" "podcasts" "youtube" "youtube/manual" ];
@@ -83,7 +83,10 @@
         "SECRET_KEY_BASE=${config.sops.placeholder.pinchflat-secret-key}\n";
       services.pinchflat = {
         enable      = true;
-        mediaDir    = "${root}/youtube";
+        # 2026-10-21: unstable marks pinchflat knownVulnerabilities (build refuses);
+        # stable ships the same 2025.9.26 without the flag.
+        package     = pkgs-stable.pinchflat;
+        mediaDir   = "${root}/youtube";
         secretsFile = config.sops.templates."pinchflat.env".path;
         extraConfig = { TZ = config.time.timeZone; UMASK = "002"; };
       };

@@ -1,5 +1,5 @@
 { ... }: {
-  flake.nixosModules.Tn-email = { config, lib, pkgs, ... }:
+  flake.nixosModules.Tn-email = { config, lib, pkgs, pkgs-stable, ... }:
   let
     secrets = "${config.users.users.xin.home}/Projects/Technonomicon/_secrets.yaml";
 
@@ -61,7 +61,7 @@
     # ikhal between two syncs; the first run signs in to Google (browser)
     tnCal = pkgs.writeShellApplication {
       name = "tn-cal";
-      runtimeInputs = with pkgs; [ khal vdirsyncer coreutils ];
+      runtimeInputs = [ pkgs-stable.khal ] ++ (with pkgs; [ vdirsyncer coreutils ]);
       text = ''
         if [ ! -f "${calState}/google-token" ]; then
           echo "First run: sign in to Google as xin@ironshark.org in the browser."
@@ -107,7 +107,7 @@
       isync
       msmtp
       # Calendars live in Google; Thunderbird and khal (below) keep offline copies
-      khal
+      pkgs-stable.khal   # 2026-10-21: unstable's khal build fails (empty man output); use stable's
       vdirsyncer
       tnCal
       calendarPushLogin

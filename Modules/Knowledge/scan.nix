@@ -1,5 +1,5 @@
 { inputs, ... }: {
-  flake.nixosModules.Tn-scan = { config, pkgs, lib, ... }:
+  flake.nixosModules.Tn-scan = { config, pkgs, pkgs-stable, lib, ... }:
     let
       # Upload to Paperless on Akmon (https://docs.ironshark.org, Tn-paperless)
       # through its REST API; Paperless titles, tags and files it from there.
@@ -293,8 +293,9 @@
 
       environment.systemPackages = with pkgs; [
         simple-scan   # quick single/multi-page scans straight to PDF
-        naps2         # saved profiles, ADF batches, built-in OCR
-        ocrmypdf      # add a text layer to any PDF
+        # 2026-10-21: unstable's naps2 fails to build (patchelf aborts on Grpc.Tools); use stable's
+        pkgs-stable.naps2  # saved profiles, ADF batches, built-in OCR
+        ocrmypdf     # add a text layer to any PDF
         tesseract     # OCR engine behind ocrmypdf (129 languages)
         img2pdf       # lossless image -> PDF
         unpaper       # page cleanup for ocrmypdf --clean

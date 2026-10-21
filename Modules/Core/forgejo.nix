@@ -12,6 +12,12 @@
     admin   = "xin";
   in {
 
+    # 2026-10-21: unstable dropped services.gitea-actions-runner (assertion: use
+    # services.forgejo-runner, which needs a uuid+token migration of the runner
+    # state). Keep the stable module until that migration is done.
+    disabledModules = [ "services/continuous-integration/gitea-actions-runner.nix" ];
+    imports = [ "${inputs.nixpkgs-stable}/nixos/modules/services/continuous-integration/gitea-actions-runner.nix" ];
+
     sops.secrets.forgejo-admin-password = { owner = cfg.user; };
 
     tn.web.vhosts.git = { port = cfg.settings.server.HTTP_PORT; maxBody = "1g"; };   # LFS, release assets
