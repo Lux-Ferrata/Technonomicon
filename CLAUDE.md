@@ -37,7 +37,7 @@ Removing friction is precisely what this section exists to prevent.
 
 ## Building and deploying
 
-Deploying goes through `deploy` (Tn-dev-client) on Kvasir. It asks for the sudo password up front, so xin runs it:
+Deploying goes through `deploy` (Tn-dev-client) on Kvasir. It asks for the sudo password up front, so xin runs it. It rebases onto Forgejo's `working` first and pushes `working` back after a successful switch, so committed work reaches Forgejo when xin deploys:
 
 ```bash
 deploy akmon     # evaluate here, build on Akmon, switch Akmon over ssh
@@ -82,7 +82,7 @@ All shared modules are prefixed `Tn-` (Technonomicon); each host picks the ones 
 - `Tn-server`, `Tn-server-*`, `Tn-console-kanata` — Akmon's base: tailscale and sshd, mail relay, alerts (`tn-issue`), metrics, report mails, Claude's health review, `aku`, a rescue nvim, the console keyboard
 - `Tn-forgejo` (git + CI runner), `Tn-overnight` (overnight agents)
 
-**Services/** — Akmon's web services. Each sets `tn.web.vhosts.<name>`, which gives it `https://<name>.ironshark.org` (tailnet-only) and a DNS record. `Tn-server-web` provides nginx, the wildcard cert and the shared Postgres; the rest are one module per service (Grimoire, LanguageTool, Radicale + calendar push + task deadlines, WebDAV, Paperless, Immich, Karakeep, mail archive, Miniflux, Atuin, SearXNG, Vaultwarden, media, NAS, torrent, hosting, office, AstraDraw, OpenHabitTracker).
+**Services/** — Akmon's web services. Each sets `tn.web.vhosts.<name>`, which gives it `https://<name>.ironshark.org` (tailnet-only) and a DNS record. `Tn-server-web` provides nginx, the wildcard cert and the shared Postgres; the rest are one module per service (Grimoire, LanguageTool, Radicale + calendar push + task deadlines, WebDAV, Paperless, Immich, Karakeep, mail archive, Miniflux, Atuin, SearXNG, Vaultwarden, media, NAS, torrent, hosting, office, AstraDraw, OpenHabitTracker, Hydrus).
 
 **Knowledge/**
 - `Tn-learning` — hledger, fava, beancount, gnucash, visidata, anki, zotero (pinned input), foliate, rnote

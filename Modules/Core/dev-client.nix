@@ -118,7 +118,8 @@
     # prompt (at the end), so Akmon is done by hand: evaluate, build on
     # Akmon, switch over ssh with the password on sudo's stdin (as nh
     # does). Kvasir gets it through nh's local askpass hook. nh args only
-    # go to Kvasir.
+    # go to Kvasir. Pulls Forgejo's working first (tn-pull) and pushes it
+    # after a successful switch.
     # tn-check <akmon|kvasir|all>: "does it build?" without switching or a
     # password. Evaluates here, builds on Akmon and leaves the result in
     # Akmon's store (nothing copied back); builds here only when Akmon is
@@ -196,6 +197,24 @@
             "sudo -S -p ''' sh -c 'nix-env -p /nix/var/nix/profiles/system --set $out && systemd-run -E LOCALE_ARCHIVE --collect --no-ask-password --pipe --quiet --service-type=exec --unit=deploy-switch-to-configuration $out/bin/switch-to-configuration switch'"
         }
 
+        # after a switch: Forgejo's working = what's running, since
+        # Wednesday's upgrade and the nightly job build from it. Only commits
+        # that just built and switched get pushed. Never fails the deploy.
+        push_working() {
+          local g=(git -C "$flake")
+          [ "$("''${g[@]}" branch --show-current)" = working ] || return 0
+          if [ -n "$("''${g[@]}" rev-list origin/working..working 2>/dev/null)" ]; then
+            if GIT_SSH_COMMAND="ssh -o ConnectTimeout=5" "''${g[@]}" push -q origin working; then
+              step "pushed working to Forgejo"
+            else
+              echo "deploy: push to Forgejo failed; push working by hand" >&2
+            fi
+          fi
+          [ -z "$("''${g[@]}" status --porcelain --untracked-files=no)" ] \
+            || echo "deploy: uncommitted changes are deployed but not pushed" >&2
+          return 0
+        }
+
         target=$(printf '%s' "''${1:-}" | tr '[:upper:]' '[:lower:]')
         [ $# -gt 0 ] && shift
         case "$target" in
@@ -218,8 +237,16 @@
         unset pw
 
         case "$target" in
-          akmon)  akmon_with_pw ;;
-          kvasir) kvasir "$@" ;;
+          akmon)  akmon_with_pw; push_working ;;
+          kvasir)
+            kvasir "$@"
+            # nh's --dry / -n (alone or in a cluster like -na) switches nothing
+            dry=0
+            for arg in "$@"; do
+              case "$arg" in --dry|-n*|-[!-]*n*) dry=1 ;; esac
+            done
+            [ $dry = 1 ] || push_working
+            ;;
           all)
             # the server first: Kvasir's builds go through it
             if akmon_with_pw; then a="✓"; else a="✗"; fi
@@ -230,6 +257,7 @@
             fi
             unset TN_DEPLOY_PW
             printf '\nAkmon %s   Kvasir %s\n' "$a" "$k"
+            if [ "$a" = "✓" ]; then push_working; fi
             [ "$a$k" = "✓✓" ]
             ;;
         esac
