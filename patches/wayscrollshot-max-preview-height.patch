@@ -53,11 +53,12 @@
          exit: false,
 --- a/src/session.rs	1969-12-31 19:00:01.000000000 -0500
 +++ b/src/session.rs	2026-07-08 11:20:55.539479542 -0400
-@@ -54,6 +54,7 @@
-             command_tx.clone(),
-             region.clone(),
-             args.preview_width,
-+            args.max_preview_height,
-         )?)
-     };
- 
+@@ -405,7 +405,7 @@
+     if args.no_preview {
+         return None;
+     }
+-    match LayerShellOverlay::new(command_tx, region.clone(), args.preview_width) {
++    match LayerShellOverlay::new(command_tx, region.clone(), args.preview_width, args.max_preview_height) {
+         Ok(overlay) => Some(overlay),
+         Err(err) => {
+             log::warn!("【预览浮层】【启动】layer-shell 不可用: {err}");

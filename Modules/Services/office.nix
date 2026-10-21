@@ -46,6 +46,9 @@
 
     services.opencloud = {
       enable  = true;
+      # 2026-10-21: the module no longer defaults `package`; keep the rolling
+      # release it used before (switching to -production would be a downgrade).
+      package = pkgs.opencloud;
       address = "127.0.0.1";
       inherit port stateDir;
       url     = "https://${office}";
