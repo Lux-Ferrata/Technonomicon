@@ -122,6 +122,7 @@ Every service is `<name>.ironshark.org`: an A record pointing at Akmon's tailnet
 | `lt.` | LanguageTool (VSCodium LTeX+, Obsidian, Brave) |
 | `docs.` | Paperless-ngx |
 | `photos.` | Immich (search by description, faces, text) |
+| `hydrus.`, `hydrus-api.` | Hydrus: collected images by exact tags (noVNC GUI; Client API for Hydrus Companion / Hydrus Web); inbox = Syncthing "Hydrus_Inbox" |
 | `keep.` | Karakeep (bookmarks with archives, tags from the local model) |
 | `cal.` | Radicale: staging for the generated calendars pushed to Google Calendar |
 | `draw.` | AstraDraw (Excalidraw with workspaces); launcher "Flowchart" |
@@ -224,7 +225,7 @@ Open items from the services rollout are in [`TODO.md`](TODO.md).
 - [ ] Switch to the Proton suite instead of Google Workspace?
 
 ### Homelab
-- [ ] Hydrus picture and gif server (ML image recognition, search, and tagging); deferred
+- [x] Hydrus picture and gif server (`hydrus.ironshark.org`; ML auto-tagging still to do, see TODO.md)
 - [x] LanguageTool server for Obsidian grammar and spell checking (`lt.ironshark.org`)
 - [x] Tasks: Vikunja, local on Kvasir (offline), backed up to Akmon
 - [x] Habits: OpenHabitTracker with sync through Akmon

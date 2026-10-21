@@ -62,6 +62,7 @@
       self.nixosModules.Tn-office
       self.nixosModules.Tn-astradraw
       self.nixosModules.Tn-openhabittracker
+      self.nixosModules.Tn-hydrus
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
