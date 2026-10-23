@@ -111,7 +111,7 @@
                 };
               });
             in config.boot.kernelPackages.nvidiaPackages.stable.overrideAttrs (o: {
-              postInstall = (o.postInstall or "") + ''
+              postInstall = toString (o.postInstall or null) + ''
                 for f in "$bin"/origBin/*; do
                   install -Dm755 "$f" "$bin/bin/''${f##*/}"
                   ${patchelf_0_15}/bin/patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
