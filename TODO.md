@@ -9,7 +9,8 @@ delete them as they're done.
       scaffolding. Decide the new layout, then re-point:
   - Immich's external libraries (now `/srv/xin/Media` at `/mnt/media`,
     `Modules/Services/immich.nix`). Images actually live mostly in
-    `Grimoire/Assets` and `Apocrypha/force-drawing` today.
+    `Apocrypha/force-drawing` today (`Grimoire/Assets` went with the
+    2026-10-18 flatten; collected images now go to Hydrus).
   - Where Paperless, Karakeep and Takeout imports keep their files, if that
     should change.
 - [ ] **Phase 5 photos** (after the layout):
@@ -97,9 +98,17 @@ values. The rules are the same everywhere:
 - [ ] Immich machine learning on the GPU (CUDA build, compiled on Akmon) if the
       library grows enough for it to matter.
 - [ ] Karakeep: turn off sign-ups once the account exists (`DISABLE_SIGNUPS`).
+- [ ] **Around 2026-11-23:** look at Strata again (github.com/Niko1221/Strata,
+      Qwen3.8-Flash-Next 125B MoE split over VRAM + RAM) for the overnight
+      agent. First check whether upstream llama.cpp loads the Unsloth GGUFs
+      (then no new engine is needed); otherwise see if Strata has matured
+      (open issues, Nix-friendly build, state outside `$HOME`). Trial it
+      night-only and sandboxed next to `llama-chat`, not as a swap.
 - [ ] Hydrus ML auto-tagging (a tagger, e.g. WD14, feeding tags through the Client API) if hand tagging gets slow.
 - [ ] BBDB-style people hub: Google Contacts -> Radicale (CardDAV, vdirsyncer
-      google_contacts); a nightly generator keeps Obsidian `People/` notes with
+      google_contacts); a nightly generator keeps the person notes in the
+      Grimoire's Personal vault (flat: one root note per person with
+      `up: [[People]]`, no `People/` folder) with
       contact fields plus a marked, generated block of email threads (archive
       search, `mid:` links into Thunderbird) and calendar events. Must respect
       the vault rule (write via the Obsidian CLI / marked blocks only).
