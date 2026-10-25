@@ -63,6 +63,7 @@
       self.nixosModules.Tn-astradraw
       self.nixosModules.Tn-openhabittracker
       self.nixosModules.Tn-hydrus
+      self.nixosModules.Tn-mimir
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
