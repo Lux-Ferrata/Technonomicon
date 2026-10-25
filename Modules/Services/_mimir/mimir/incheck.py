@@ -87,6 +87,22 @@ def answer_type_errors(html: str, correct: dict) -> list:
     return errors
 
 
+def dropped_by_mustache(params, path="params") -> list:
+    """Lists holding a falsy scalar (0, False, ""): Mustache skips those items in
+    {{#list}}{{.}}{{/list}}, so a table row silently loses a cell and shifts left."""
+    found = []
+    if isinstance(params, dict):
+        for k, v in params.items():
+            found += dropped_by_mustache(v, f"{path}.{k}")
+    elif isinstance(params, list):
+        if any(not v and not isinstance(v, (dict, list)) for v in params):
+            found.append(path)
+        for i, v in enumerate(params):
+            if isinstance(v, (dict, list)):
+                found += dropped_by_mustache(v, f"{path}[{i}]")
+    return found
+
+
 def dynamic_files(html: str) -> list:
     """file-name values of the dynamic figures and downloads, served by file()."""
     names = []
