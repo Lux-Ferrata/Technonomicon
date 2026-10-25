@@ -46,6 +46,7 @@
         vaultwarden    = "vaultwarden.svg";
         flowchart      = "sitemap-outline.svg";
         hydrus         = "hydrus.svg";
+        practice       = "brain.svg";
       };
 
       # one launcher entry per Akmon service with a web UI (tailnet-only).
