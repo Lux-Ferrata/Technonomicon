@@ -163,6 +163,12 @@
       timerConfig = { OnCalendar = "*-*-* 02:20:00"; Persistent = true; };
     };
 
+    # alerted on when stale (Tn-server-metrics)
+    tn.metrics.jobs = {
+      mimir-plan.maxAge   = 26 * 3600;
+      mimir-backup.maxAge = 26 * 3600;
+    };
+
     # ── web ─────────────────────────────────────────────────────────────
     tn.web.vhosts.learn = {
       inherit port;
