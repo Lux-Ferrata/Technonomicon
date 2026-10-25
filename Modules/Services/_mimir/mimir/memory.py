@@ -76,16 +76,18 @@ def _review(sched: Scheduler, card: Card, rating: Rating, when: datetime, seed: 
     return card
 
 
+def _order(e: Event) -> tuple[float, int]:
+    return (e.first_graded_at.timestamp() if e.first_graded_at else float("inf"), e.iq_id)
+
+
 def pick_events(events: list[Event]) -> list[Event]:
     """One event per (skill, day): the earliest graded one."""
     best: dict[tuple[str, date], Event] = {}
     for e in events:
         k = (e.skill_uuid, e.day)
-        cur = best.get(k)
-        key = (e.first_graded_at or datetime.max.replace(tzinfo=None), e.iq_id)
-        if cur is None or key < ((cur.first_graded_at or datetime.max.replace(tzinfo=None)), cur.iq_id):
+        if k not in best or _order(e) < _order(best[k]):
             best[k] = e
-    return sorted(best.values(), key=lambda e: (e.day, e.first_graded_at.isoformat() if e.first_graded_at else "", e.iq_id))
+    return sorted(best.values(), key=lambda e: (e.day, *_order(e)))
 
 
 def replay(cat: Catalog, events: list[Event], overrides: dict[tuple[date, str], Override],
