@@ -12,8 +12,8 @@ import shlex
 import socket
 import subprocess
 import sys
-import tomllib
-from datetime import date, datetime, timedelta, timezone
+import time
+from datetime import date, datetime, timezone
 
 from . import catalog as catalog_mod
 from . import emit, graph, lint, report, scaffold
@@ -56,7 +56,6 @@ def connect(env: Env, log) -> tuple[PL, int]:
                 ci = pl.course_instance(None)
                 break
             except RuntimeError:
-                import time
                 time.sleep(2)
         else:
             raise SystemExit("PL did not pick up the Practice course instance after a reload")
@@ -64,14 +63,14 @@ def connect(env: Env, log) -> tuple[PL, int]:
     return pl, ci
 
 
-def show_plan(plan) -> str:
+def show_plan(plan, budget: float) -> str:
     if not plan.items:
         return f"{plan.day}: nothing to practice."
     lines = [f"{emit.title(plan)}"]
     for i in plan.items:
         lines.append(f"  {i.zone:<6} {i.minutes:>4.0f} min  {i.skill.id}  [{i.template.qid.rsplit('/', 1)[-1]}]  {i.reason}")
     if plan.skipped_due:
-        lines.append(f"  ({plan.skipped_due} more due reviews didn't fit the {plan.minutes:.0f}-minute budget)")
+        lines.append(f"  ({plan.skipped_due} more due reviews didn't fit the {budget:g}-minute budget)")
     return "\n".join(lines)
 
 
@@ -98,17 +97,22 @@ def cmd_plan(a, env: Env) -> int:
         exclude = frozenset(p.skill_uuid for p in planned_today)
         new_done = sum(1 for p in planned_today if p.zone == "New")
         plan = plan_day(cat, states, study, env.tz, day, mode, exclude, new_done)
-        print(show_plan(plan))
+        print(show_plan(plan, study.budget_minutes))
         tid = None
         if not a.dry_run and plan.items:
             tid = emit.tid_for(day, mode, log.tids())
             emit.ensure_course_instance(env.generated, env.tz.key)
             emit.write_assessment(env.generated, cat, plan, tid, study)
-            log.record_plan([PlanRow(tid, day, i.skill.uuid, i.template.qid, i.zone, i.reason) for i in plan.items])
             removed = emit.prune(env.generated, day, log.final_tids())
             job = pl.reload()
-            if not pl.wait_for(ci, tid):
-                raise SystemExit(f"PL did not list {tid} after reloading (job {job}); check `mimir reload`")
+            found = pl.wait_for(ci, tid)
+            if found is None:
+                raise SystemExit(f"PL did not list {tid} after reloading (job {job}); nothing recorded, "
+                                 "so the next `mimir plan` tries again")
+            ci = found
+            log.set_meta("course_instance_id", str(ci))
+            # recorded only once PL has it: a failed reload must not block the next run
+            log.record_plan([PlanRow(tid, day, i.skill.uuid, i.template.qid, i.zone, i.reason) for i in plan.items])
             print(f"Written {tid}; open {env.learn_url}/pl/course_instance/{ci}/assessments")
             if removed:
                 print("pruned:", ", ".join(removed))
@@ -227,8 +231,9 @@ def cmd_graph(a, env: Env) -> int:
 def cmd_lint(a, env: Env) -> int:
     _, cat = load_all(env)
     qids = a.ids or (sorted(cat.templates) if a.all else lint.changed_qids(env.course, cat))
-    qids = [q for q in qids if q in cat.templates] + [q for q in qids if q not in cat.templates and q in
-                                                      [t for s in cat.skills for t in []]]
+    unknown = [q for q in qids if q not in cat.templates]
+    if unknown:
+        raise SystemExit(f"not templates of the catalog: {', '.join(unknown)}")
     results = lint.run_in_image(env.pl_image, env.course, qids, a.seeds) if qids else {}
     text, ok = lint.report(cat, results, a.seeds)
     print(text or "nothing to check (no changed templates; --all checks every one)")

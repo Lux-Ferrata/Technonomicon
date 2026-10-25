@@ -39,7 +39,7 @@ def course(tmp: Path, skills: list[dict], templates: dict[str, list[str]] | None
         for slug in slugs:
             d = tmp / "questions" / sid / slug
             d.mkdir(parents=True, exist_ok=True)
-            srs = {"skill": sid}
+            srs: dict = {"skill": sid}
             if minutes and f"{sid}/{slug}" in minutes:
                 srs["minutes"] = minutes[f"{sid}/{slug}"]
             (d / "info.json").write_text(json.dumps({
@@ -56,11 +56,11 @@ def skill_uuid(sid: str) -> str:
 _iq = [0]
 
 
-def event(sid: str, d: date, zone: str, tries: list[float], variants_correct: int = None,
+def event(sid: str, d: date, zone: str, tries: list[float], variants_correct: int | None = None,
           variants: int = 1, duration_s: float | None = 60, template: str = "t1") -> Event:
     _iq[0] += 1
     if variants_correct is None:
-        variants_correct = int(max(tries) >= 1)
+        variants_correct = int(bool(tries) and max(tries) >= 1)
     when = datetime.combine(d, time(12), tzinfo=TZ).astimezone(timezone.utc)
     return Event(iq_id=_iq[0], assessment_tid=d.isoformat(), day=d, zone=zone, skill_uuid=skill_uuid(sid),
                  skill_id=sid, template_qid=f"{sid}/{template}", tries=tries, variants_correct=variants_correct,

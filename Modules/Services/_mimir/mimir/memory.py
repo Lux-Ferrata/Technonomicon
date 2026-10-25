@@ -20,8 +20,6 @@ from .config import Study, day_start
 from .db import Event, Override
 from .grades import RATINGS, learn_outcome, review_rating
 
-EPOCH = date(2026, 1, 1)
-
 
 @dataclass
 class Entry:

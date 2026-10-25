@@ -11,8 +11,6 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .config import Study
-
 LEVELS = ("precalc", "lower", "upper", "grad")
 
 
@@ -99,7 +97,7 @@ class Catalog:
         return out
 
 
-def _skill(raw: dict, file: str, study: Study, errors: list[str]) -> Skill | None:
+def _skill(raw: dict, file: str, errors: list[str]) -> Skill | None:
     where = f"{file}: skill {raw.get('id', '?')!r}"
     for k in ("id", "uuid", "title"):
         if not isinstance(raw.get(k), str) or not raw[k]:
@@ -120,7 +118,7 @@ def _skill(raw: dict, file: str, study: Study, errors: list[str]) -> Skill | Non
     )
 
 
-def load(course: Path, study: Study) -> Catalog:
+def load(course: Path) -> Catalog:
     cat = Catalog()
     seen_uuid: dict[str, str] = {}
     for path in sorted((course / "skills").rglob("*.toml")):
@@ -131,7 +129,7 @@ def load(course: Path, study: Study) -> Catalog:
             cat.errors.append(f"{rel}: {e}")
             continue
         for raw in doc.get("skill", []):
-            s = _skill(raw, rel, study, cat.errors)
+            s = _skill(raw, rel, cat.errors)
             if s is None:
                 continue
             if s.id in cat.skills:

@@ -12,7 +12,7 @@ A, B, C, P = "m/p/a/one", "m/p/b/two", "m/p/c/three", "m/p/d/placeholder"
 
 
 def ids(items):
-    return [i.skill.id for i in items]
+    return [getattr(i, "skill", i).id for i in items]  # plan items or skills
 
 
 def test_gating_and_placeholders(tmp_path):
@@ -47,7 +47,7 @@ def test_reviews_first_then_new_within_budget(tmp_path):
 
 
 def test_budget_skips_but_always_fits_one(tmp_path):
-    skills = [{"id": f"m/p/s/n{i}", "minutes": 25} for i in range(3)]
+    skills = [{"id": f"m/p/s/n{i}", "minutes": 18} for i in range(3)]  # under the long threshold
     cat = catalog.load(course(tmp_path, skills))
     st = replay(cat, [learn(s["id"], MON) for s in skills], {}, STUDY, TZ)
     plan = plan_day(cat, st, STUDY, TZ, MON + timedelta(days=60))

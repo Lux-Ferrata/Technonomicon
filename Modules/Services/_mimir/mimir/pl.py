@@ -77,11 +77,20 @@ class PL:
             raise
         raise RuntimeError("PL did not answer /pl/loadFromDisk with a redirect (is it in dev mode?)")
 
-    def wait_for(self, ci: int, tid: str, timeout: float = 120) -> bool:
-        """After a reload: wait until the assessment `tid` is listed."""
+    def wait_for(self, ci: int, tid: str, timeout: float = 120) -> int | None:
+        """After a reload: wait until the assessment `tid` is listed. Returns the
+        course-instance id (re-discovered if the reload replaced the instance)."""
         end = time.monotonic() + timeout
         while time.monotonic() < end:
-            if any(a["assessment_name"] == tid for a in self.assessments(ci)):
-                return True
+            try:
+                if any(a["assessment_name"] == tid for a in self.assessments(ci)):
+                    return ci
+            except urllib.error.HTTPError as e:
+                if e.code not in (403, 404):
+                    raise
+                try:
+                    ci = self.course_instance(None)
+                except RuntimeError:
+                    pass
             time.sleep(1)
-        return False
+        return None

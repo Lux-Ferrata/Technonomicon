@@ -27,6 +27,7 @@ class Item:
     zone: str  # Review | New | Long
     minutes: float
     reason: str
+    learning: bool = False  # not yet in FSRS: needs `learn` correct variants, learn mode on
 
 
 @dataclass
@@ -130,7 +131,7 @@ def plan_day(cat: Catalog, states: dict[str, SkillState], study: Study, tz, day:
             if used + m > study.budget_minutes and plan.items:
                 continue
             reason = "learning (again)" if states[s.uuid].attempted else "new"
-            plan.items.append(Item(s, t, "New", m, reason))
+            plan.items.append(Item(s, t, "New", m, reason, learning=True))
             used += m
             added += 1
 
@@ -140,6 +141,5 @@ def plan_day(cat: Catalog, states: dict[str, SkillState], study: Study, tz, day:
         longs += [(s, "new") for s in frontier(cat, states) if is_long(cat, s, study) and s.uuid not in exclude]
         for s, why in longs[:want]:
             t = choose_template(cat, states[s.uuid], s, day)
-            zone = "Long"
-            plan.items.append(Item(s, t, zone, cat.minutes(t), why))
+            plan.items.append(Item(s, t, "Long", cat.minutes(t), why, learning=not states[s.uuid].graduated))
     return plan

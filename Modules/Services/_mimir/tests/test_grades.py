@@ -8,7 +8,7 @@ from mimir.grades import learn_outcome, review_rating
 D = date(2026, 11, 2)
 
 
-def grade(tries, duration=60, minutes=4):
+def grade(tries, duration: float | None = 60, minutes=4):
     return review_rating(event("a/b/c/d", D, "Review", tries, duration_s=duration), minutes, STUDY)
 
 
