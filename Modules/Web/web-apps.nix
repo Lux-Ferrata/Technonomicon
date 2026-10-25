@@ -52,7 +52,8 @@
       # one launcher entry per Akmon service with a web UI (tailnet-only).
       # Not here on purpose: vault. (the Vaultwarden entry below), dav./lt./wopi./collabora. (no UI
       # of their own), metrics. (Grafana only draws the report charts), cal. (only
-      # stages generated calendars; calendars are edited in Google).
+      # stages generated calendars; calendars are edited in Google), pl. (Mimir's
+      # author view, reached from the links `mimir` prints).
       akmon = id: title: sub: path: ico: keywords: pkgs.makeDesktopItem {
         name = "akmon-${id}";
         desktopName = title;
