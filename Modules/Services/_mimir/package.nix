@@ -27,5 +27,6 @@ python3Packages.buildPythonApplication {
 
   makeWrapperArgs = [ "--set-default" "MIMIR_PL_IMAGE" plImage ];
 
+  passthru = { inherit plImage; };
   meta.mainProgram = "mimir";
 }
