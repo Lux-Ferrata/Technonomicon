@@ -189,6 +189,11 @@ def check_template(course: Path, qid: str, seeds: int) -> dict:
             phase = "JSON-safe params and answers"
             json.dumps(data["params"])
             json.dumps(data["correct_answers"])
+            if "{{.}}" in html:
+                dropped = dropped_by_mustache(data["params"])
+                if dropped:
+                    fail(seed, f"{', '.join(dropped)} holds 0/False/\"\", which {{{{.}}}} drops: store the items as strings")
+                    continue
             phase = "render question.html"
             rendered = chevron.render(html, data)
             missing = needed_answers(rendered) - set(data["correct_answers"])
