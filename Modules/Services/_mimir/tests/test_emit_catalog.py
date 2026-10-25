@@ -1,3 +1,4 @@
+import dataclasses
 import json
 from datetime import date, timedelta
 
@@ -45,8 +46,19 @@ def test_emitted_files_validate_and_set_learn_only_when_learning(tmp_path):
     jsonschema.validate(json.loads((gen / "Practice" / "infoCourseInstance.json").read_text()),
                         emit.schema("infoCourseInstance"))
     zones = {z["title"]: z["questions"] for z in a["zones"]}
-    assert zones["Review"][0] == {"id": f"{A}/t1", "autoPoints": 1, "triesPerVariant": 2, "maxAutoPoints": 1}
-    assert zones["New"][0]["preferences"] == {"learn": True} and zones["New"][0]["maxAutoPoints"] == 2
+    # self-graded (the default): one Pass/Fail per variant, the preference set explicitly
+    assert zones["Review"][0] == {"id": f"{A}/t1", "autoPoints": 1, "triesPerVariant": 1, "maxAutoPoints": 1,
+                                   "preferences": {"selfgrade": True}}
+    assert zones["New"][0]["preferences"] == {"learn": True, "selfgrade": True} and zones["New"][0]["maxAutoPoints"] == 2
+    assert "Pass or Fail" in a["text"]
+    # auto-graded: typed answers, two tries, the preference switched off
+    auto = dataclasses.replace(STUDY, grading="auto")
+    b = json.loads(emit.write_assessment(gen, cat, plan, emit.tid_for(day, "more", {tid}), auto).read_text())
+    jsonschema.validate(b, emit.schema("infoAssessment"))
+    zones = {z["title"]: z["questions"] for z in b["zones"]}
+    assert zones["Review"][0] == {"id": f"{A}/t1", "autoPoints": 1, "triesPerVariant": 2, "maxAutoPoints": 1,
+                                   "preferences": {"selfgrade": False}}
+    assert zones["New"][0]["preferences"] == {"learn": True, "selfgrade": False}
     ac = a["accessControl"][0]["dateControl"]
     assert ac["release"]["date"] == f"{day.isoformat()}T04:00:00"
     assert ac["due"]["date"] == f"{(day + timedelta(days=1)).isoformat()}T04:00:00"

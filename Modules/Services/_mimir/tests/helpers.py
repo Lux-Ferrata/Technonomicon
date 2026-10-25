@@ -45,7 +45,8 @@ def course(tmp: Path, skills: list[dict], templates: dict[str, list[str]] | None
             (d / "info.json").write_text(json.dumps({
                 "uuid": str(uuid.uuid5(uuid.NAMESPACE_URL, f"{sid}/{slug}")), "title": slug, "topic": "T",
                 "type": "v3", "comment": {"srs": srs},
-                "preferences": {"learn": {"type": "boolean", "default": False}}}))
+                "preferences": {"learn": {"type": "boolean", "default": False},
+                                "selfgrade": {"type": "boolean", "default": True}}}))
     return tmp
 
 
@@ -57,14 +58,14 @@ _iq = [0]
 
 
 def event(sid: str, d: date, zone: str, tries: list[float], variants_correct: int | None = None,
-          variants: int = 1, duration_s: float | None = 60, template: str = "t1") -> Event:
+          variants: int = 1, duration_s: float | None = 60, template: str = "t1", grader: str = "internal") -> Event:
     _iq[0] += 1
     if variants_correct is None:
         variants_correct = int(bool(tries) and max(tries) >= 1)
     when = datetime.combine(d, time(12), tzinfo=TZ).astimezone(timezone.utc)
     return Event(iq_id=_iq[0], assessment_tid=d.isoformat(), day=d, zone=zone, skill_uuid=skill_uuid(sid),
                  skill_id=sid, template_qid=f"{sid}/{template}", tries=tries, variants_correct=variants_correct,
-                 variants=variants, duration_s=duration_s, first_graded_at=when)
+                 variants=variants, duration_s=duration_s, first_graded_at=when, grader=grader)
 
 
 def learn(sid: str, d: date, first_ok: bool = True) -> Event:

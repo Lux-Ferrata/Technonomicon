@@ -7,8 +7,8 @@ then runs it with PL's own interpreter and Python library:
         /PrairieLearn/.venv/bin/python3.13 /mimir/incheck.py --seeds 200 QID...
 
 For every template and seed it mirrors the question server: seed `random` and
-`numpy.random`, call generate() (half the seeds in learn mode when the
-template declares it), then prepare(). It checks that params and correct
+`numpy.random`, call generate() (half the seeds in learn mode, and half in the
+Pass/Fail self-grade mode, when the template declares them), then prepare(). It checks that params and correct
 answers are JSON-safe, that every answers-name in question.html (rendered with
 the variant's data, as PL's Mustache does) has a correct answer, and that
 generate() is fast. Each dynamic figure in question.html is
@@ -37,6 +37,8 @@ import numpy as np
 
 SLOW_MS = 2000  # PL's question timeout is a few seconds; stay well under it
 HANG_S = 10  # per seed and phase; past this it's an endless loop, not slowness
+GRADED_ELEMENT = re.compile(r"<(pl-(?:symbolic|number|integer|string|matrix)-input|pl-dropdown|pl-checkbox|"
+                            r"pl-multiple-choice|pl-matching|pl-order-blocks)\b")
 ANSWERS_NAME = re.compile(r'answers-name\s*=\s*"([^"]+)"')
 DYNAMIC_FILE = re.compile(r"<pl-(?:figure|file-download)\b[^>]*>")
 NO_CORRECT_NEEDED = ("pl-file-editor", "pl-file-upload", "pl-rich-text-editor", "pl-image-capture",
@@ -164,6 +166,8 @@ def check_template(course: Path, qid: str, seeds: int) -> dict:
 
     declared = {k: v.get("default") for k, v in (info.get("preferences") or {}).items()}
     has_file = hasattr(mod, "file")
+    if "<tn-selfgrade" in html and not (course / "elements" / "tn-selfgrade" / "info.json").exists():
+        fail(None, "uses <tn-selfgrade>, but the course has no elements/tn-selfgrade")
     if dynamic_files(html) and not has_file:
         fail(None, f"dynamic files {dynamic_files(html)} but no file() in server.py")
     has_self_check = hasattr(mod, "make") and hasattr(mod, "self_check")
@@ -174,6 +178,8 @@ def check_template(course: Path, qid: str, seeds: int) -> dict:
         prefs = dict(declared)
         if "learn" in prefs:
             prefs["learn"] = seed % 2 == 0
+        if "selfgrade" in prefs:
+            prefs["selfgrade"] = (seed // 2) % 2 == 1  # every mix of learn and Pass/Fail
         phase = "generate"
         try:
             random.seed(seed)
@@ -204,6 +210,17 @@ def check_template(course: Path, qid: str, seeds: int) -> dict:
             if wrong_type:
                 fail(seed, "; ".join(wrong_type))
                 continue
+            if prefs.get("selfgrade"):
+                left = sorted(set(GRADED_ELEMENT.findall(rendered)))
+                if "<tn-selfgrade" not in rendered:
+                    fail(seed, "Pass/Fail mode shows no <tn-selfgrade>")
+                    continue
+                if left:
+                    fail(seed, f"Pass/Fail mode still shows {left}: they would demand typed answers")
+                    continue
+                if not str(data["params"].get("steps") or "").strip():
+                    fail(seed, "Pass/Fail mode needs params.steps: the solution it reveals")
+                    continue
             figures = dynamic_files(rendered) if has_file else []  # names may come from Mustache
             if ms > SLOW_MS:
                 fail(seed, f"generate()+prepare() took {ms:.0f} ms")

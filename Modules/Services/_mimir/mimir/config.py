@@ -18,6 +18,7 @@ class Study:
     new_per_day: int = 3
     retention: float = 0.85
     max_interval_days: int = 365
+    grading: str = "self"  # "self": Pass/Fail after showing the solution (Anki style); "auto": PL grades typed answers
     slow_factor: float = 2.0
     partial_hard: float = 0.5
     long_threshold: float = 20
@@ -37,11 +38,15 @@ def load_study(course: Path) -> Study:
     bad = [x for x in days if x not in WEEKDAYS]
     if bad:
         raise ValueError(f"practice.toml: long.days has {bad}; use {', '.join(WEEKDAYS)}")
+    grading = str(g.get("mode", s.grading))
+    if grading not in ("self", "auto"):
+        raise ValueError(f'practice.toml: grades.mode is "{grading}"; use "self" or "auto"')
     return Study(
         budget_minutes=float(b.get("minutes", s.budget_minutes)),
         new_per_day=int(b.get("new_per_day", s.new_per_day)),
         retention=float(m.get("retention", s.retention)),
         max_interval_days=int(m.get("max_interval_days", s.max_interval_days)),
+        grading=grading,
         slow_factor=float(g.get("slow_factor", s.slow_factor)),
         partial_hard=float(g.get("partial_hard", s.partial_hard)),
         long_threshold=float(lg.get("threshold_minutes", s.long_threshold)),

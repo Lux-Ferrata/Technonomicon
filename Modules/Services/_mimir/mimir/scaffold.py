@@ -16,6 +16,14 @@ ELEMENTS = {
            '</pl-multiple-choice>'),
 }
 KINDS = tuple(ELEMENTS)
+# what Pass/Fail (self-grade) mode shows instead of each answer element: the prompt, nothing to type
+ASKS = {
+    "numeric": '<span class="tn-ask">Answer: <span class="tn-gap"></span></span>',
+    "integer": '<span class="tn-ask">Answer: <span class="tn-gap"></span></span>',
+    "symbolic": '<div class="tn-ask">Answer: <span class="tn-gap"></span></div>',
+    "set": '<div class="tn-ask">Solution set: <span class="tn-gap"></span></div>',
+    "mc": '<ul class="tn-options">{{#params.choices}}<li>{{{text}}}</li>{{/params.choices}}</ul>',
+}
 
 QUESTION_HTML = """{{{{#preferences.learn}}}}
 <pl-card header="Worked example">
@@ -28,11 +36,16 @@ QUESTION_HTML = """{{{{#preferences.learn}}}}
   {{{{{{params.statement}}}}}}
 </pl-question-panel>
 
-{element}
+{{{{^preferences.selfgrade}}}}{element}{{{{/preferences.selfgrade}}}}{{{{#preferences.selfgrade}}}}{ask}{{{{/preferences.selfgrade}}}}
 
+{{{{#preferences.selfgrade}}}}
+<tn-selfgrade></tn-selfgrade>
+{{{{/preferences.selfgrade}}}}
+{{{{^preferences.selfgrade}}}}
 <pl-answer-panel>
   {{{{{{params.steps}}}}}}
 </pl-answer-panel>
+{{{{/preferences.selfgrade}}}}
 """
 
 SERVER_PY = '''"""{title}.
@@ -44,7 +57,7 @@ import random
 
 import prairielearn as pl
 import sympy as sp
-from tnlearn import checks, fill, fmt, nice
+from tnlearn import checks, fill, fmt, form, nice
 
 X = sp.Symbol("x")
 
@@ -72,6 +85,10 @@ def self_check(m):
     """An INDEPENDENT check of the answer: substitute it back, solve numerically,
     compare with a brute force. Never re-run the code that made it."""
     raise NotImplementedError("write the independent check")
+
+
+def parse(data):
+    form.relax_typed(data)  # isqrt(2), √2, xsqrt(3): shorthands PL's parser refuses
 
 
 def generate(data):
@@ -124,9 +141,10 @@ def new_template(course: Path, skill_id: str, slug: str, kind: str, title: str, 
     (d / "source").mkdir(parents=True)
     info = {"uuid": str(uuid.uuid4()), "title": title, "topic": topic, "type": "v3",
             "comment": {"srs": {"skill": skill_id}},
-            "preferences": {"learn": {"type": "boolean", "default": False}}}
+            "preferences": {"learn": {"type": "boolean", "default": False},
+                            "selfgrade": {"type": "boolean", "default": True}}}
     (d / "info.json").write_text(json.dumps(info, indent=2) + "\n")
-    (d / "question.html").write_text(QUESTION_HTML.format(element=ELEMENTS[kind]))
+    (d / "question.html").write_text(QUESTION_HTML.format(element=ELEMENTS[kind], ask=ASKS[kind]))
     answer_expr = {"numeric": 'float(m["_answer"])', "integer": 'int(m["_answer"])',
                    "mc": 'None  # pl-multiple-choice uses params.choices',
                    }.get(kind, 'pl.to_json(m["_answer"])')

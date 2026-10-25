@@ -43,6 +43,7 @@ class Template:
     minutes: float | None
     encompasses: dict[str, float]
     declares_learn: bool
+    declares_selfgrade: bool = False  # has the Pass/Fail mode (the `selfgrade` preference)
 
 
 @dataclass
@@ -167,7 +168,10 @@ def load(course: Path) -> Catalog:
             minutes=float(srs["minutes"]) if srs.get("minutes") is not None else None,
             encompasses={k: float(v) for k, v in enc.items()},
             declares_learn="learn" in (d.get("preferences") or {}),
+            declares_selfgrade="selfgrade" in (d.get("preferences") or {}),
         )
+        if not cat.templates[qid].declares_selfgrade:
+            cat.warnings.append(f"{qid}: no Pass/Fail mode (declare the selfgrade preference, add <tn-selfgrade>)")
 
     _check_graph(cat)
     return cat

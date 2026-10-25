@@ -33,6 +33,8 @@ def _event(tid: str, d: date, q: dict, subs: list[dict], skill: tuple[str, str],
     for s in graded:
         by_variant[int(s["variant_number"])].append(s)
     first = by_variant[min(by_variant)]
+    # a Pass/Fail review (the <tn-selfgrade> element) is graded by the learner, not by PL
+    selfgraded = any("selfgrade" in (s.get("submitted_answer") or {}) for s in graded)
     return Event(
         iq_id=int(q["instance_question_id"]),
         assessment_tid=tid,
@@ -46,6 +48,7 @@ def _event(tid: str, d: date, q: dict, subs: list[dict], skill: tuple[str, str],
         variants=len(by_variant),
         duration_s=q.get("duration_seconds"),
         first_graded_at=datetime.fromisoformat(graded[0]["graded_at"]),
+        grader="self" if selfgraded else "internal",
         final=closed,
     )
 

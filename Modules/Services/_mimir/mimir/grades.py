@@ -1,5 +1,14 @@
 """From what happened in PL to an FSRS grade (judged on the first variant).
 
+Self-graded (grader "self", the default: the learner shows the solution and
+marks it, as in Anki's pass/fail):
+
+| Outcome | Grade |
+| Pass    | Good  |
+| Fail    | Again |
+
+Auto-graded (practice.toml grades.mode = "auto": PL grades typed answers):
+
 | Outcome                                                          | Grade |
 | fully right on try 1, within slow_factor x minutes               | Good  |
 | right but slow; right only on try 2; best partial >= partial_hard | Hard  |
@@ -7,8 +16,9 @@
 
 Later variants the same day are relearning: they don't change the grade.
 Easy is never automatic. New skills enter FSRS on the day they reach their
-`learn` count of correct variants: Good if that day's first variant was right
-on try 1, otherwise Hard.
+`learn` count of correct (or passed) variants: Good if that day's first variant
+was right on try 1, otherwise Hard (auto) or Again (self, which has no Hard).
+Each event keeps the grader it had, so switching modes never regrades history.
 """
 
 from dataclasses import dataclass
@@ -24,6 +34,8 @@ FULL = 0.9999  # a score counts as fully right at or above this
 def review_rating(ev: Event, minutes: float, study: Study) -> Rating | None:
     if not ev.tries:
         return None
+    if ev.grader == "self":
+        return Rating.Good if ev.tries[0] >= FULL else Rating.Again
     first, best = ev.tries[0], max(ev.tries[:2])
     if first >= FULL:
         slow = ev.duration_s is not None and minutes > 0 and ev.duration_s > study.slow_factor * minutes * 60
@@ -46,7 +58,8 @@ def learn_outcome(ev: Event, learn: int) -> LearnOutcome | None:
     if not ev.tries:
         return None
     if ev.variants_correct >= learn:
-        return LearnOutcome(True, Rating.Good if ev.tries[0] >= FULL else Rating.Hard, False)
+        slip = Rating.Again if ev.grader == "self" else Rating.Hard
+        return LearnOutcome(True, Rating.Good if ev.tries[0] >= FULL else slip, False)
     return LearnOutcome(False, None, ev.tries[0] < FULL)
 
 

@@ -118,7 +118,7 @@ class Log:
             self.con.execute(
                 "INSERT INTO events VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(iq_id) DO UPDATE SET "
                 "tries=excluded.tries, variants_correct=excluded.variants_correct, variants=excluded.variants, "
-                "duration_s=excluded.duration_s, first_graded_at=excluded.first_graded_at, "
+                "duration_s=excluded.duration_s, first_graded_at=excluded.first_graded_at, grader=excluded.grader, "
                 "final=MAX(events.final, excluded.final), updated_at=excluded.updated_at", row)
         return old is None or (json.loads(old[0]), old[1], old[2]) != (e.tries, e.variants_correct, e.variants)
 
