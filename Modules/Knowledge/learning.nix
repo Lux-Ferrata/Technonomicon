@@ -27,7 +27,7 @@
       visidata
       # datasette  # broken: asgi-csrf dep marked broken in nixpkgs (2026-07); re-enable when fixed
       anki-bin
-      srl
+      mimir
       zotero   # pinned, see above
       onlyoffice-desktopeditors
       foliate
