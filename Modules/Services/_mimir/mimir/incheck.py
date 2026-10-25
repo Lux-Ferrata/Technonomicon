@@ -9,14 +9,15 @@ then runs it with PL's own interpreter and Python library:
 For every template and seed it mirrors the question server: seed `random` and
 `numpy.random`, call generate() (half the seeds in learn mode when the
 template declares it), then prepare(). It checks that params and correct
-answers are JSON-safe, that every answers-name in question.html has a correct
-answer, and that generate() is fast. Each dynamic figure in question.html is
+answers are JSON-safe, that every answers-name in question.html (rendered with
+the variant's data, as PL's Mustache does) has a correct answer, and that
+generate() is fast. Each dynamic figure in question.html is
 fetched through file() and must come back as a non-empty image. Then, freshly
 seeded, make() + self_check(): the template's independent check of its own
 answer. A seed that runs past HANG_S (an endless loop) fails the template and
 stops its check, so one bad template can't stall the rest.
 
-Standard library + numpy only (it can't import the mimir package). Prints one
+Standard library, numpy and chevron only (it can't import the mimir package). Prints one
 JSON object: {qid: {"ok": n, "failures": [...], "max_ms": t}}.
 """
 
@@ -31,6 +32,7 @@ import time
 import traceback
 from pathlib import Path
 
+import chevron
 import numpy as np
 
 SLOW_MS = 2000  # PL's question timeout is a few seconds; stay well under it
@@ -38,7 +40,9 @@ HANG_S = 10  # per seed and phase; past this it's an endless loop, not slowness
 ANSWERS_NAME = re.compile(r'answers-name\s*=\s*"([^"]+)"')
 DYNAMIC_FILE = re.compile(r"<pl-(?:figure|file-download)\b[^>]*>")
 NO_CORRECT_NEEDED = ("pl-file-editor", "pl-file-upload", "pl-rich-text-editor", "pl-image-capture",
-                     "pl-excalidraw", "pl-workspace")
+                     "pl-excalidraw", "pl-workspace",
+                     # the correct answer is in the markup
+                     "pl-checkbox", "pl-multiple-choice", "pl-dropdown", "pl-matching", "pl-order-blocks")
 
 
 def load_module(qdir: Path, course: Path):
@@ -65,6 +69,22 @@ def needed_answers(html: str) -> set:
         if not tag.startswith(NO_CORRECT_NEEDED):
             names.add(m.group(1))
     return names
+
+
+def answer_type_errors(html: str, correct: dict) -> list:
+    """Correct answers of the wrong type crash the element at grading time
+    (e.g. a bare int for pl-symbolic-input, which wants a string or sympy JSON)."""
+    wants = {"pl-symbolic-input": (lambda v: isinstance(v, (str, dict)), "a string or sympy JSON (pl.to_json of a sympy object)"),
+             "pl-number-input": (lambda v: isinstance(v, (int, float, dict)) and not isinstance(v, bool), "an int or float"),
+             "pl-integer-input": (lambda v: isinstance(v, (int, str)) and not isinstance(v, bool), "an int")}
+    errors = []
+    for m in ANSWERS_NAME.finditer(html):
+        start = html.rfind("<", 0, m.start())
+        tag = html[start + 1:m.start()].split()[0] if start >= 0 else ""
+        name = m.group(1)
+        if tag in wants and name in correct and not wants[tag][0](correct[name]):
+            errors.append(f"{tag} {name!r}: correct answer is {type(correct[name]).__name__}, needs {wants[tag][1]}")
+    return errors
 
 
 def dynamic_files(html: str) -> list:
@@ -127,11 +147,9 @@ def check_template(course: Path, qid: str, seeds: int) -> dict:
         return out
 
     declared = {k: v.get("default") for k, v in (info.get("preferences") or {}).items()}
-    needed = needed_answers(html)
-    figures = dynamic_files(html)
-    if figures and not hasattr(mod, "file"):
-        fail(None, f"dynamic files {figures} but no file() in server.py")
-        figures = []
+    has_file = hasattr(mod, "file")
+    if dynamic_files(html) and not has_file:
+        fail(None, f"dynamic files {dynamic_files(html)} but no file() in server.py")
     has_self_check = hasattr(mod, "make") and hasattr(mod, "self_check")
     if not has_self_check:
         fail(None, "no make()/self_check(): every template needs an independent check")
@@ -155,10 +173,17 @@ def check_template(course: Path, qid: str, seeds: int) -> dict:
             phase = "JSON-safe params and answers"
             json.dumps(data["params"])
             json.dumps(data["correct_answers"])
-            missing = needed - set(data["correct_answers"])
+            phase = "render question.html"
+            rendered = chevron.render(html, data)
+            missing = needed_answers(rendered) - set(data["correct_answers"])
             if missing:
                 fail(seed, f"no correct answer for {sorted(missing)}")
                 continue
+            wrong_type = answer_type_errors(rendered, data["correct_answers"])
+            if wrong_type:
+                fail(seed, "; ".join(wrong_type))
+                continue
+            figures = dynamic_files(rendered) if has_file else []  # names may come from Mustache
             if ms > SLOW_MS:
                 fail(seed, f"generate()+prepare() took {ms:.0f} ms")
                 continue
