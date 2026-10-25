@@ -178,6 +178,15 @@
     # would vanish. Show it unconditionally.
     programs.starship.settings.hostname.ssh_only = lib.mkForce false;
 
+    # pushes to forgejo@akmon from shells here use the passphrase-less key
+    # instead of Kvasir's forwarded agent, so they never ask for the PIN
+    sops.secrets.akmon-ssh-key = { owner = "xin"; };
+    programs.ssh.extraConfig = ''
+      Host akmon
+        IdentityFile ${config.sops.secrets.akmon-ssh-key.path}
+        IdentitiesOnly yes
+    '';
+
     # ── VSCodium server (Open Remote - SSH from Kvasir) ──────────────────
     # The server and marketplace extensions ship generic-linux binaries
     programs.nix-ld.enable = true;
