@@ -31,6 +31,7 @@ HOST = os.uname().nodename
 FROM = f"{HOST} <homelab@ironshark.org>"
 TO = "xin@ironshark.org"
 DASH = "akmon-report"
+MIMIR_SUMMARY = os.environ.get("TN_REPORT_MIMIR", "/srv/mimir/state/summary.json")
 
 # light chart surface + inks + status (dataviz reference palette)
 INK, INK2, MUTED, HAIR = "#0b0b0b", "#52514e", "#898781", "#e1e0d9"
@@ -302,6 +303,27 @@ def charts(rep, period, extra):
     rep.para(f"Live: {PUBLIC}/d/{DASH}", muted=True)
 
 
+def practice(rep):
+    """Today's Mimir practice, from the summary its 04:00 plan writes (Tn-mimir)."""
+    try:
+        with open(MIMIR_SUMMARY) as f:
+            s = json.load(f)
+    except (OSError, ValueError):
+        return
+    line = f"{s['reviews']} reviews + {s['new']} new, ~{s['minutes']} min"
+    if s.get("long"):
+        line += " + long: " + ", ".join(s["long"])
+    y = s.get("yesterday", {})
+    line += f" · yesterday {y.get('passed', 0)}/{y.get('done', 0)} · {s['mature']} of {s['skills']} skills mature"
+    if s.get("day") != datetime.date.today().isoformat():
+        line = f"No plan today (the last is from {s.get('day')}): check mimir-plan. " + line
+    rep.heading("Practice")
+    rep.para(line)
+    if s.get("paused"):
+        rep.para("Paused new skills (failed two learn days): " + ", ".join(s["paused"]), muted=True)
+    rep.para("https://learn.ironshark.org", muted=True)
+
+
 # ---------------------------------------------------------------- assembly
 def build(args):
     rep = Report()
@@ -322,6 +344,8 @@ def build(args):
             rep.heading("Alert digest")
             rep.pre(body)
 
+    if not weekly:
+        practice(rep)
     if weekly:
         load_table(rep, period)
     charts(rep, period, [(4, "Temperatures"), (5, "Pool usage"), (7, "GPU memory")] if weekly else [])

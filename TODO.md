@@ -21,6 +21,21 @@ delete them as they're done.
   - The Google OAuth client already has (or needs) the Photos Library API
     enabled. Big imports can borrow the GPU with `gpu-lend`.
 
+## Mimir (practice system, 2026-10-24)
+
+Plan: `~/.claude/plans/i-want-to-build-dazzling-wand.md`; how-to: Wiki page `Mimir`.
+
+- [ ] Deploy (`deploy all`): Akmon gets PrairieLearn, the 04:00 planner and
+      `learn.`/`pl.`; Kvasir gets the "Practice" launcher and the `mimir` CLI.
+- [ ] First day: `mimir plan` (or wait for 04:00), open "Practice", do the
+      set. Next day `mimir status` / `mimir why <skill>` should show the
+      grades (the plan's post-deploy checks).
+- [ ] Look over the 13 pilot templates at `pl.ironshark.org` (PL's Test
+      button on each); approve, or ask Claude for changes.
+- [ ] After a week of use: phase 3 (Math Academy-style graph credit).
+- [ ] Before phase 6: decide which model grades proofs (Claude API key,
+      Claude Code token, or the local model).
+
 ## Calendars
 
 Google Calendar is home; Radicale only stages the generated deadline

@@ -56,6 +56,7 @@ nh os switch                     # plain local switch, if ever needed
 | `overnight-add "task" [project]` | Queue work for the overnight agents; `overnight-now` starts a run |
 | `lagent ask/read/search/code` | Hand work to the local models on Akmon (see below) |
 | `grimoire-commit` | Named commit of the Obsidian vault (its git lives on Akmon) |
+| `mimir status` / `why` / `plan --more` | Mimir practice: today's set, one skill's history, an extra set (runs on Akmon); `mimir lint`, `new`, `preview` for authoring in `~/Projects/Mimir` |
 | `paperless-add FILE…`, `scan --paperless` | Documents into Paperless |
 | `stt` / `tts` | Speech to text (Akmon GPU or local CPU) / text to speech |
 
@@ -127,6 +128,7 @@ Every service is `<name>.ironshark.org`: an A record pointing at Akmon's tailnet
 | `cal.` | Radicale: staging for the generated calendars pushed to Google Calendar |
 | `draw.` | AstraDraw (Excalidraw with workspaces); launcher "Flowchart" |
 | `habits.` | OpenHabitTracker sync server (the apps work offline) |
+| `learn.`, `pl.` | Mimir: FSRS-scheduled practice of procedures on PrairieLearn (`learn.` the learner, launcher "Practice"; `pl.` the author view). Course: `~/Projects/Mimir` |
 | `dav.` | WebDAV (Zotero attachments) |
 | `vault.` | Vaultwarden (nightly backup of the Bitwarden cloud vault) |
 | `office.` | OpenCloud + Collabora |
