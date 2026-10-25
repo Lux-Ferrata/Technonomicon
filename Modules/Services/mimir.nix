@@ -65,7 +65,9 @@
 
     systemd.tmpfiles.rules = [
       "d ${root}           0755 root root  -"
-      "d ${root}/postgres  0700 root root  -"   # the container's postgres takes it over
+      # the image's postgres user (rootful podman: the same uid on the host); a
+      # wrong owner here would be re-applied on every switch, under a live database
+      "d ${root}/postgres  0700 26   26    -"
       "d ${root}/generated 0755 xin  users -"
       "d ${root}/state     0755 xin  users -"
       "d /srv/backup/mimir 0750 root root  -"
