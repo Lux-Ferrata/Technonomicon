@@ -10,8 +10,11 @@ For every template and seed it mirrors the question server: seed `random` and
 `numpy.random`, call generate() (half the seeds in learn mode when the
 template declares it), then prepare(). It checks that params and correct
 answers are JSON-safe, that every answers-name in question.html has a correct
-answer, and that generate() is fast. Then, freshly seeded, make() +
-self_check(): the template's independent check of its own answer.
+answer, and that generate() is fast. Each dynamic figure in question.html is
+fetched through file() and must come back as a non-empty image. Then, freshly
+seeded, make() + self_check(): the template's independent check of its own
+answer. A seed that runs past HANG_S (an endless loop) fails the template and
+stops its check, so one bad template can't stall the rest.
 
 Standard library + numpy only (it can't import the mimir package). Prints one
 JSON object: {qid: {"ok": n, "failures": [...], "max_ms": t}}.
@@ -22,6 +25,7 @@ import importlib.util
 import json
 import random
 import re
+import signal
 import sys
 import time
 import traceback
@@ -30,7 +34,9 @@ from pathlib import Path
 import numpy as np
 
 SLOW_MS = 2000  # PL's question timeout is a few seconds; stay well under it
+HANG_S = 10  # per seed and phase; past this it's an endless loop, not slowness
 ANSWERS_NAME = re.compile(r'answers-name\s*=\s*"([^"]+)"')
+DYNAMIC_FILE = re.compile(r"<pl-(?:figure|file-download)\b[^>]*>")
 NO_CORRECT_NEEDED = ("pl-file-editor", "pl-file-upload", "pl-rich-text-editor", "pl-image-capture",
                      "pl-excalidraw", "pl-workspace")
 
@@ -61,6 +67,42 @@ def needed_answers(html: str) -> set:
     return names
 
 
+def dynamic_files(html: str) -> list:
+    """file-name values of the dynamic figures and downloads, served by file()."""
+    names = []
+    for tag in DYNAMIC_FILE.findall(html):
+        name = re.search(r'file-name\s*=\s*"([^"]+)"', tag)
+        if name and re.search(r'type\s*=\s*"dynamic"', tag):
+            names.append(name.group(1))
+    return names
+
+
+class Hang(BaseException):
+    """Raised by the alarm; a BaseException so a template's own except can't swallow it."""
+
+
+def on_alarm(signum, frame):
+    raise Hang
+
+
+def limited(fn, *args):
+    signal.setitimer(signal.ITIMER_REAL, HANG_S)
+    try:
+        return fn(*args)
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+
+
+def file_bytes(val) -> bytes:
+    """file()'s return value as PL's zygote reads it."""
+    if val is None:
+        return b""
+    if hasattr(val, "read"):
+        val.seek(0)
+        val = val.read()
+    return val.encode() if isinstance(val, str) else bytes(val)
+
+
 def blank(seed: int, prefs: dict) -> dict:
     return {"params": {}, "correct_answers": {}, "submitted_answers": {}, "format_errors": {},
             "partial_scores": {}, "score": 0, "feedback": {}, "variant_seed": seed,
@@ -86,6 +128,10 @@ def check_template(course: Path, qid: str, seeds: int) -> dict:
 
     declared = {k: v.get("default") for k, v in (info.get("preferences") or {}).items()}
     needed = needed_answers(html)
+    figures = dynamic_files(html)
+    if figures and not hasattr(mod, "file"):
+        fail(None, f"dynamic files {figures} but no file() in server.py")
+        figures = []
     has_self_check = hasattr(mod, "make") and hasattr(mod, "self_check")
     if not has_self_check:
         fail(None, "no make()/self_check(): every template needs an independent check")
@@ -94,16 +140,19 @@ def check_template(course: Path, qid: str, seeds: int) -> dict:
         prefs = dict(declared)
         if "learn" in prefs:
             prefs["learn"] = seed % 2 == 0
+        phase = "generate"
         try:
             random.seed(seed)
             np.random.seed(seed)
             data = blank(seed, prefs)
             t0 = time.perf_counter()
-            mod.generate(data)
+            limited(mod.generate, data)
             if hasattr(mod, "prepare"):
-                mod.prepare(data)
+                phase = "prepare"
+                limited(mod.prepare, data)
             ms = (time.perf_counter() - t0) * 1000
             out["max_ms"] = max(out["max_ms"], round(ms, 1))
+            phase = "JSON-safe params and answers"
             json.dumps(data["params"])
             json.dumps(data["correct_answers"])
             missing = needed - set(data["correct_answers"])
@@ -113,18 +162,32 @@ def check_template(course: Path, qid: str, seeds: int) -> dict:
             if ms > SLOW_MS:
                 fail(seed, f"generate()+prepare() took {ms:.0f} ms")
                 continue
-        except Exception:
-            fail(seed, "generate", traceback.format_exc())
-            continue
-        if has_self_check:
-            try:
+            for name in figures:
+                phase = f"file({name})"
                 random.seed(seed)
                 np.random.seed(seed)
-                mod.self_check(mod.make())
-            except Exception:
-                fail(seed, "self_check", traceback.format_exc())
-                continue
-        out["ok"] += 1
+                fdata = {**data, "filename": name}
+                t0 = time.perf_counter()
+                body = file_bytes(limited(mod.file, fdata))
+                fms = (time.perf_counter() - t0) * 1000
+                if not body or (name.endswith(".png") and not body.startswith(b"\x89PNG")):
+                    fail(seed, f"file() returned no image for {name} ({len(body)} bytes)")
+                    break
+                if fms > SLOW_MS:
+                    fail(seed, f"file() took {fms:.0f} ms for {name}")
+                    break
+            else:
+                phase = "self_check"
+                if has_self_check:
+                    random.seed(seed)
+                    np.random.seed(seed)
+                    limited(lambda: mod.self_check(mod.make()))
+                out["ok"] += 1
+        except Hang:
+            fail(seed, f"{phase} ran past {HANG_S} s (an endless loop?); stopped checking this template")
+            break
+        except Exception:
+            fail(seed, phase, traceback.format_exc())
     return out
 
 
@@ -135,6 +198,7 @@ def main():
     ap.add_argument("qids", nargs="+")
     a = ap.parse_args()
     course = Path(a.course)
+    signal.signal(signal.SIGALRM, on_alarm)
     report = {qid: check_template(course, qid, a.seeds) for qid in a.qids}
     print(json.dumps(report))
 
