@@ -87,7 +87,7 @@ All shared modules are prefixed `Tn-` (Technonomicon); each host picks the ones 
 **Mimir** (`Tn-mimir`, `Modules/Services/mimir.nix`): FSRS-scheduled practice of procedures on PrairieLearn, at `learn.` (the learner) and `pl.` (the author). The course is `~/Projects/Mimir` (its own `CLAUDE.md` and `/author` skill). The `mimir` scheduler and CLI are `Modules/Services/_mimir/`: Python, with tests that run in the Nix build. The pinned PL image lives in `_mimir/package.nix`. Never use PL's API course sync or its "Pull from remote git repository" button: they `git reset --hard` the course directory. Reload with `mimir reload`.
 
 **Knowledge/**
-- `Tn-learning` — hledger, fava, beancount, gnucash, visidata, anki, zotero (pinned input), foliate, rnote
+- `Tn-learning` — hledger, fava, beancount, gnucash, visidata, anki, the `mimir` CLI (state commands run on Akmon over ssh), zotero (pinned input), foliate, rnote
 - `Tn-mind` — Obsidian, OpenHabitTracker (Flathub), pomodoro
 - `Tn-vikunja` — Kvasir's local Vikunja (tasks, offline), tailnet access, backup to Akmon
 - `Tn-pdf` — sioyek (inverse search into VSCodium)
