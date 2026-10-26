@@ -261,6 +261,8 @@
       serviceConfig = {
         ExecStartPre = [ "${arcSqueeze}" ];
         ExecStopPost = [ "${arcRestore}" "${fimResume}/bin/llama-fim-resume" ];
+        # on request only: a failed load waits for the next request
+        Restart      = lib.mkForce "no";
       };
     };
 
