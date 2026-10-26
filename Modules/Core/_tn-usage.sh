@@ -99,8 +99,8 @@ render() {
     label GPU;  bar "$gu"; printf ' %5s%%  %s°C  %.0f / %.0f W\n' "$gu" "$gt" "$gw" "$gl"
     label VRAM; bar $(( vu * 100 / vt )); printf ' %.1f / %.1f GiB\n' \
       "$(awk -v m="$vu" 'BEGIN{print m/1024}')" "$(awk -v m="$vt" 'BEGIN{print m/1024}')"
-    printf '%6s llama: %s   %s\n\n' "" "$(dot llama-fim-server.service 'FIM loaded' 'FIM asleep/off')" \
-      "$(dot llama-chat.service 'chat loaded' 'chat asleep')"
+    printf '%6s models: %s   %s\n\n' "" "$(dot llama-fim-server.service 'FIM loaded' 'FIM asleep/off')" \
+      "$(dot podman-strata.service 'Strata loaded' 'Strata asleep')"
   fi
 
   local p name size alloc frag cap health

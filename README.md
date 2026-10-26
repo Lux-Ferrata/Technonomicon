@@ -56,6 +56,7 @@ nh os switch                     # plain local switch, if ever needed
 | `overnight-add "task" [project]` | Queue work for the overnight agents; `overnight-now` starts a run |
 | `lagent ask/read/search/code` | Hand work to the local models on Akmon (see below) |
 | `grimoire-commit` | Named commit of the Obsidian vault (its git lives on Akmon) |
+| `mimir status` / `why` / `plan --more` | Mimir practice: today's set, one skill's history, an extra set (runs on Akmon); `mimir lint`, `new`, `preview` for authoring in `~/Projects/Mimir` |
 | `paperless-add FILE…`, `scan --paperless` | Documents into Paperless |
 | `stt` / `tts` | Speech to text (Akmon GPU or local CPU) / text to speech |
 
@@ -127,6 +128,7 @@ Every service is `<name>.ironshark.org`: an A record pointing at Akmon's tailnet
 | `cal.` | Radicale: staging for the generated calendars pushed to Google Calendar |
 | `draw.` | AstraDraw (Excalidraw with workspaces); launcher "Flowchart" |
 | `habits.` | OpenHabitTracker sync server (the apps work offline) |
+| `learn.`, `pl.` | Mimir: FSRS-scheduled practice of procedures on PrairieLearn (`learn.` the learner, launcher "Practice"; `pl.` the author view). Course: `~/Projects/Mimir` |
 | `dav.` | WebDAV (Zotero attachments) |
 | `vault.` | Vaultwarden (nightly backup of the Bitwarden cloud vault) |
 | `office.` | OpenCloud + Collabora |
@@ -148,13 +150,15 @@ Also on Akmon:
 - A 05:40 Claude health review, and digest mails at 06:00.
 
 **Local AI:**
-- llama.cpp on the GPU, each model loaded by its first request: a completion model for editors (`:8012`, unloaded after an idle hour) and Qwen3-Coder-30B-A3B for chat (`:8011`).
-- When Akmon is away, Kvasir falls back to a CPU model.
+- Each model is loaded by its first request: a llama.cpp completion model for editors (`:8012`, unloaded after an idle hour), and for chat **Strata** (`:8011`) running Qwen3.8-Flash-Next, a 125B MoE split over the GPU and pinned RAM. Strata unloads completion while it runs and brings it back when it goes idle. Run `strata-prepare` once on Akmon to download and tune it.
+- `claude-local` is Claude Code running on Strata instead of Anthropic's models.
+- When Akmon is away, or Strata has the GPU, Kvasir falls back to a CPU model. Karakeep tags with a small CPU model of its own.
 - Each night the **overnight agents** (Claude supervising the local models) work through Forgejo issues labelled `overnight` and leave branches or PRs. They delegate to `lagent`:
   - `lagent ask` answers from the local model.
   - `lagent read FILE-OR-URL [question]` reads PDFs, web pages, DOCX or EPUB in parts with page references.
   - `lagent search` returns SearXNG results.
   - `lagent code` makes an aider edit.
+  - `lagent agent DIR TASK` runs headless `claude-local` for multi-step edits. It never commits.
 
 ## Secrets
 

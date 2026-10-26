@@ -2,13 +2,14 @@
   # Overnight agents on Akmon: Claude supervises the local models through a
   # queue of Forgejo issues (agents/overnight.sh, agents/lagent.sh). Runs as
   # xin every night, or on demand (`systemctl --user start overnight`, or
-  # `overnight-now` from Kvasir). Night mode hands the whole GPU to the chat
-  # model while nobody needs code completion.
+  # `overnight-now` from Kvasir). Night mode keeps code completion off while
+  # nobody needs it.
   flake.nixosModules.Tn-overnight = { config, lib, pkgs, pkgs-stable, ... }:
   let
     lagent = pkgs.writeShellApplication {
       name          = "lagent";
-      runtimeInputs = with pkgs; [ curl jq git coreutils gnused gawk systemd file poppler-utils pandoc pkgs-stable.aider-chat ];
+      runtimeInputs = with pkgs; [ curl jq git coreutils gnused gawk systemd file poppler-utils pandoc pkgs-stable.aider-chat
+                                   (callPackage ./_claude-local.nix { }) ];
       text          = builtins.readFile ../../agents/lagent.sh;
     };
     overnight = pkgs.writeShellApplication {
@@ -48,26 +49,25 @@
       };
     };
 
-    # ── Night mode: 00:00-05:45 the chat model gets the whole GPU ────────
-    # Stopping completion (and its socket, so nothing wakes it) frees ~13 GB
-    # of VRAM; the chat server is stopped too so its next wake-up --fits
-    # into all of it. In the morning completion goes back to on-request.
+    # ── Night mode: 00:00-05:45 no code completion ───────────────────────
+    # Strata stops completion whenever it wakes anyway; at night completion
+    # also stays off between Strata's naps (its socket too, so nothing wakes
+    # it). In the morning completion goes back to on-request -- unless a run
+    # is still using Strata (they can last until ~07:10); Strata brings it
+    # back when it goes to sleep (llama-fim-resume, Tn-dev-host).
     systemd.services.llama-night = {
-      description = "Night mode: GPU to the chat model";
+      description = "Night mode: no code completion";
       serviceConfig.Type = "oneshot";
-      script = "systemctl stop llama-fim.socket llama-fim.service llama-fim-server.service llama-chat-server.service";
+      script = "systemctl stop llama-fim.socket llama-fim.service llama-fim-server.service";
     };
     systemd.timers.llama-night = {
       wantedBy = [ "timers.target" ];
       timerConfig.OnCalendar = "*-*-* 00:00:00";
     };
     systemd.services.llama-day = {
-      description = "Day mode: GPU back to code completion";
+      description = "Day mode: code completion back on request";
       serviceConfig.Type = "oneshot";
-      script = ''
-        systemctl stop llama-chat-server.service
-        systemctl start llama-fim.socket
-      '';
+      script = "systemctl is-active -q podman-strata.service || systemctl start llama-fim.socket";
     };
     systemd.timers.llama-day = {
       wantedBy = [ "timers.target" ];

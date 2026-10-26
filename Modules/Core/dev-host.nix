@@ -12,56 +12,170 @@
     seeding = [ ];
     llama = pkgs.llama-cpp.override { cudaSupport = true; };
 
-    # Lend the GPU to a job: both llama servers stop (and can't be woken)
-    # while CMD runs, then go back to sleeping-until-asked. xin may do this
-    # without sudo (polkit rule below).
-    llamaUnits = [ "llama-fim.socket" "llama-chat.socket" "whisper.socket"
-                   "llama-fim.service" "llama-chat.service" "whisper.service"
-                   "llama-fim-server.service" "llama-chat-server.service" "whisper-server.service" ];
+    # Completion back on request -- unless it's night mode (00:00-05:45,
+    # Tn-overnight) or Strata holds the GPU. Strata Conflicts= with the FIM
+    # units, both ways: starting the FIM socket under a running Strata would
+    # stop Strata, so everything that brings FIM back goes through here.
+    # --no-block: Strata's ExecStopPost calls this while it's still stopping.
+    fimResume = pkgs.writeShellApplication {
+      name = "llama-fim-resume";
+      runtimeInputs = [ pkgs.coreutils config.systemd.package ];
+      text = ''
+        [ "$(date +%H%M)" -lt 0545 ] && exit 0
+        systemctl is-active -q podman-strata.service && exit 0
+        systemctl start --no-block llama-fim.socket
+      '';
+    };
+
+    # Lend the GPU to a job: every model server stops (and can't be woken)
+    # while CMD runs, then goes back to sleeping-until-asked. xin may do
+    # this without sudo (polkit rule below).
+    llamaUnits = [ "llama-fim.socket" "strata.socket" "whisper.socket"
+                   "llama-fim.service" "strata.service" "whisper.service"
+                   "llama-fim-server.service" "podman-strata.service" "whisper-server.service" ];
     gpuLend = pkgs.writeShellApplication {
       name = "gpu-lend";
-      runtimeInputs = [ pkgs.coreutils config.hardware.nvidia.package.bin ];
+      runtimeInputs = [ pkgs.coreutils config.hardware.nvidia.package.bin fimResume ];
       text = ''
         if [ $# -eq 0 ]; then
-          echo "Usage: gpu-lend CMD [ARGS...]   run CMD with the llama models off the GPU"
+          echo "Usage: gpu-lend CMD [ARGS...]   run CMD with the local models off the GPU"
           nvidia-smi --query-gpu=memory.used,memory.total --format=csv
           exit 2
         fi
         systemctl stop ${lib.concatStringsSep " " llamaUnits}
         restore() {
-          # night mode (00:00-05:45, Tn-overnight) keeps completion off
-          if [ "$(date +%H%M)" -lt 0545 ]; then systemctl start llama-chat.socket whisper.socket
-          else systemctl start llama-fim.socket llama-chat.socket whisper.socket; fi
+          systemctl start strata.socket whisper.socket
+          llama-fim-resume
         }
         trap restore EXIT
-        echo "gpu-lend: llama models stopped; $(nvidia-smi --query-gpu=memory.used --format=csv,noheader) of VRAM still in use" >&2
+        echo "gpu-lend: local models stopped; $(nvidia-smi --query-gpu=memory.used --format=csv,noheader) of VRAM still in use" >&2
         "$@"
       '';
     };
+
+    # ── Strata: the chat model ───────────────────────────────────────────
+    # Qwen3.8-Flash-Next (125B MoE) on Strata (github.com/Niko1221/Strata),
+    # a CPU+GPU engine: attention, KV cache and the hottest experts in VRAM,
+    # the other experts pinned in RAM and computed on the CPU. Upstream's
+    # image, pinned; it only sees its own dataset. Models, pack, tuning and
+    # its preset live in /var/lib/strata (fast/strata, not snapshotted:
+    # ~70 GB that can be downloaded again).
+    #
+    #   :8011 (nginx, adds the API key) -> strata.socket 127.0.0.1:18011
+    #     -> podman-strata 127.0.0.1:28011
+    #
+    # Strata always wants a key once it listens beyond loopback (it does,
+    # inside the container), so nginx adds it and clients send none.
+    # Woken on request like the llama servers; it stops completion first
+    # (Kvasir's completion then falls back to its local model) and brings
+    # it back when it goes to sleep. First run, and after changing the
+    # model: `strata-prepare`.
+    strata = {
+      image = "ghcr.io/niko1221/strata:0.2.3-cuda13@sha256:d39ca9fc583c5085dc66b857fbf3b3e3a9e256f692672d4061322d3bd468433a";
+      data  = "/var/lib/strata";
+      port  = 28011;
+      # IQ2_XS: ~35.5 GB of experts pinned in RAM, the rest on the GPU
+      env = {
+        FAMILY   = "qwen";
+        MODEL    = "IQ2_XS";
+        CONTEXT  = "128k";
+        KV       = "int8";
+        PARALLEL = "1";
+        VISION   = "off";
+        # tuned once, by strata-prepare; later starts keep it
+        TUNE     = "thorough";
+        # room for whisper (~1 GB) next to the expert cache
+        STRATA_SET = "vram-reserve-mib=1800";
+      };
+      # the ARC shrinks to this while Strata holds its experts
+      arcMax = 4 * 1024 * 1024 * 1024;
+    };
+    # The experts are pinned, so nothing can push them out: make room before
+    # they load. The host's own ARC cap (Hosts/Akmon) is saved and put back.
+    arcParam = "/sys/module/zfs/parameters/zfs_arc_max";
+    arcSqueeze = pkgs.writeShellScript "strata-arc-squeeze" ''
+      [ -e /run/strata-arc-max ] || cat ${arcParam} > /run/strata-arc-max
+      echo ${toString strata.arcMax} > ${arcParam}
+      # the ARC gives memory back over a few seconds
+      for _ in $(seq 30); do
+        size=$(${pkgs.gawk}/bin/awk '$1 == "size" { print $3 }' /proc/spl/kstat/zfs/arcstats)
+        [ "$size" -le $(( ${toString strata.arcMax} + 512 * 1024 * 1024 )) ] && exit 0
+        sleep 1
+      done
+      echo "ARC still at $size bytes; Strata may choose its slower low-RAM mode" >&2
+    '';
+    arcRestore = pkgs.writeShellScript "strata-arc-restore" ''
+      if [ -e /run/strata-arc-max ]; then
+        cat /run/strata-arc-max > ${arcParam}
+        rm /run/strata-arc-max
+      fi
+    '';
+    podman = "${config.virtualisation.podman.package}/bin/podman";
+    strataPrepare = pkgs.writeShellApplication {
+      name = "strata-prepare";
+      runtimeInputs = [ pkgs.coreutils pkgs.curl config.systemd.package ];
+      text = ''
+        # Download, prepare and tune Strata's model (tens of minutes the
+        # first time; an interrupted download continues), outside the
+        # wake-on-request units so nothing times out. Ends once it serves.
+        [ "$(id -u)" -eq 0 ] || exec sudo "$0" "$@"
+        systemctl stop strata.socket strata.service podman-strata.service llama-fim.socket llama-fim.service llama-fim-server.service
+        systemctl start strata-data.service
+        ${arcSqueeze}
+        cleanup() {
+          ${podman} stop -t 120 strata-prepare >/dev/null 2>&1 || true
+          ${podman} rm -f strata-prepare >/dev/null 2>&1 || true
+          ${arcRestore}
+          systemctl start strata.socket
+          ${fimResume}/bin/llama-fim-resume
+        }
+        trap cleanup EXIT
+        ${podman} run -d --name strata-prepare --replace \
+          ${lib.concatStringsSep " " (lib.mapAttrsToList (k: v: "-e ${k}=${lib.escapeShellArg v}") strata.env)} \
+          --env-file ${config.sops.templates."strata.env".path} \
+          ${lib.concatStringsSep " " strataOptions} \
+          -p 127.0.0.1:${toString strata.port}:8080 -v ${strata.data}:/data \
+          ${strata.image} >/dev/null
+        ${podman} logs -f strata-prepare &
+        until curl -sf http://127.0.0.1:${toString strata.port}/health >/dev/null; do
+          ${podman} container exists strata-prepare && [ "$(${podman} inspect -f '{{.State.Running}}' strata-prepare)" = true ] \
+            || { echo "strata-prepare: the container stopped (see above)" >&2; exit 1; }
+          sleep 5
+        done
+        echo "strata-prepare: ready; stopping it again (the next request to :8011 wakes it)" >&2
+      '';
+    };
+    strataOptions = [ "--device=nvidia.com/gpu=all" "--ulimit=memlock=-1:-1" "--shm-size=2g" ];
   in {
-    # ── Chat / edit-selection / aider, loaded on demand ──────────────────
-    # The first request after an idle spell wakes it (~10-20 s to load),
-    # 30 idle minutes put it back to sleep. --fit gives it whatever VRAM
-    # completion leaves; the MoE experts that don't fit run from RAM, which
-    # is fine with only ~3B parameters active per token.
     imports = [
       (import ./_llama-ondemand.nix {
         inherit pkgs lib;
-        name        = "llama-chat";
-        description = "llama.cpp chat server (Qwen3-Coder-30B-A3B)";
-        listen      = "0.0.0.0";           # firewall: tailscale0 only
-        port        = 8011;
-        backendPort = 18011;
+        name        = "strata";
+        description = "Strata (Qwen3.8-Flash-Next)";
+        server      = "podman-strata";
+        port        = 18011;               # nginx :8011 in front
+        backendPort = strata.port;
         idle        = "30min";
+        wait        = 600;                 # pinning ~35 GB takes a minute or two
+      })
+
+      # ── Tags and summaries for Karakeep: small, on the CPU ─────────────
+      # So a saved bookmark never wakes Strata (and stops completion). No
+      # VRAM: it never competes with completion or Strata.
+      (import ./_llama-ondemand.nix {
+        inherit pkgs lib;
+        name        = "llama-tagger";
+        description = "llama.cpp tagging server (Qwen2.5-Coder-3B, CPU)";
+        port        = 8016;
+        backendPort = 18016;
+        idle        = "10min";
         args = [
-          "${llama}/bin/llama-server"
-          "--model ${models.chat-30b-a3b}"
+          "${pkgs.llama-cpp}/bin/llama-server"   # the CPU build (Kvasir's)
+          "--model ${models.chat-3b}"
           "--alias chat"
-          "--jinja"                        # Qwen3 chat template + tool calls
-          "--ctx-size 32768 --parallel 1"
-          "--flash-attn on"
-          "--fit on --fit-target 512"      # leave 512 MiB of VRAM spare
+          "--jinja --ctx-size 8192 --threads 8"
         ];
+        extra = { Nice = 10; CPUWeight = 20; };
       })
 
       # ── Code completion (FIM) for the editor, on the GPU ───────────────
@@ -70,7 +184,9 @@
       # it unloads and the GPU is free for anything else (the next
       # suggestion then waits a few seconds for it). Kvasir reaches it
       # through its local proxy (Tn-dev-client), which falls back to a CPU
-      # model when Akmon is away. Flags follow llama-vscode's FIM server.
+      # model when Akmon is away -- or while Strata has the GPU (it stops
+      # completion, then brings it back). Flags follow llama-vscode's FIM
+      # server.
       (import ./_llama-ondemand.nix {
         inherit pkgs lib;
         name        = "llama-fim";
@@ -116,6 +232,69 @@
     ];
     systemd.services.whisper-server.path = [ pkgs.ffmpeg-headless ];
 
+    # ── Strata (see the let block) ───────────────────────────────────────
+    virtualisation.oci-containers.containers.strata = {
+      inherit (strata) image;
+      autoStart       = false;             # strata.socket wakes it
+      ports           = [ "127.0.0.1:${toString strata.port}:8080" ];
+      volumes         = [ "${strata.data}:/data" ];
+      environment     = strata.env;
+      environmentFiles = [ config.sops.templates."strata.env".path ];
+      # no memory limit: Strata plans from the host's RAM
+      extraOptions    = strataOptions;
+    };
+    sops.secrets.strata-api-key = { };
+    sops.templates."strata.env".content = "API_KEY=${config.sops.placeholder.strata-api-key}\n";
+    sops.templates."strata-auth.conf" = {
+      owner   = "nginx";
+      content = ''
+        proxy_set_header Authorization "Bearer ${config.sops.placeholder.strata-api-key}";
+        proxy_set_header x-api-key "${config.sops.placeholder.strata-api-key}";
+      '';
+    };
+    systemd.services.podman-strata = {
+      # completion off the GPU first; it comes back in ExecStopPost
+      conflicts = [ "llama-fim.socket" "llama-fim.service" "llama-fim-server.service" ];
+      after     = [ "llama-fim.socket" "llama-fim.service" "llama-fim-server.service" "strata-data.service" ];
+      requires  = [ "strata-data.service" ];
+      # (oci-containers' 120 s stop timeout is what Strata asks for)
+      serviceConfig = {
+        ExecStartPre = [ "${arcSqueeze}" ];
+        ExecStopPost = [ "${arcRestore}" "${fimResume}/bin/llama-fim-resume" ];
+        # on request only: a failed load waits for the next request
+        Restart      = lib.mkForce "no";
+      };
+    };
+
+    # its own dataset, outside fast/srv: no snapshots of re-downloadable
+    # weights; a mounted dataset, so it survives the root wipe
+    systemd.services.strata-data = {
+      description = "Create Strata's dataset on the fast pool";
+      after       = [ "zfs-mount.service" ];
+      wantedBy    = [ "multi-user.target" ];
+      path        = [ config.boot.zfs.package ];
+      serviceConfig = { Type = "oneshot"; RemainAfterExit = true; };
+      script = ''
+        zfs list fast/strata >/dev/null 2>&1 || zfs create \
+          -o mountpoint=${strata.data} -o recordsize=1M -o compression=off fast/strata
+      '';
+    };
+
+    # :8011 for the tailnet (firewall below) and this machine; adds the key
+    services.nginx.virtualHosts.strata-api = {
+      listen = [ { addr = "0.0.0.0"; port = 8011; } ];
+      locations."/" = {
+        proxyPass   = "http://127.0.0.1:18011";
+        extraConfig = ''
+          include ${config.sops.templates."strata-auth.conf".path};
+          proxy_buffering    off;            # streamed tokens
+          proxy_read_timeout 900s;           # a cold start, then a long answer
+          proxy_send_timeout 900s;
+        '';
+      };
+      extraConfig = "client_max_body_size 64m;";   # Claude Code's requests are big
+    };
+
     security.polkit.extraConfig = ''
       polkit.addRule(function(action, subject) {
         var units = ${builtins.toJSON llamaUnits};
@@ -131,6 +310,8 @@
     # socket-activated user daemon, with linger so it survives the last logout
     environment.systemPackages = [
       gpuLend
+      fimResume
+      strataPrepare
       (pkgs.callPackage ./_stt.nix { })
       (pkgs.callPackage ./_tts.nix { })
       pkgs.shpool
@@ -177,6 +358,15 @@
     # server don't inherit SSH_CONNECTION, so starship's ssh-only hostname
     # would vanish. Show it unconditionally.
     programs.starship.settings.hostname.ssh_only = lib.mkForce false;
+
+    # pushes to forgejo@akmon from shells here use the passphrase-less key
+    # instead of Kvasir's forwarded agent, so they never ask for the PIN
+    sops.secrets.akmon-ssh-key = { owner = "xin"; };
+    programs.ssh.extraConfig = ''
+      Host akmon
+        IdentityFile ${config.sops.secrets.akmon-ssh-key.path}
+        IdentitiesOnly yes
+    '';
 
     # ── VSCodium server (Open Remote - SSH from Kvasir) ──────────────────
     # The server and marketplace extensions ship generic-linux binaries

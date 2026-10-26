@@ -25,6 +25,9 @@
     users.users.xin.openssh.authorizedKeys.keys = [
       # xin@Kvasir
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG0xOjA5uRmGhQjFGbZsnIcKvI7g7ZIq5PiR3EeiNimO xin@Kvasir"
+      # akmon-ssh-key in sops: no passphrase, so reaching Akmon never asks
+      # for the PIN (Tn-dev-client / Tn-dev-host use it for Host akmon only)
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGszsNUUv6dLZWk0eY52iZyeYh9SD3gosXuufP0iPK6v akmon@Kvasir"
     ];
 
     # remote builds / `nix copy` from Kvasir push unsigned paths

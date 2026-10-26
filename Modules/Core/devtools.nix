@@ -7,6 +7,8 @@
   flake.nixosModules.Tn-devtools = { pkgs, pkgs-stable, ... }:
   let
     acLibrary = pkgs.callPackage ./_ac-library.nix { };
+    # Claude Code on Akmon's Strata
+    claudeLocal = pkgs.callPackage ./_claude-local.nix { };
   in {
 
     environment.variables = {
@@ -20,7 +22,7 @@
     };
 
     # Aider for multi-file asks, on the local chat model: 127.0.0.1:8011 is
-    # Akmon's chat server there, and the online/offline proxy on Kvasir
+    # Akmon's Strata there, and the online/offline proxy on Kvasir
     # (Tn-dev-host / Tn-dev-client). From stable: on unstable (2026-10-01)
     # litellm grew an exception aider refuses at import.
     home-manager.users.xin.programs.aider-chat = {
@@ -29,7 +31,7 @@
       settings = {
         model                 = "openai/chat";
         openai-api-base       = "http://127.0.0.1:8011/v1";
-        openai-api-key        = "local";   # llama.cpp ignores it; aider insists
+        openai-api-key        = "local";   # Akmon's nginx sets the real one; aider insists
         edit-format           = "diff";
         # you commit, not the model
         auto-commits          = false;
@@ -39,12 +41,13 @@
         # the local alias isn't in litellm's model list
         show-model-warnings   = false;
         # the first request may have to wake the model
-        timeout               = 300;
+        timeout               = 900;
       };
     };
 
     environment.systemPackages = with pkgs; [
       claude-code
+      claudeLocal
       lazygit
       delta
       sqlite

@@ -398,6 +398,9 @@
       RestartSec     = lib.mkForce 10;
     };
 
+    # Host akmon's ssh key, no passphrase (programs.ssh below)
+    sops.secrets.akmon-ssh-key = { owner = "xin"; };
+
     home-manager.users.xin = {
       systemd.user.services.zoxide-sync = {
         Unit.Description = "Share zoxide directories with Akmon";
@@ -429,6 +432,10 @@
         enable              = true;
         enableDefaultConfig = false;
         settings.akmon = {
+          # the passphrase-less akmon-ssh-key (sops), never the agent's
+          # PIN-protected one; Forgejo has it too, so pushes don't ask either
+          IdentityFile   = config.sops.secrets.akmon-ssh-key.path;
+          IdentitiesOnly = true;
           # one TCP connection shared by ak / rb / eo / Remote-SSH: later
           # connects are instant and the reachability probe is nearly free
           ControlMaster  = "auto";

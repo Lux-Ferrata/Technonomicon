@@ -26,16 +26,9 @@ in {
     sha256 = "29871c94d15727a6e243f79a37113d4ae625a6215b5e800bf41a23af2da32832";
   };
 
-  # Chat / edit-selection / aider. MoE: 30B weights, ~3B active per token,
-  # so it's quick even with the experts that don't fit in VRAM held in RAM
-  # (llama.cpp --fit decides the split at start). Loaded on demand.
-  chat-30b-a3b = hf {
-    repo   = "unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF";
-    rev    = "b17cb02dd882d5b6ab62fc777ad2995f19668350";
-    file   = "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf";
-    sha256 = "2841aa314d916434860cfb8990347528dcdfe5c350dbcb9d1461dbee88ff2533";
-  };
-  # Kvasir's offline chat fallback, on CPU
+  # Chat itself is Strata on Akmon (Tn-dev-host); its weights are prepared
+  # by Strata in /var/lib/strata, not here.
+  # Kvasir's offline chat fallback, and Akmon's Karakeep tagger, on CPU
   chat-3b = hf {
     repo   = "ggml-org/Qwen2.5-Coder-3B-Instruct-Q8_0-GGUF";
     rev    = "4944a3e9ecbaacda76873e9577d038400413772c";
