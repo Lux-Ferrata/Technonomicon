@@ -63,6 +63,7 @@
       self.nixosModules.Tn-astradraw
       self.nixosModules.Tn-openhabittracker
       self.nixosModules.Tn-hydrus
+      self.nixosModules.Tn-mimir
 
       ({ pkgs, config, lib, ... }: {
         system.stateVersion = "23.11";
@@ -96,7 +97,29 @@
         hardware = {
           nvidia-container-toolkit.enable = true;
           nvidia = {
-            package = config.boot.kernelPackages.nvidiaPackages.stable;
+            # patchelf 0.19.2 leaves .dynamic of nvidia-smi & co in a
+            # read-only segment, so they segfault in ld.so on start
+            # (nixpkgs#576412, NixOS/patchelf#674). Re-patch them from the
+            # untouched copies with 0.15.2, the last version that worked.
+            # Drop once nixos-unstable has the fix and `nvidia-smi -L` runs
+            # without this.
+            package = let
+              patchelf_0_15 = pkgs.patchelf.overrideAttrs (finalAttrs: _: {
+                version = "0.15.2";
+                src = pkgs.fetchurl {
+                  url  = "https://github.com/NixOS/patchelf/releases/download/${finalAttrs.version}/patchelf-${finalAttrs.version}.tar.bz2";
+                  hash = "sha256-F3RfVkFZyOIo/EEtplogSLhGxLa0Igt3y/IkFuAvLXw=";
+                };
+              });
+            in config.boot.kernelPackages.nvidiaPackages.stable.overrideAttrs (o: {
+              postInstall = toString (o.postInstall or null) + ''
+                for f in "$bin"/origBin/*; do
+                  install -Dm755 "$f" "$bin/bin/''${f##*/}"
+                  ${patchelf_0_15}/bin/patchelf --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
+                    --set-rpath "$out/lib:$libPath" "$bin/bin/''${f##*/}"
+                done
+              '';
+            });
             open = true;
             nvidiaSettings = false;
             modesetting.enable = true;
