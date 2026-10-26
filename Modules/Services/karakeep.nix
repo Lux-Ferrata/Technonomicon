@@ -1,8 +1,10 @@
 { inputs, ... }: {
   # Karakeep at https://keep.ironshark.org: saved links with a readable copy,
   # screenshot and full offline archive of each page, full-text search
-  # (Meilisearch), and tags written by the local chat model (Akmon's :8011,
-  # woken on demand) -- nothing leaves the box. Clients: the Brave extension
+  # (Meilisearch), and tags written by a small local model on the CPU
+  # (Akmon's :8016, llama-tagger in Tn-dev-host, woken on demand; not
+  # Strata, which would stop code completion for a bookmark) -- nothing
+  # leaves the box. Clients: the Brave extension
   # and the phone app, server https://keep.ironshark.org.
   #
   # The first account made becomes the admin. Data stays in
