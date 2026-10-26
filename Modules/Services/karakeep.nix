@@ -22,7 +22,7 @@
         NEXTAUTH_URL = "https://keep.ironshark.org";
         DISABLE_NEW_RELEASE_CHECK = "true";
         # tagging and summaries from the local model (OpenAI-compatible)
-        OPENAI_BASE_URL          = "http://127.0.0.1:8011/v1";
+        OPENAI_BASE_URL          = "http://127.0.0.1:8016/v1";
         OPENAI_API_KEY           = "local";
         INFERENCE_TEXT_MODEL     = "chat";
         INFERENCE_CONTEXT_LENGTH = "8192";
