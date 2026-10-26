@@ -148,10 +148,10 @@
         backendPort = 18016;
         idle        = "10min";
         args = [
-          "${llama}/bin/llama-server"
+          "${pkgs.llama-cpp}/bin/llama-server"   # the CPU build (Kvasir's)
           "--model ${models.chat-3b}"
           "--alias chat"
-          "--jinja --ctx-size 8192 --threads 8 --n-gpu-layers 0"
+          "--jinja --ctx-size 8192 --threads 8"
         ];
         extra = { Nice = 10; CPUWeight = 20; };
       })
