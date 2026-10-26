@@ -48,26 +48,25 @@
       };
     };
 
-    # ── Night mode: 00:00-05:45 the chat model gets the whole GPU ────────
-    # Stopping completion (and its socket, so nothing wakes it) frees ~13 GB
-    # of VRAM; the chat server is stopped too so its next wake-up --fits
-    # into all of it. In the morning completion goes back to on-request.
+    # ── Night mode: 00:00-05:45 no code completion ───────────────────────
+    # Strata stops completion whenever it wakes anyway; at night completion
+    # also stays off between Strata's naps (its socket too, so nothing wakes
+    # it). In the morning completion goes back to on-request -- unless a run
+    # is still using Strata (they can last until ~07:10); Strata brings it
+    # back when it goes to sleep (llama-fim-resume, Tn-dev-host).
     systemd.services.llama-night = {
-      description = "Night mode: GPU to the chat model";
+      description = "Night mode: no code completion";
       serviceConfig.Type = "oneshot";
-      script = "systemctl stop llama-fim.socket llama-fim.service llama-fim-server.service llama-chat-server.service";
+      script = "systemctl stop llama-fim.socket llama-fim.service llama-fim-server.service";
     };
     systemd.timers.llama-night = {
       wantedBy = [ "timers.target" ];
       timerConfig.OnCalendar = "*-*-* 00:00:00";
     };
     systemd.services.llama-day = {
-      description = "Day mode: GPU back to code completion";
+      description = "Day mode: code completion back on request";
       serviceConfig.Type = "oneshot";
-      script = ''
-        systemctl stop llama-chat-server.service
-        systemctl start llama-fim.socket
-      '';
+      script = "systemctl is-active -q podman-strata.service || systemctl start llama-fim.socket";
     };
     systemd.timers.llama-day = {
       wantedBy = [ "timers.target" ];
