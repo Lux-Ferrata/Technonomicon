@@ -82,8 +82,10 @@
         KV       = "int8";
         PARALLEL = "1";
         VISION   = "off";
-        # tuned once, by strata-prepare; later starts keep it
-        TUNE     = "thorough";
+        # The service never tunes: tuning outlasts the start timeout, and an
+        # inconclusive result ("busy PC") saves nothing, so every wake tuned
+        # again and was killed. strata-prepare tunes; starts keep its result.
+        TUNE     = "skip";
         # room for whisper (~1 GB) next to the expert cache
         STRATA_SET = "vram-reserve-mib=1800";
       };
