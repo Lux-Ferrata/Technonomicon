@@ -2,8 +2,8 @@
   # Overnight agents on Akmon: Claude supervises the local models through a
   # queue of Forgejo issues (agents/overnight.sh, agents/lagent.sh). Runs as
   # xin every night, or on demand (`systemctl --user start overnight`, or
-  # `overnight-now` from Kvasir). Night mode hands the whole GPU to the chat
-  # model while nobody needs code completion.
+  # `overnight-now` from Kvasir). Night mode keeps code completion off while
+  # nobody needs it.
   flake.nixosModules.Tn-overnight = { config, lib, pkgs, pkgs-stable, ... }:
   let
     lagent = pkgs.writeShellApplication {
