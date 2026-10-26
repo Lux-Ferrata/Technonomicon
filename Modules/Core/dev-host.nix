@@ -184,7 +184,9 @@
       # it unloads and the GPU is free for anything else (the next
       # suggestion then waits a few seconds for it). Kvasir reaches it
       # through its local proxy (Tn-dev-client), which falls back to a CPU
-      # model when Akmon is away. Flags follow llama-vscode's FIM server.
+      # model when Akmon is away -- or while Strata has the GPU (it stops
+      # completion, then brings it back). Flags follow llama-vscode's FIM
+      # server.
       (import ./_llama-ondemand.nix {
         inherit pkgs lib;
         name        = "llama-fim";
