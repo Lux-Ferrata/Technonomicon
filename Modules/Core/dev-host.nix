@@ -257,10 +257,10 @@
       conflicts = [ "llama-fim.socket" "llama-fim.service" "llama-fim-server.service" ];
       after     = [ "llama-fim.socket" "llama-fim.service" "llama-fim-server.service" "strata-data.service" ];
       requires  = [ "strata-data.service" ];
+      # (oci-containers' 120 s stop timeout is what Strata asks for)
       serviceConfig = {
-        ExecStartPre   = [ "${arcSqueeze}" ];
-        ExecStopPost   = [ "${arcRestore}" "${fimResume}/bin/llama-fim-resume" ];
-        TimeoutStopSec = 150;              # it drains, then unpins ~35 GB
+        ExecStartPre = [ "${arcSqueeze}" ];
+        ExecStopPost = [ "${arcRestore}" "${fimResume}/bin/llama-fim-resume" ];
       };
     };
 
