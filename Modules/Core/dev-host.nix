@@ -306,6 +306,8 @@
     # socket-activated user daemon, with linger so it survives the last logout
     environment.systemPackages = [
       gpuLend
+      fimResume
+      strataPrepare
       (pkgs.callPackage ./_stt.nix { })
       (pkgs.callPackage ./_tts.nix { })
       pkgs.shpool
