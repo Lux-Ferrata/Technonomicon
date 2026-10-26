@@ -5,6 +5,11 @@
 #                                                       piped stdin is appended as context
 #   lagent code DIR INSTRUCTION [FILE...]               headless aider edit inside git repo DIR
 #                                                       (never commits); prints the diffstat
+#   lagent agent DIR TASK...                            headless Claude Code on the local model
+#                                                       (claude-local) inside git repo DIR: reads,
+#                                                       searches and edits across files over many
+#                                                       steps; never commits. Prints its final
+#                                                       answer, then what changed
 #   lagent read SOURCE [QUESTION...]                    read a file or URL (PDF, HTML, DOCX, EPUB,
 #                                                       text) with the local model: a summary, or
 #                                                       what answers QUESTION; long documents are
@@ -13,8 +18,9 @@
 #                                                       (search.ironshark.org): title, url, snippet
 #   lagent status                                       is the chat model up / night mode on?
 #
-# Endpoint: $LAGENT_URL (default http://127.0.0.1:8011, the on-demand chat
-# server; the first request after an idle spell waits for it to load).
+# Endpoint: $LAGENT_URL (default http://127.0.0.1:8011, Strata on Akmon,
+# woken on demand: the first request after an idle spell waits a minute or
+# two for it to load).
 
 URL=${LAGENT_URL:-http://127.0.0.1:8011}
 
@@ -22,6 +28,7 @@ usage() {
   cat >&2 <<'EOF'
 usage: lagent ask  [-s SYSTEM] [-n MAX_TOKENS] PROMPT...   (stdin = extra context)
        lagent code DIR INSTRUCTION [FILE...]               (aider edit, never commits)
+       lagent agent DIR TASK...                            (local Claude Code, never commits)
        lagent read SOURCE [QUESTION...]                    (file or URL; summary or answer)
        lagent search [-n N] QUERY...                       (SearXNG results)
        lagent status
@@ -62,10 +69,37 @@ code() {
   git -C "$dir" diff --stat
 }
 
-# The chat model has a 32k-token context: documents go through it in parts
-# of ~40k characters (split at blank lines where it can), one set of notes
-# per part, then a pass that combines the notes.
-CHUNK_CHARS=40000
+# Claude Code's own tools, on Strata. Edits are allowed inside DIR; shell
+# commands only from this list (anything else is refused, as nobody is
+# there to approve it). LAGENT_AGENT_TOOLS adds more, space separated, e.g.
+# 'Bash(cargo test:*)'.
+agent() {
+  [ $# -ge 2 ] || usage
+  local dir=$1; shift
+  local task="$*"
+  git -C "$dir" rev-parse --git-dir >/dev/null 2>&1 \
+    || { echo "lagent agent: $dir is not a git repository" >&2; exit 1; }
+  local -a tools=(Read Edit Write Glob Grep
+    'Bash(git diff:*)' 'Bash(git status:*)' 'Bash(git log:*)' 'Bash(git show:*)'
+    'Bash(ls:*)' 'Bash(nix build:*)' 'Bash(nix flake check:*)' 'Bash(nix eval:*)')
+  # shellcheck disable=SC2206  # word splitting is the point
+  [ -n "${LAGENT_AGENT_TOOLS:-}" ] && tools+=(${LAGENT_AGENT_TOOLS})
+  ( cd "$dir" && claude-local -p "$task" \
+      --permission-mode acceptEdits \
+      --allowedTools "${tools[@]}" \
+      --disallowedTools 'Bash(git commit:*)' 'Bash(git push:*)' WebFetch WebSearch \
+      --max-turns "${LAGENT_AGENT_TURNS:-60}" ) \
+    || echo "lagent agent: claude-local stopped with an error (see above)" >&2
+  echo
+  echo "--- changes ---"
+  git -C "$dir" status --short
+  git -C "$dir" diff --stat
+}
+
+# Strata has a 128k-token context: documents go through it in parts of
+# ~240k characters (~60k tokens; split at blank lines where it can), one
+# set of notes per part, then a pass that combines the notes.
+CHUNK_CHARS=240000
 
 read_doc() {
   [ $# -ge 1 ] || usage
@@ -156,17 +190,22 @@ search() {
 }
 
 status() {
-  if curl -sf --max-time 5 "$URL/health" >/dev/null; then
-    echo "chat model: up ($URL)"
+  # from the units: a request would wake Strata
+  if systemctl is-active --quiet podman-strata.service; then
+    echo "Strata: loaded ($URL)"
+  elif systemctl is-active --quiet strata.socket; then
+    echo "Strata: asleep; the next request wakes it (a minute or two)"
   else
-    echo "chat model: not answering yet (it starts on first request)"
+    echo "Strata: off (gpu-lend?)"
   fi
   if systemctl is-active --quiet llama-fim-server.service; then
-    echo "completion server: loaded (chat shares the GPU)"
+    echo "completion server: loaded"
   elif systemctl is-active --quiet llama-fim.socket; then
     echo "completion server: asleep until the next completion request"
+  elif systemctl is-active --quiet podman-strata.service; then
+    echo "completion server: off while Strata has the GPU (back when Strata sleeps)"
   else
-    echo "completion server: off (night mode or gpu-lend -- chat has the whole GPU)"
+    echo "completion server: off (night mode or gpu-lend)"
   fi
 }
 
@@ -174,6 +213,7 @@ cmd=${1:-}; shift || true
 case $cmd in
   ask)    ask "$@" ;;
   code)   code "$@" ;;
+  agent)  agent "$@" ;;
   read)   read_doc "$@" ;;
   search) search "$@" ;;
   status) status ;;

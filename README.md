@@ -150,13 +150,15 @@ Also on Akmon:
 - A 05:40 Claude health review, and digest mails at 06:00.
 
 **Local AI:**
-- llama.cpp on the GPU, each model loaded by its first request: a completion model for editors (`:8012`, unloaded after an idle hour) and Qwen3-Coder-30B-A3B for chat (`:8011`).
-- When Akmon is away, Kvasir falls back to a CPU model.
+- Each model is loaded by its first request: a llama.cpp completion model for editors (`:8012`, unloaded after an idle hour), and for chat **Strata** (`:8011`) running Qwen3.8-Flash-Next, a 125B MoE split over the GPU and pinned RAM. Strata unloads completion while it runs and brings it back when it goes idle. Run `strata-prepare` once on Akmon to download and tune it.
+- `claude-local` is Claude Code running on Strata instead of Anthropic's models.
+- When Akmon is away, or Strata has the GPU, Kvasir falls back to a CPU model. Karakeep tags with a small CPU model of its own.
 - Each night the **overnight agents** (Claude supervising the local models) work through Forgejo issues labelled `overnight` and leave branches or PRs. They delegate to `lagent`:
   - `lagent ask` answers from the local model.
   - `lagent read FILE-OR-URL [question]` reads PDFs, web pages, DOCX or EPUB in parts with page references.
   - `lagent search` returns SearXNG results.
   - `lagent code` makes an aider edit.
+  - `lagent agent DIR TASK` runs headless `claude-local` for multi-step edits. It never commits.
 
 ## Secrets
 

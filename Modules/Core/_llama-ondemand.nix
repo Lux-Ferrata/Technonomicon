@@ -18,18 +18,15 @@ let
   serverUnit = if server == null then "${name}-server" else server;
   waitHealthy = {
     unitConfig.StopWhenUnneeded = true;
-    serviceConfig = {
-      # only "started" once it answers, so the proxy never hands a request
-      # to a server that's still loading
-      ExecStartPost = pkgs.writeShellScript "${name}-wait" ''
-        for _ in $(seq ${toString (wait * 2)}); do
-          ${pkgs.curl}/bin/curl -sf http://${host}:${toString backendPort}${healthPath} >/dev/null && exit 0
-          sleep 0.5
-        done
-        exit 1
-      '';
-      TimeoutStartSec = wait + 60;
-    };
+    # only "started" once it answers, so the proxy never hands a request
+    # to a server that's still loading
+    serviceConfig.ExecStartPost = pkgs.writeShellScript "${name}-wait" ''
+      for _ in $(seq ${toString (wait * 2)}); do
+        ${pkgs.curl}/bin/curl -sf http://${host}:${toString backendPort}${healthPath} >/dev/null && exit 0
+        sleep 0.5
+      done
+      exit 1
+    '';
   };
 in {
   systemd.sockets.${name} = {
@@ -50,6 +47,9 @@ in {
     serviceConfig = {
       # args = [ llama-server binary, flags... ]
       ExecStart = lib.concatStringsSep " " (args ++ [ "--host ${host}" "--port ${toString backendPort}" ]);
+      # an existing unit keeps its own timeout (a container's covers the
+      # image pull); the wait above is bounded anyway
+      TimeoutStartSec = wait + 60;
       DynamicUser     = true;
       PrivateTmp      = true;
       ProtectSystem   = "strict";
