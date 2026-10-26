@@ -46,12 +46,14 @@
         vaultwarden    = "vaultwarden.svg";
         flowchart      = "sitemap-outline.svg";
         hydrus         = "hydrus.svg";
+        practice       = "brain.svg";
       };
 
       # one launcher entry per Akmon service with a web UI (tailnet-only).
       # Not here on purpose: vault. (the Vaultwarden entry below), dav./lt./wopi./collabora. (no UI
       # of their own), metrics. (Grafana only draws the report charts), cal. (only
-      # stages generated calendars; calendars are edited in Google).
+      # stages generated calendars; calendars are edited in Google), pl. (Mimir's
+      # author view, reached from the links `mimir` prints).
       akmon = id: title: sub: path: ico: keywords: pkgs.makeDesktopItem {
         name = "akmon-${id}";
         desktopName = title;
@@ -354,6 +356,7 @@
       (akmon "draw"       "Flowchart"         "draw"       "/" icons.flowchart      [ "flowchart" "diagram" "whiteboard" "excalidraw" "astradraw" "drawing" ])
       (akmon "photos"     "Photos"            "photos"     "/" icons.immich         [ "photos" "immich" "pictures" "images" "gallery" ])
       (akmon "hydrus"     "Hydrus"            "hydrus"     "/vnc.html" icons.hydrus [ "hydrus" "images" "art" "references" "screenshots" "tags" ])
+      (akmon "learn"      "Practice"          "learn"      "/pl" icons.practice     [ "practice" "mimir" "learn" "review" "problems" "math" "prairielearn" ])
       (akmon "media"      "Jellyfin"          "media"      "/" icons.jellyfin       [ "jellyfin" "media" "movies" "tv" "shows" ])
       (akmon "audiobooks" "Audiobooks"        "audiobooks" "/" icons.audiobookshelf [ "audiobooks" "audiobookshelf" "podcasts" "books" ])
       (akmon "docs"       "Paperless"         "docs"       "/" icons.paperless      [ "paperless" "documents" "scans" "receipts" ])

@@ -6,19 +6,14 @@
       inherit (pkgs.stdenv.hostPlatform) system;
     }).zotero;
 
-    srl = pkgs.python3Packages.buildPythonPackage rec {
-      pname = "srl";
-      version = "20.0.0";
-      pyproject = true;
-      build-system = [ pkgs.python3Packages.setuptools ];
-      src = pkgs.fetchFromGitHub {
-        owner = "HayesBarber";
-        repo = "spaced-repetition-learning";
-        rev = "fb892232ab3d694348250722c696b7683c34a86a";
-        hash = "sha256-jPEkjCE+kLP8p/TojY4ty7exEgjfHStFv4zmzbwJPIM=";
-      };
-      propagatedBuildInputs = with pkgs.python3Packages; [ rich ];
-      doCheck = false;
+    # Mimir's CLI (Tn-mimir runs the service on Akmon). Authoring commands
+    # (new, lint, preview, graph, backlog) work on ~/Projects/Mimir here; the
+    # state commands (plan, status, why, override, reload) run on Akmon over ssh.
+    mimir = let pkg = pkgs.callPackage ../Services/_mimir/package.nix { }; in pkgs.symlinkJoin {
+      name = "mimir-kvasir";
+      paths = [ pkg ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postBuild = "wrapProgram $out/bin/mimir --set-default MIMIR_REMOTE akmon";
     };
   in {
 
@@ -32,7 +27,7 @@
       visidata
       # datasette  # broken: asgi-csrf dep marked broken in nixpkgs (2026-07); re-enable when fixed
       anki-bin
-      srl
+      mimir
       zotero   # pinned, see above
       onlyoffice-desktopeditors
       foliate

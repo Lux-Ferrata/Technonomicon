@@ -82,10 +82,12 @@ All shared modules are prefixed `Tn-` (Technonomicon); each host picks the ones 
 - `Tn-server`, `Tn-server-*`, `Tn-console-kanata` — Akmon's base: tailscale and sshd, mail relay, alerts (`tn-issue`), metrics, report mails, Claude's health review, `aku`, a rescue nvim, the console keyboard
 - `Tn-forgejo` (git + CI runner), `Tn-overnight` (overnight agents)
 
-**Services/** — Akmon's web services. Each sets `tn.web.vhosts.<name>`, which gives it `https://<name>.ironshark.org` (tailnet-only) and a DNS record. `Tn-server-web` provides nginx, the wildcard cert and the shared Postgres; the rest are one module per service (Grimoire, LanguageTool, Radicale + calendar push + task deadlines, WebDAV, Paperless, Immich, Karakeep, mail archive, Miniflux, Atuin, SearXNG, Vaultwarden, media, NAS, torrent, hosting, office, AstraDraw, OpenHabitTracker, Hydrus).
+**Services/** — Akmon's web services. Each sets `tn.web.vhosts.<name>`, which gives it `https://<name>.ironshark.org` (tailnet-only) and a DNS record. `Tn-server-web` provides nginx, the wildcard cert and the shared Postgres; the rest are one module per service (Grimoire, LanguageTool, Radicale + calendar push + task deadlines, WebDAV, Paperless, Immich, Karakeep, mail archive, Miniflux, Atuin, SearXNG, Vaultwarden, media, NAS, torrent, hosting, office, AstraDraw, OpenHabitTracker, Hydrus, Mimir).
+
+**Mimir** (`Tn-mimir`, `Modules/Services/mimir.nix`): FSRS-scheduled practice of procedures on PrairieLearn, at `learn.` (the learner) and `pl.` (the author). The course is `~/Projects/Mimir` (its own `CLAUDE.md` and `/author` skill). The `mimir` scheduler and CLI are `Modules/Services/_mimir/`: Python, with tests that run in the Nix build. The pinned PL image lives in `_mimir/package.nix`. Never use PL's API course sync or its "Pull from remote git repository" button: they `git reset --hard` the course directory. Reload with `mimir reload`.
 
 **Knowledge/**
-- `Tn-learning` — hledger, fava, beancount, gnucash, visidata, anki, zotero (pinned input), foliate, rnote
+- `Tn-learning` — hledger, fava, beancount, gnucash, visidata, anki, the `mimir` CLI (state commands run on Akmon over ssh), zotero (pinned input), foliate, rnote
 - `Tn-mind` — Obsidian, OpenHabitTracker (Flathub), pomodoro
 - `Tn-vikunja` — Kvasir's local Vikunja (tasks, offline), tailnet access, backup to Akmon
 - `Tn-pdf` — sioyek (inverse search into VSCodium)
