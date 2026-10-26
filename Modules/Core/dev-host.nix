@@ -134,6 +134,7 @@
         trap cleanup EXIT
         ${podman} run -d --name strata-prepare --replace \
           ${lib.concatStringsSep " " (lib.mapAttrsToList (k: v: "-e ${k}=${lib.escapeShellArg v}") strata.env)} \
+          -e TUNE=thorough -e RETUNE=1 \
           --env-file ${config.sops.templates."strata.env".path} \
           ${lib.concatStringsSep " " strataOptions} \
           -p 127.0.0.1:${toString strata.port}:8080 -v ${strata.data}:/data \
