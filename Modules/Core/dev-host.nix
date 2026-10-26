@@ -230,6 +230,67 @@
     ];
     systemd.services.whisper-server.path = [ pkgs.ffmpeg-headless ];
 
+    # ── Strata (see the let block) ───────────────────────────────────────
+    virtualisation.oci-containers.containers.strata = {
+      inherit (strata) image;
+      autoStart       = false;             # strata.socket wakes it
+      ports           = [ "127.0.0.1:${toString strata.port}:8080" ];
+      volumes         = [ "${strata.data}:/data" ];
+      environment     = strata.env;
+      environmentFiles = [ config.sops.templates."strata.env".path ];
+      # no memory limit: Strata plans from the host's RAM
+      extraOptions    = strataOptions;
+    };
+    sops.secrets.strata-api-key = { };
+    sops.templates."strata.env".content = "API_KEY=${config.sops.placeholder.strata-api-key}\n";
+    sops.templates."strata-auth.conf" = {
+      owner   = "nginx";
+      content = ''
+        proxy_set_header Authorization "Bearer ${config.sops.placeholder.strata-api-key}";
+        proxy_set_header x-api-key "${config.sops.placeholder.strata-api-key}";
+      '';
+    };
+    systemd.services.podman-strata = {
+      # completion off the GPU first; it comes back in ExecStopPost
+      conflicts = [ "llama-fim.socket" "llama-fim.service" "llama-fim-server.service" ];
+      after     = [ "llama-fim.socket" "llama-fim.service" "llama-fim-server.service" "strata-data.service" ];
+      requires  = [ "strata-data.service" ];
+      serviceConfig = {
+        ExecStartPre   = [ "${arcSqueeze}" ];
+        ExecStopPost   = [ "${arcRestore}" "${fimResume}/bin/llama-fim-resume" ];
+        TimeoutStopSec = 150;              # it drains, then unpins ~35 GB
+      };
+    };
+
+    # its own dataset, outside fast/srv: no snapshots of re-downloadable
+    # weights; a mounted dataset, so it survives the root wipe
+    systemd.services.strata-data = {
+      description = "Create Strata's dataset on the fast pool";
+      after       = [ "zfs-mount.service" ];
+      wantedBy    = [ "multi-user.target" ];
+      path        = [ config.boot.zfs.package ];
+      serviceConfig = { Type = "oneshot"; RemainAfterExit = true; };
+      script = ''
+        zfs list fast/strata >/dev/null 2>&1 || zfs create \
+          -o mountpoint=${strata.data} -o recordsize=1M -o compression=off fast/strata
+      '';
+    };
+
+    # :8011 for the tailnet (firewall below) and this machine; adds the key
+    services.nginx.virtualHosts.strata-api = {
+      listen = [ { addr = "0.0.0.0"; port = 8011; } ];
+      locations."/" = {
+        proxyPass   = "http://127.0.0.1:18011";
+        extraConfig = ''
+          include ${config.sops.templates."strata-auth.conf".path};
+          proxy_buffering    off;            # streamed tokens
+          proxy_read_timeout 900s;           # a cold start, then a long answer
+          proxy_send_timeout 900s;
+        '';
+      };
+      extraConfig = "client_max_body_size 64m;";   # Claude Code's requests are big
+    };
+
     security.polkit.extraConfig = ''
       polkit.addRule(function(action, subject) {
         var units = ${builtins.toJSON llamaUnits};
