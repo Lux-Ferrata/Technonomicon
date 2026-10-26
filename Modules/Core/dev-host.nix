@@ -121,9 +121,11 @@
         [ "$(id -u)" -eq 0 ] || exec sudo "$0" "$@"
         systemctl stop strata.socket strata.service podman-strata.service llama-fim.socket llama-fim.service llama-fim-server.service
         systemctl start strata-data.service
+        ${arcSqueeze}
         cleanup() {
           ${podman} stop -t 120 strata-prepare >/dev/null 2>&1 || true
           ${podman} rm -f strata-prepare >/dev/null 2>&1 || true
+          ${arcRestore}
           systemctl start strata.socket
           ${fimResume}/bin/llama-fim-resume
         }
