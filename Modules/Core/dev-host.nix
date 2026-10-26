@@ -90,6 +90,26 @@
       # the ARC shrinks to this while Strata holds its experts
       arcMax = 4 * 1024 * 1024 * 1024;
     };
+    # The experts are pinned, so nothing can push them out: make room before
+    # they load. The host's own ARC cap (Hosts/Akmon) is saved and put back.
+    arcParam = "/sys/module/zfs/parameters/zfs_arc_max";
+    arcSqueeze = pkgs.writeShellScript "strata-arc-squeeze" ''
+      [ -e /run/strata-arc-max ] || cat ${arcParam} > /run/strata-arc-max
+      echo ${toString strata.arcMax} > ${arcParam}
+      # the ARC gives memory back over a few seconds
+      for _ in $(seq 30); do
+        size=$(${pkgs.gawk}/bin/awk '$1 == "size" { print $3 }' /proc/spl/kstat/zfs/arcstats)
+        [ "$size" -le $(( ${toString strata.arcMax} + 512 * 1024 * 1024 )) ] && exit 0
+        sleep 1
+      done
+      echo "ARC still at $size bytes; Strata may choose its slower low-RAM mode" >&2
+    '';
+    arcRestore = pkgs.writeShellScript "strata-arc-restore" ''
+      if [ -e /run/strata-arc-max ]; then
+        cat /run/strata-arc-max > ${arcParam}
+        rm /run/strata-arc-max
+      fi
+    '';
     podman = "${config.virtualisation.podman.package}/bin/podman";
     strataPrepare = pkgs.writeShellApplication {
       name = "strata-prepare";
