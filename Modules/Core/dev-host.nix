@@ -82,8 +82,10 @@
         KV       = "int8";
         PARALLEL = "1";
         VISION   = "off";
-        # tuned once, by strata-prepare; later starts keep it
-        TUNE     = "thorough";
+        # The service never tunes: tuning outlasts the start timeout, and an
+        # inconclusive result ("busy PC") saves nothing, so every wake tuned
+        # again and was killed. strata-prepare tunes; starts keep its result.
+        TUNE     = "skip";
         # room for whisper (~1 GB) next to the expert cache
         STRATA_SET = "vram-reserve-mib=1800";
       };
@@ -132,6 +134,7 @@
         trap cleanup EXIT
         ${podman} run -d --name strata-prepare --replace \
           ${lib.concatStringsSep " " (lib.mapAttrsToList (k: v: "-e ${k}=${lib.escapeShellArg v}") strata.env)} \
+          -e TUNE=thorough -e RETUNE=1 \
           --env-file ${config.sops.templates."strata.env".path} \
           ${lib.concatStringsSep " " strataOptions} \
           -p 127.0.0.1:${toString strata.port}:8080 -v ${strata.data}:/data \
