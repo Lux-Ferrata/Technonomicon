@@ -63,7 +63,8 @@
     fi
   '';
 
-  boot.initrd.systemd.enable = true;
+  # 2026-10-28: boot.initrd.systemd.enable removed upstream (scripted initrd
+  # is gone, systemd initrd is always on)
   boot.initrd.systemd.services.rollback-root = {
     description = "Roll back / to an empty snapshot";
     wantedBy    = [ "initrd.target" ];
